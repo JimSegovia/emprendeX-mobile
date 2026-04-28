@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Home, FileText, Plus, Users, Menu } from 'lucide-react-native';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 
 export default function TabLayout() {
@@ -51,13 +51,16 @@ export default function TabLayout() {
             </View>
           ),
           // Disable default click so we could show a modal or action sheet
-          tabBarButton: (props: any) => (
-            <TouchableOpacity 
-              {...props} 
-              activeOpacity={0.8}
-              onPress={() => console.log('FAB pressed')} 
-            />
-          )
+          tabBarButton: (props: any) => {
+            const router = useRouter();
+            return (
+              <TouchableOpacity 
+                {...props} 
+                activeOpacity={0.8}
+                onPress={() => router.push('/operaciones/nueva')} 
+              />
+            );
+          }
         }}
       />
       <Tabs.Screen

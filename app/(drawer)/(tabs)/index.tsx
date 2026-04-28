@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Platform, StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { 
@@ -9,15 +9,19 @@ import {
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 bg-violet-600">
+      <View 
+        className="flex-row items-center justify-between px-6 pb-4 bg-violet-600"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
+      >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu size={24} color="white" />
@@ -174,6 +178,6 @@ export default function DashboardScreen() {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

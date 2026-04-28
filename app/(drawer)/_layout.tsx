@@ -1,6 +1,7 @@
 import { Drawer } from 'expo-router/drawer';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { 
   Home, Users, Package, FileText, Calendar, Bell, 
   RefreshCw, FileSignature, CreditCard, BarChart2, Settings, ChevronDown, Crown
@@ -8,6 +9,7 @@ import {
 
 function CustomDrawerContent(props: any) {
   const { navigation } = props;
+  const router = useRouter();
 
   const DRAWER_ITEMS = [
     { label: 'Inicio', icon: Home, route: '(tabs)', active: true },
@@ -52,11 +54,15 @@ function CustomDrawerContent(props: any) {
               key={index}
               className={`flex-row items-center py-3.5 px-4 rounded-xl mb-1 ${isActive ? 'bg-violet-50' : 'bg-transparent'}`}
               onPress={() => {
+                navigation.closeDrawer();
                 if (item.route === '(tabs)') {
-                  navigation.navigate('(tabs)');
-                } else {
-                  // For now, close drawer on mock items
-                  navigation.closeDrawer();
+                  router.push('/');
+                } else if (item.route === 'operaciones') {
+                  router.push('/operaciones');
+                } else if (item.route === 'clientes') {
+                  router.push('/clientes');
+                } else if (item.route === 'calendario') {
+                  router.push('/calendario');
                 }
               }}
             >
@@ -71,13 +77,19 @@ function CustomDrawerContent(props: any) {
 
       {/* Footer */}
       <SafeAreaView edges={['bottom']} className="p-4 bg-white border-t border-slate-100">
-        <View className="flex-row items-center bg-violet-50 p-4 rounded-2xl">
+        <TouchableOpacity 
+          className="flex-row items-center bg-violet-50 p-4 rounded-2xl"
+          onPress={() => {
+            navigation.closeDrawer();
+            router.push('/plan-pro');
+          }}
+        >
           <Crown size={24} color="#f59e0b" className="mr-3" />
           <View>
             <Text className="text-violet-900 font-bold text-sm">Tu plan: Pro</Text>
             <Text className="text-violet-600 text-xs">Vence el 20/06/2024</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </SafeAreaView>
     </View>
   );
