@@ -51,6 +51,10 @@ export default function OperacionDetalleScreen() {
               <Text className="text-slate-800 font-medium">María López</Text>
             </View>
             <View className="flex-row justify-between mt-3">
+              <Text className="text-slate-500">Cotización de origen</Text>
+              <Text className="text-slate-800 font-medium">COT-204 aprobada</Text>
+            </View>
+            <View className="flex-row justify-between mt-3">
               <Text className="text-slate-500">Fecha de entrega</Text>
               <Text className="text-slate-800 font-medium">20/05/2024 - 2:00 p.m.</Text>
             </View>

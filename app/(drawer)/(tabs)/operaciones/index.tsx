@@ -9,12 +9,10 @@ import Animated, { AnimatedTouchableOpacity, itemEntering, screenEntering, secti
 const operacionesData = [
   { id: '1023', tipo: 'Pedido', cliente: 'María López', monto: '150.00', estado: 'En camino', color: 'orange' },
   { id: '1022', tipo: 'Cotización', fecha: '20/05/2024', monto: '320.00', estado: 'Pendiente', color: 'amber' },
-  { id: '1021', tipo: 'Alquiler', cliente: 'Carlos Ramírez', monto: '180.00', estado: 'Reservado', color: 'blue' },
-  { id: '1020', tipo: 'Suscripción', cliente: 'Lucía Fernández', monto: '300.00', estado: 'Activa', color: 'green' },
   { id: '1019', tipo: 'Pedido', cliente: 'Ana Torres', monto: '120.00', estado: 'Entregado', color: 'emerald' },
 ];
 
-const tabs = ['Todas', 'Pedidos', 'Cotizaciones', 'Alquileres', 'Suscripciones'];
+const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
 export default function OperacionesScreen() {
   const [activeTab, setActiveTab] = useState('Todas');
@@ -30,17 +28,22 @@ export default function OperacionesScreen() {
     switch(color) {
       case 'orange': return 'bg-orange-100 text-orange-600';
       case 'amber': return 'bg-amber-100 text-amber-600';
-      case 'blue': return 'bg-blue-100 text-blue-600';
-      case 'green': return 'bg-green-100 text-green-600';
       case 'emerald': return 'bg-emerald-100 text-emerald-600';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
 
+  const filteredOperaciones = operacionesData.filter((item) => {
+    if (activeTab === 'Todas') return true;
+    if (activeTab === 'Pedidos') return item.tipo === 'Pedido';
+    if (activeTab === 'Cotizaciones') return item.tipo === 'Cotización';
+    return true;
+  });
+
   const renderItem = ({ item, index }: { item: typeof operacionesData[0]; index: number }) => (
     <AnimatedTouchableOpacity 
       className="bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm"
-      onPress={() => router.push({ pathname: '/operaciones/[id]', params: { id: item.id } })}
+      onPress={() => router.push({ pathname: '/(drawer)/(tabs)/operaciones/[id]', params: { id: item.id } })}
       entering={itemEntering(index)}
       layout={smoothLayout}
     >
@@ -53,7 +56,7 @@ export default function OperacionesScreen() {
       </View>
 
       {/* Middle row */}
-      <Text className={`text-xs mb-2 ${item.tipo === 'Pedido' ? 'text-slate-500' : item.tipo === 'Cotización' ? 'text-violet-500' : item.tipo === 'Alquiler' ? 'text-blue-500' : item.tipo === 'Suscripción' ? 'text-emerald-500' : 'text-slate-500'}`}>
+      <Text className={`text-xs mb-2 ${item.tipo === 'Cotización' ? 'text-violet-500' : 'text-slate-500'}`}>
         {item.tipo}
       </Text>
 
@@ -109,7 +112,7 @@ export default function OperacionesScreen() {
 
       {/* List */}
       <FlatList
-        data={operacionesData}
+        data={filteredOperaciones}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16 }}

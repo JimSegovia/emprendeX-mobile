@@ -1,13 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Filter, ChevronLeft, ChevronRight, Plus, Box, Calendar as CalendarIcon } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { Filter, ChevronLeft, ChevronRight, Plus, Box, Calendar as CalendarIcon, Menu } from 'lucide-react-native';
+import { useNavigation, useRouter } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 
 export default function CalendarioScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const router = useRouter();
+
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
 
   // Mock calendar data
   const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -35,8 +41,8 @@ export default function CalendarioScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft color="white" size={24} />
+          <TouchableOpacity onPress={openDrawer} className="mr-4">
+            <Menu color="white" size={24} />
           </TouchableOpacity>
           <Text className="text-white text-xl font-bold">Calendario</Text>
         </View>
@@ -126,14 +132,14 @@ export default function CalendarioScreen() {
                 <CalendarIcon size={24} color="#7c3aed" />
               </View>
               <View>
-                <Text className="font-bold text-slate-800 mb-0.5">Alquiler #2001</Text>
+                <Text className="font-bold text-slate-800 mb-0.5">Cotización #2001</Text>
                 <Text className="text-slate-500 text-sm">Carlos Ramírez</Text>
               </View>
             </View>
             <View className="items-end">
               <Text className="text-slate-500 text-sm mb-2">3:00 p.m.</Text>
-              <View className="bg-emerald-100 px-3 py-1 rounded-full">
-                <Text className="text-emerald-600 font-semibold text-xs">Reservado</Text>
+              <View className="bg-amber-100 px-3 py-1 rounded-full">
+                <Text className="text-amber-600 font-semibold text-xs">Pendiente</Text>
               </View>
             </View>
           </Animated.View>
@@ -163,7 +169,7 @@ export default function CalendarioScreen() {
       <TouchableOpacity 
         className="absolute right-6 w-14 h-14 bg-violet-600 rounded-full items-center justify-center shadow-lg shadow-violet-300"
         style={{ bottom: Math.max(insets.bottom, 16) + 8 }}
-        onPress={() => router.push('/operaciones/nueva')}
+        onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}
       >
         <Plus color="white" size={30} />
       </TouchableOpacity>

@@ -24,8 +24,8 @@ export default function DashboardScreen() {
 
       {/* Header */}
       <Animated.View
-        className="flex-row items-center justify-between bg-violet-600 px-6 pb-4"
-        style={{ paddingTop: insets.top + 14 }}
+        className="flex-row items-center justify-between bg-violet-600 px-4 pb-4"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
@@ -153,21 +153,21 @@ export default function DashboardScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
           >
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(0)} onPress={() => router.push('/operaciones/nueva')}>
+            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(0)} onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}>
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <PlusSquare size={24} color="#7c3aed" />
-              </View>
-              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Nuevo{'\n'}pedido</Text>
-            </AnimatedTouchableOpacity>
-
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(1)}>
-              <View className="bg-violet-50 p-2 rounded-lg mb-2">
-                <FileText size={24} color="#7c3aed" />
               </View>
               <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Nueva{'\n'}cotización</Text>
             </AnimatedTouchableOpacity>
 
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(2)}>
+            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(1)} onPress={() => router.push('/(drawer)/(tabs)/cotizaciones')}>
+              <View className="bg-violet-50 p-2 rounded-lg mb-2">
+                <FileText size={24} color="#7c3aed" />
+              </View>
+              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Ver{'\n'}cotizaciones</Text>
+            </AnimatedTouchableOpacity>
+
+            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(2)} onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}>
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <UserPlus size={24} color="#7c3aed" />
               </View>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu, Search, Filter } from 'lucide-react-native';
-import { useNavigation } from 'expo-router';
+import { Menu, Search, Plus } from 'lucide-react-native';
+import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { AnimatedTouchableOpacity, itemEntering, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
 
@@ -18,6 +18,7 @@ const clientesData = [
 export default function ClientesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const router = useRouter();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -26,6 +27,7 @@ export default function ClientesScreen() {
   const renderItem = ({ item, index }: { item: typeof clientesData[0]; index: number }) => (
     <AnimatedTouchableOpacity
       className="flex-row items-center justify-between py-5 border-b border-slate-100 bg-white"
+      onPress={() => router.push({ pathname: '/(drawer)/(tabs)/clientes/[id]', params: { id: item.id } })}
       entering={itemEntering(index)}
       layout={smoothLayout}
     >
@@ -61,8 +63,12 @@ export default function ClientesScreen() {
           <TouchableOpacity className="mr-4">
             <Search color="white" size={24} />
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Filter color="white" size={24} />
+          <TouchableOpacity
+            className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
+            onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
+          >
+            <Plus size={16} color="white" />
+            <Text className="ml-2 font-semibold text-white">Nuevo</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -72,7 +78,7 @@ export default function ClientesScreen() {
         data={clientesData}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       />
     </Animated.View>

@@ -54,9 +54,6 @@ export default function RootLayout() {
         />
         <Stack.Screen name="onboarding" options={{ animation: "fade_from_bottom" }} />
         <Stack.Screen name="(drawer)" options={{ animation: "fade" }} />
-        <Stack.Screen name="operaciones" />
-        <Stack.Screen name="calendario" />
-        <Stack.Screen name="plan-pro" />
         <Stack.Screen
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}
