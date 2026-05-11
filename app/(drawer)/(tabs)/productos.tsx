@@ -119,7 +119,13 @@ export default function ProductosScreen() {
             <TouchableOpacity className="mr-3 flex-row items-center rounded-2xl bg-white/15 px-3.5 py-2.5" onPress={() => setOnlyActive((v) => !v)} activeOpacity={0.8}>
               <Text className="font-semibold text-white">{onlyActive ? 'Activos' : 'Todos'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5" activeOpacity={0.8}>
+            <TouchableOpacity
+              className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
+              activeOpacity={0.8}
+              onPress={() => {
+                // Placeholder for create flow.
+              }}
+            >
               <Plus size={16} color="white" />
               <Text className="ml-2 font-semibold text-white">Nuevo</Text>
             </TouchableOpacity>
