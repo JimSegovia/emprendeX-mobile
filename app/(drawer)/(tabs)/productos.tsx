@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, TextInput, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Briefcase, Menu, Package, Plus, Search, SlidersHorizontal } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -95,41 +95,43 @@ export default function ProductosScreen() {
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1 pr-4">
+        <View className="flex-col space-y-4">
+          <View className="flex-row items-center">
             <TouchableOpacity onPress={openDrawer} className="mr-4">
               <Menu color="white" size={24} />
             </TouchableOpacity>
-            <Text className="text-white text-xl font-bold">Productos y servicios</Text>
+            <Text className="text-white text-2xl font-bold">Productos y servicios</Text>
           </View>
-          <View className="flex-row">
-            <TouchableOpacity
-              className="mr-3 flex-row items-center rounded-2xl bg-white/15 px-3.5 py-2.5"
-              onPress={() => {
-                // Lightweight toggle: all -> producto -> servicio -> all
-                setFilter((prev) => (prev === 'all' ? 'Producto' : prev === 'Producto' ? 'Servicio' : 'all'));
-              }}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Cambiar filtro"
-            >
-              <SlidersHorizontal size={16} color="white" />
-              <Text className="ml-2 font-semibold text-white">{filter === 'all' ? 'Todo' : filter}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="mr-3 flex-row items-center rounded-2xl bg-white/15 px-3.5 py-2.5" onPress={() => setOnlyActive((v) => !v)} activeOpacity={0.8}>
-              <Text className="font-semibold text-white">{onlyActive ? 'Activos' : 'Todos'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
-              activeOpacity={0.8}
-              onPress={() => {
-                // Placeholder for create flow.
-              }}
-            >
-              <Plus size={16} color="white" />
-              <Text className="ml-2 font-semibold text-white">Nuevo</Text>
-            </TouchableOpacity>
-          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16 }}>
+            <View className="flex-row">
+              <TouchableOpacity
+                className="mr-3 flex-row items-center rounded-2xl bg-white/15 px-3.5 py-2.5"
+                onPress={() => {
+                  // Lightweight toggle: all -> producto -> servicio -> all
+                  setFilter((prev) => (prev === 'all' ? 'Producto' : prev === 'Producto' ? 'Servicio' : 'all'));
+                }}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Cambiar filtro"
+              >
+                <SlidersHorizontal size={16} color="white" />
+                <Text className="ml-2 font-semibold text-white">{filter === 'all' ? 'Todo' : filter}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="mr-3 flex-row items-center rounded-2xl bg-white/15 px-3.5 py-2.5" onPress={() => setOnlyActive((v) => !v)} activeOpacity={0.8}>
+                <Text className="font-semibold text-white">{onlyActive ? 'Activos' : 'Todos'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
+                activeOpacity={0.8}
+                onPress={() => {
+                  // Placeholder for create flow.
+                }}
+              >
+                <Plus size={16} color="white" />
+                <Text className="ml-2 font-semibold text-white">Nuevo</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
       </Animated.View>
 
