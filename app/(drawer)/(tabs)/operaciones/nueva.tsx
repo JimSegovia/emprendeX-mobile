@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DropDownPicker from 'react-native-dropdown-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 
 export default function NuevaOperacionScreen() {
@@ -41,7 +41,7 @@ export default function NuevaOperacionScreen() {
   const [showDate, setShowDate] = useState(false);
   const dropdownSpacing = 220;
 
-  function handleDateChange(event, selectedDate) {
+  function handleDateChange(event: DateTimePickerEvent, selectedDate?: Date) {
     setShowDate(false);
     if (selectedDate) setDate(selectedDate);
   }
