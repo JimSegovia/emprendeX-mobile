@@ -61,7 +61,7 @@ export default function OnboardingStep1() {
 
   const handleNext = () => {
     if (currentIndex === FEATURE_SLIDES.length - 1) {
-      router.push('/onboarding/modules');
+      router.push('/onboarding/setup');
       return;
     }
 
