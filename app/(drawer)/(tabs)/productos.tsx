@@ -124,7 +124,7 @@ export default function ProductosScreen() {
                 className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
                 activeOpacity={0.8}
                 onPress={() => {
-                  // Placeholder for create flow.
+                  router.push('/(drawer)/(tabs)/productos/nuevo');
                 }}
               >
                 <Plus size={16} color="white" />

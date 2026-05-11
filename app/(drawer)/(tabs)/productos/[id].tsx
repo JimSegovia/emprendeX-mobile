@@ -27,7 +27,7 @@ export default function ProductoDetalleScreen() {
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1 pr-4">
-            <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <TouchableOpacity onPress={() => router.navigate('/(drawer)/(tabs)/productos')} className="mr-4">
               <ArrowLeft color="white" size={24} />
             </TouchableOpacity>
             <Text className="text-white text-xl font-bold">Detalle</Text>

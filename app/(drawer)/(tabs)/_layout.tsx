@@ -88,6 +88,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="productos/nuevo"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="calendario"
         options={{
           href: null,
