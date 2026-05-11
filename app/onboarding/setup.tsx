@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronDown, ChevronLeft, Info, Check } from 'lucide-react-native';
-import Animated, { screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
+import Animated, { sectionEntering } from '@/components/ui/motion';
 
 const CATEGORIES = [
   'Restaurante / Comida',

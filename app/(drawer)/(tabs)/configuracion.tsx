@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowDown, ArrowUp, Briefcase, CreditCard, Crown, FileText, Menu, Package, Users } from 'lucide-react-native';
+import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { AnimatedTouchableOpacity, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
+import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
+import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
+import { useModulePreferences } from '@/lib/module-preferences-context';
 
 const businessProfile = {
   name: 'Dulce Taller',
   category: 'Pasteleria personalizada',
   currency: 'Soles peruanos (S/)',
 };
-
-const initialModules = [
-  { id: 'clientes', label: 'Clientes', detail: 'Gestion de contactos y fichas.', icon: Users },
-  { id: 'productos', label: 'Productos / Servicios', detail: 'Catalogo reutilizable para pedidos.', icon: Package },
-  { id: 'cotizaciones', label: 'Cotizaciones', detail: 'Respuestas rapidas para leads.', icon: FileText },
-  { id: 'pagos', label: 'Pagos', detail: 'Control de adelantos y saldos.', icon: CreditCard },
-];
 
 const premiumModules = [
   { id: 'reportes', label: 'Reportes avanzados', detail: 'Comparativos, periodos y tendencias.' },
@@ -28,23 +24,26 @@ export default function ConfiguracionScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
-  const [modules, setModules] = useState(initialModules);
+  const { isHydrated, order, setOrder, reset } = useModulePreferences();
+
+  const [localOrder, setLocalOrder] = useState<ModuleId[]>(order);
+  useEffect(() => setLocalOrder(order), [order]);
+
+  const modulesById = useMemo(() => {
+    return new Map<ModuleId, ModuleDefinition>(DEFAULT_MODULES.map((m) => [m.id, m]));
+  }, []);
+
+  const orderedModules = useMemo(() => {
+    return localOrder.map((id) => modulesById.get(id)).filter(Boolean) as ModuleDefinition[];
+  }, [localOrder, modulesById]);
 
   const handleLogout = () => {
     router.replace('/');
   };
 
-  const moveModule = (index: number, direction: 'up' | 'down') => {
-    const nextIndex = direction === 'up' ? index - 1 : index + 1;
-
-    if (nextIndex < 0 || nextIndex >= modules.length) {
-      return;
-    }
-
-    const nextModules = [...modules];
-    const [selected] = nextModules.splice(index, 1);
-    nextModules.splice(nextIndex, 0, selected);
-    setModules(nextModules);
+  const persistLocalOrder = (next: ModuleId[]) => {
+    setLocalOrder(next);
+    setOrder(next);
   };
 
   const openDrawer = () => {
@@ -97,59 +96,91 @@ export default function ConfiguracionScreen() {
           <Text className="text-lg font-bold text-slate-800">Módulos visibles</Text>
 
           <View className="mt-4 flex-row flex-wrap">
-            {modules.map((module, index) => {
-              const Icon = module.icon;
+            {orderedModules
+              .filter((m) => m.id !== 'configuracion')
+              .map((module, index) => {
+                const Icon = module.icon;
 
-              return (
-                <View key={module.id} className={`mr-3 flex-row items-center rounded-full border border-violet-100 bg-white px-4 py-3 ${index > 1 ? 'mt-3' : ''}`}>
-                  <Icon size={16} color="#7c3aed" />
-                  <Text className="ml-2 text-sm font-semibold text-violet-700">{module.label}</Text>
-                </View>
-              );
-            })}
+                return (
+                  <View key={module.id} className={`mr-3 flex-row items-center rounded-full border border-violet-100 bg-white px-4 py-3 ${index > 1 ? 'mt-3' : ''}`}>
+                    <Icon size={16} color="#7c3aed" />
+                    <Text className="ml-2 text-sm font-semibold text-violet-700">{module.label}</Text>
+                  </View>
+                );
+              })}
           </View>
         </Animated.View>
 
         <Animated.View className="mb-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" entering={sectionEntering(3)}>
-          <Text className="text-lg font-bold text-slate-800">Orden del menú principal</Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-bold text-slate-800">Orden del sidebar</Text>
+            <TouchableOpacity
+              className="rounded-full border border-slate-200 bg-white px-3 py-2"
+              onPress={() => {
+                reset();
+              }}
+              activeOpacity={0.8}
+            >
+              <Text className="text-xs font-bold text-slate-700">Restablecer</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View className="mt-5">
-            {modules.map((module, index) => {
-              const Icon = module.icon;
+          <Text className="mt-2 text-sm leading-6 text-slate-500">
+            Mantén presionado el icono para arrastrar y cambiar el orden.
+          </Text>
 
-              return (
-                <AnimatedTouchableOpacity key={module.id} className={`rounded-[24px] border border-slate-100 bg-slate-50 p-4 ${index === 0 ? '' : 'mt-3'}`} layout={smoothLayout} activeOpacity={0.9}>
-                  <View className="flex-row items-center justify-between">
-                    <View className="mr-4 flex-1 flex-row items-center">
-                      <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-white">
-                        <Icon size={20} color="#7c3aed" />
+          <View className="mt-4">
+            {!isHydrated ? (
+              <View className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <Text className="text-sm font-semibold text-slate-700">Cargando preferencias…</Text>
+              </View>
+            ) : (
+              <DraggableFlatList
+                data={orderedModules}
+                keyExtractor={(item) => item.id}
+                onDragEnd={({ data }) => {
+                  persistLocalOrder(data.map((m) => m.id));
+                }}
+                activationDistance={10}
+                scrollEnabled={false}
+                renderItem={({ item, drag, isActive, getIndex }: RenderItemParams<ModuleDefinition>) => {
+                  const index = getIndex?.() ?? 0;
+                  const Icon = item.icon;
+                  return (
+                    <AnimatedTouchableOpacity
+                      className={`rounded-[24px] border border-slate-100 p-4 ${index === 0 ? '' : 'mt-3'} ${isActive ? 'bg-violet-50' : 'bg-slate-50'}`}
+                      layout={smoothLayout}
+                      activeOpacity={0.9}
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <View className="mr-4 flex-1 flex-row items-center">
+                          <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-white">
+                            <Icon size={20} color="#7c3aed" />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="font-bold text-slate-800">{item.label}</Text>
+                            {item.detail ? (
+                              <Text className="mt-1 text-xs leading-5 text-slate-500">{item.detail}</Text>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        <TouchableOpacity
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2"
+                          onLongPress={drag}
+                          delayLongPress={180}
+                          activeOpacity={0.8}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Reordenar ${item.label}`}
+                        >
+                          <GripVertical size={18} color={isActive ? '#7c3aed' : '#475569'} />
+                        </TouchableOpacity>
                       </View>
-                      <View className="flex-1">
-                        <Text className="font-bold text-slate-800">{module.label}</Text>
-                        <Text className="mt-1 text-xs leading-5 text-slate-500">{module.detail}</Text>
-                      </View>
-                    </View>
-
-                    <View>
-                      <TouchableOpacity
-                        className={`rounded-xl px-3 py-2 ${index === 0 ? 'bg-slate-100' : 'border border-slate-200 bg-white'}`}
-                        onPress={() => moveModule(index, 'up')}
-                        disabled={index === 0}
-                      >
-                        <ArrowUp size={16} color={index === 0 ? '#cbd5e1' : '#475569'} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        className={`mt-2 rounded-xl px-3 py-2 ${index === modules.length - 1 ? 'bg-slate-100' : 'border border-slate-200 bg-white'}`}
-                        onPress={() => moveModule(index, 'down')}
-                        disabled={index === modules.length - 1}
-                      >
-                        <ArrowDown size={16} color={index === modules.length - 1 ? '#cbd5e1' : '#475569'} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </AnimatedTouchableOpacity>
-              );
-            })}
+                    </AnimatedTouchableOpacity>
+                  );
+                }}
+              />
+            )}
           </View>
         </Animated.View>
 

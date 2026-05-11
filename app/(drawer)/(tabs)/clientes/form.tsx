@@ -1,119 +1,177 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Users } from 'lucide-react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { ArrowLeft, Info } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 
-const CLIENTS = [
-  { id: '1', name: 'Maria López', phone: '987 654 321', district: 'Los Olivos', notes: 'Prefiere WhatsApp en la tarde.' },
-  { id: '2', name: 'Juan Pérez', phone: '912 345 678', district: 'Pueblo Libre', notes: 'Recojo en taller los viernes.' },
-  { id: '3', name: 'Lucía Fernández', phone: '946 678 901', district: 'Surco', notes: 'Suele pedir personalizados.' },
-];
-
 export default function ClienteFormScreen() {
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
 
-  const existingClient = useMemo(() => CLIENTS.find((client) => client.id === id), [id]);
-  const [name, setName] = useState(existingClient?.name ?? '');
-  const [phone, setPhone] = useState(existingClient?.phone ?? '');
-  const [district, setDistrict] = useState(existingClient?.district ?? '');
-  const [notes, setNotes] = useState(existingClient?.notes ?? '');
-  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+  // Very basic validation
+  const isEmailValid = email.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isFormValid =
+    name.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    email.trim().length > 0 &&
+    isEmailValid &&
+    phone.trim().length > 0;
 
-  const hasNameError = attemptedSubmit && !name.trim();
-  const hasPhoneError = attemptedSubmit && !phone.trim();
-
-  const handleSave = () => {
-    setAttemptedSubmit(true);
-
-    if (!name.trim() || !phone.trim()) {
-      return;
+  const handleContinue = () => {
+    if (isFormValid) {
+      // In a real app, save to state/context/API here.
+      // For now, go back to the previous screen (clientes list).
+      router.back();
     }
-
-    router.back();
   };
 
   return (
-    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-      <Animated.View
-        className="bg-violet-600 px-4 pb-4"
-        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
-        entering={sectionEntering(0)}
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView 
+        className="flex-1" 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1 pr-4">
-            <TouchableOpacity onPress={() => router.back()} className="mr-4">
-              <ArrowLeft color="white" size={24} />
+        <Animated.View className="flex-1" entering={screenEntering}>
+          {/* Header */}
+          <Animated.View className="flex-row items-center px-4 pt-4 mb-2" entering={sectionEntering(0)}>
+            <TouchableOpacity 
+              className="p-2 rounded-full"
+              onPress={() => router.back()}
+            >
+              <ArrowLeft size={24} color="#334155" />
             </TouchableOpacity>
-            <View>
-              <Text className="text-white text-xl font-bold">{existingClient ? 'Editar cliente' : 'Nuevo cliente'}</Text>
-            </View>
-          </View>
-          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-            <Users size={22} color="white" />
-          </View>
-        </View>
-      </Animated.View>
+          </Animated.View>
 
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
-        <Animated.View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" entering={sectionEntering(1)}>
-          <View className="mb-5">
-            <Text className="mb-2 text-sm font-semibold text-slate-700">Nombre completo *</Text>
-            <TextInput
-              className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
-              placeholder="Ej. Maria López"
-              placeholderTextColor="#94a3b8"
-              value={name}
-              onChangeText={setName}
-            />
-            {hasNameError && <Text className="mt-2 text-sm text-rose-500">Ingresa el nombre del cliente.</Text>}
-          </View>
+          <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+            <Animated.View entering={sectionEntering(1)} className="items-center mb-8 mt-2">
+              <Text className="text-[28px] font-extrabold text-slate-800 text-center mb-3">
+                Registre un cliente
+              </Text>
+              <Text className="text-slate-500 text-center text-base px-4 leading-relaxed">
+                Ingresa la información básica de tu cliente
+              </Text>
+            </Animated.View>
 
-          <View className="mb-5">
-            <Text className="mb-2 text-sm font-semibold text-slate-700">Telefono o WhatsApp *</Text>
-            <TextInput
-              className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasPhoneError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
-              placeholder="Ej. 987 654 321"
-              placeholderTextColor="#94a3b8"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
-            {hasPhoneError && <Text className="mt-2 text-sm text-rose-500">Ingresa un telefono de contacto.</Text>}
-          </View>
+            <Animated.View entering={sectionEntering(2)} className="space-y-6">
+              {/* Name */}
+              <View>
+                <Text className="text-sm font-bold text-slate-800 mb-2">Nombre de tu cliente</Text>
+                <TextInput
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
+                  placeholder="Ej. Jim Bryan Jordan"
+                  placeholderTextColor="#94a3b8"
+                  value={name}
+                  onChangeText={setName}
+                />
+                <Text className="text-xs text-slate-400 mt-1.5">
+                  Usa el nombre con el que identificarás tu próximo cliente.
+                </Text>
+              </View>
 
-          <View className="mb-5">
-            <Text className="mb-2 text-sm font-semibold text-slate-700">Distrito</Text>
-            <TextInput
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800"
-              placeholder="Ej. Miraflores"
-              placeholderTextColor="#94a3b8"
-              value={district}
-              onChangeText={setDistrict}
-            />
-          </View>
+              {/* Last Name */}
+              <View>
+                <Text className="text-sm font-bold text-slate-800 mb-2">Apellido de tu cliente</Text>
+                <TextInput
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
+                  placeholder="Ej. Espinoza Picon"
+                  placeholderTextColor="#94a3b8"
+                  value={lastName}
+                  onChangeText={setLastName}
+                />
+                <Text className="text-xs text-slate-400 mt-1.5">
+                  Usa el apellido con el que identificarás tu próximo cliente.
+                </Text>
+              </View>
 
-          <View>
-            <Text className="mb-2 text-sm font-semibold text-slate-700">Notas</Text>
-            <TextInput
-              className="min-h-[110px] rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800"
-              placeholder="Preferencias, horarios, direccion o detalles utiles."
-              placeholderTextColor="#94a3b8"
-              multiline
-              textAlignVertical="top"
-              value={notes}
-              onChangeText={setNotes}
-            />
-          </View>
+              {/* Email */}
+              <View>
+                <Text className="text-sm font-bold text-slate-800 mb-2">Correo Eléctronico</Text>
+                <TextInput
+                  className={`w-full bg-white border ${!isEmailValid && email.length > 0 ? 'border-rose-300' : 'border-slate-200'} rounded-xl px-4 py-3.5 text-base text-slate-800`}
+                  placeholder="Ej. nombre@example.com"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+                <Text className="text-xs text-slate-400 mt-1.5">
+                  Usa el correo con el que te comunicas con tu cliente.
+                </Text>
+              </View>
+
+              {/* Phone */}
+              <View>
+                <Text className="text-sm font-bold text-slate-800 mb-2">Celular</Text>
+                <TextInput
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
+                  placeholder="Ej. 945678234"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+                <Text className="text-xs text-slate-400 mt-1.5">
+                  Usa el celular con el que te comunicas con tu cliente.
+                </Text>
+              </View>
+
+              {/* Address */}
+              <View>
+                <Text className="text-sm font-bold text-slate-800 mb-2">Dirección</Text>
+                <TextInput
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
+                  placeholder="Ej. Jr. Hermanda, Avenida Ejemplo"
+                  placeholderTextColor="#94a3b8"
+                  value={address}
+                  onChangeText={setAddress}
+                />
+                <Text className="text-xs text-slate-400 mt-1.5">
+                  Coloca la dirección de tu cliente
+                </Text>
+              </View>
+
+              {/* Info Box */}
+              <View className="bg-violet-50 rounded-2xl p-4 flex-row items-start border border-violet-100 mt-2">
+                <View className="mt-0.5 mr-3">
+                  <Info size={20} color="#7c3aed" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-violet-900 font-semibold text-sm mb-1">
+                    ¿Por qué te pedimos esto?
+                  </Text>
+                  <Text className="text-violet-800/80 text-xs leading-5">
+                    Con esta información configuraremos tu espacio de trabajo y tus reportes con los valores y opciones correctas para tu negocio.
+                  </Text>
+                </View>
+              </View>
+            </Animated.View>
+          </ScrollView>
+
+          {/* Footer */}
+          <Animated.View className="px-6 py-6 pb-8 bg-white border-t border-slate-50" entering={sectionEntering(3)}>
+            <TouchableOpacity 
+              className={`w-full rounded-xl py-4 items-center justify-center ${isFormValid ? 'bg-violet-600 active:bg-violet-700' : 'bg-slate-200'}`}
+              disabled={!isFormValid}
+              onPress={handleContinue}
+            >
+              <Text className={`font-bold text-lg ${isFormValid ? 'text-white' : 'text-slate-400'}`}>Continuar</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </Animated.View>
-
-        <TouchableOpacity className="mt-6 items-center rounded-2xl bg-violet-600 py-4" onPress={handleSave}>
-          <Text className="text-lg font-bold text-white">Guardar cliente</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </Animated.View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
