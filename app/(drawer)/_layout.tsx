@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Crown } from 'lucide-react-native';
 import Animated, { itemEntering, smoothLayout } from '@/components/ui/motion';
+import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
 
 function CustomDrawerContent(props: any) {
@@ -11,7 +12,13 @@ function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { authState } = useAuthSession();
   const { modules: DRAWER_ITEMS } = useModulePreferences();
+
+  const displayName =
+    authState?.user.businessProfile.name ?? authState?.user.email ?? 'EmprendeX';
+  const avatarLetter = displayName.trim().charAt(0).toUpperCase() || 'E';
+  const accountLabel = authState?.user.email ?? 'Sin sesión activa';
 
   const navigateFromDrawer = (item: (typeof DRAWER_ITEMS)[number]) => {
     navigation.closeDrawer();
@@ -29,12 +36,14 @@ function CustomDrawerContent(props: any) {
       <View className="bg-violet-600 px-5 pb-6" style={{ paddingTop: insets.top + 28 }}>
         <View className="flex-row items-center">
           <View className="mr-3 h-12 w-12 items-center justify-center rounded-full border border-white/60">
-            <Text className="text-xl font-bold text-white">A</Text>
+            <Text className="text-xl font-bold text-white">{avatarLetter}</Text>
           </View>
 
           <View className="flex-1">
-            <Text className="text-base font-bold text-white">Ana López</Text>
-            <Text className="mt-1 text-sm font-medium text-violet-100">Plan Gratis</Text>
+            <Text className="text-base font-bold text-white">{displayName}</Text>
+            <Text className="mt-1 text-sm font-medium text-violet-100">
+              {accountLabel}
+            </Text>
           </View>
         </View>
       </View>
