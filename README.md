@@ -7,13 +7,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 1. Install dependencies
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. Start the app
 
    ```bash
-   npx expo start
+   pnpm start
    ```
 
 In the output, you'll find options to open the app in a
@@ -25,12 +25,20 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Useful Commands
+
+- `pnpm start` - Starts the Expo development server.
+- `pnpm android` - Runs the app on an Android emulator or connected device.
+- `pnpm ios` - Runs the app on an iOS simulator.
+- `pnpm web` - Runs the app in a web browser.
+- `pnpm lint` - Lints the codebase.
+
 ## Get a fresh project
 
 When you're ready, run:
 
 ```bash
-npm run reset-project
+pnpm reset-project
 ```
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
