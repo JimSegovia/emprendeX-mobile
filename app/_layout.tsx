@@ -15,6 +15,7 @@ import "react-native-reanimated";
 import "../global.css";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { AuthSessionProvider } from '@/lib/auth-session-context';
 import { ModulePreferencesProvider } from '@/lib/module-preferences-context';
 
 export const unstable_settings = {
@@ -45,30 +46,32 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <ModulePreferencesProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: "slide_from_right",
-              contentStyle: { backgroundColor: "#ffffff" },
-              gestureEnabled: true,
-              fullScreenGestureEnabled: true,
-            }}
-          >
-            <Stack.Screen name="index" options={{ animation: "fade" }} />
-            <Stack.Screen
-              name="register"
-              options={{ presentation: "modal", animation: "slide_from_bottom" }}
-            />
-            <Stack.Screen name="onboarding" options={{ animation: "fade_from_bottom" }} />
-            <Stack.Screen name="(drawer)" options={{ animation: "fade" }} />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
-            />
-          </Stack>
-          <StatusBar style="auto" />
-        </ModulePreferencesProvider>
+        <AuthSessionProvider>
+          <ModulePreferencesProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: "slide_from_right",
+                contentStyle: { backgroundColor: "#ffffff" },
+                gestureEnabled: true,
+                fullScreenGestureEnabled: true,
+              }}
+            >
+              <Stack.Screen name="index" options={{ animation: "fade" }} />
+              <Stack.Screen
+                name="register"
+                options={{ presentation: "modal", animation: "slide_from_bottom" }}
+              />
+              <Stack.Screen name="onboarding" options={{ animation: "fade_from_bottom" }} />
+              <Stack.Screen name="(drawer)" options={{ animation: "fade" }} />
+              <Stack.Screen
+                name="modal"
+                options={{ presentation: "modal", title: "Modal" }}
+              />
+            </Stack>
+            <StatusBar style="auto" />
+          </ModulePreferencesProvider>
+        </AuthSessionProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
