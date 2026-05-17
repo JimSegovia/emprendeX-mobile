@@ -1,4 +1,6 @@
 import { HapticTab } from '@/components/haptic-tab';
+import { useModulePreferences } from '@/lib/module-preferences-context';
+import { resolveModuleIdFromPathname } from '@/lib/modules';
 import { BlurView } from 'expo-blur';
 import { Tabs, usePathname, useRouter } from 'expo-router';
 import {
@@ -15,8 +17,6 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { resolveModuleIdFromPathname } from '@/lib/modules';
-import { useModulePreferences } from '@/lib/module-preferences-context';
 
 export default function TabLayout() {
   const pathname = usePathname();
@@ -57,19 +57,19 @@ export default function TabLayout() {
   const fabActions = [
     {
       label: 'Cotiza',
-      icon: <FilePlus size={20} color="#0f172a" />,
+      icon: <FilePlus size={20} color="#7c3aed" />,
       onPress: () => router.push('/(drawer)/(tabs)/operaciones/nueva'),
       offset: { x: -58, y: -42 }, // Más bajo y armónico en arco
     },
     {
       label: 'Pago',
-      icon: <CreditCard size={20} color="#0f172a" />,
+      icon: <CreditCard size={20} color="#7c3aed" />,
       onPress: () => router.push('/(drawer)/(tabs)/pagos/nuevo'),
       offset: { x: 0, y: -62 },   // Más bajo
     },
     {
       label: 'Gasto',
-      icon: <PackagePlus size={20} color="#0f172a" />,
+      icon: <PackagePlus size={20} color="#7c3aed" />,
       onPress: () => { },
       offset: { x: 58, y: -42 },  // Más bajo y armónico en arco
     },
@@ -145,13 +145,13 @@ export default function TabLayout() {
             ),
             tabBarButton: isOperationsEnabled
               ? (props: any) => (
-                  <TouchableOpacity
-                    {...props}
-                    activeOpacity={0.8}
-                    style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
-                    onPress={() => setFabOpen((prev) => !prev)}
-                  />
-                )
+                <TouchableOpacity
+                  {...props}
+                  activeOpacity={0.8}
+                  style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
+                  onPress={() => setFabOpen((prev) => !prev)}
+                />
+              )
               : () => null,
           }}
           listeners={{
@@ -306,8 +306,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '600',
-    color: '#0f172a',
-    paddingHorizontal: 6,
+    color: '#7c3aed',
+    paddingHorizontal: 4,
     backgroundColor: 'rgba(248, 250, 252, 0.9)',
     borderRadius: 8,
     overflow: 'hidden',
