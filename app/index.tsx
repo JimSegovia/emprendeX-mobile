@@ -85,10 +85,14 @@ export default function LoginScreen() {
         >
           <Animated.View className="flex-1 px-8 py-10 justify-between" entering={screenEntering}>
             <Animated.View className="items-center mt-4" entering={sectionEntering(0)}>
-              <View className="flex-row items-center justify-center">
-                <Text className="text-3xl font-bold text-slate-800 tracking-tight">Emprende</Text>
-                <Text className="text-4xl font-extrabold text-violet-600 italic ml-1">X</Text>
-              </View>
+<View className="flex-row items-center justify-center">
+  <Image
+    source={require('../assets/images/Logo.png')}
+    style={{ width: 230, height: 70 }}
+    contentFit="contain"
+    contentPosition="center"
+  />
+</View>
               <Text className="text-slate-500 text-base font-medium mt-1">
                 Tu negocio, en orden.
               </Text>

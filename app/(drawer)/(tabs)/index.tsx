@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
@@ -44,10 +45,14 @@ export default function DashboardScreen() {
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu size={24} color="white" />
           </TouchableOpacity>
-          <View className="flex-row items-baseline">
-            <Text className="text-2xl font-bold text-white tracking-tight">Emprende</Text>
-            <Text className="text-3xl font-extrabold text-violet-200 italic -ml-0.5">X</Text>
-          </View>
+<View className="flex-row items-baseline">
+  <Image
+    source={require('../../../assets/images/logo full blanco.png')}
+    style={{ width: 150, height: 40 }}
+    contentFit="contain"
+    contentPosition="center"
+  />
+</View>
         </View>
         <View className="flex-row items-center space-x-4">
           <TouchableOpacity className="mr-3">
