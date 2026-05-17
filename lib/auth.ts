@@ -6,13 +6,17 @@ const DEFAULT_API_BASE_URL = 'https://emprendex-backend-production.up.railway.ap
 
 export type AuthUser = {
   id: string;
+  firstNames: string;
+  lastNames: string;
   email: string;
+  phone: string;
+  status: 'Inactive' | 'Active' | 'Blocked';
   onboardingCompleted: boolean;
   enabledModuleIds: ModuleId[];
   businessProfile: {
+    id: string | null;
     name: string | null;
     category: string | null;
-    currencyCode: string | null;
   };
 };
 
@@ -41,13 +45,11 @@ type RegisterPayload = {
   password: string;
   businessName: string;
   businessCategory: string;
-  currencyCode: 'PEN';
 };
 
 type OnboardingSetupPayload = {
   businessName: string;
   businessCategory: string;
-  currencyCode: 'PEN';
 };
 
 type OnboardingModulesPayload = {
@@ -94,12 +96,16 @@ function isAuthUser(value: unknown): value is AuthUser {
 
   return (
     typeof value.id === 'string' &&
+    typeof value.firstNames === 'string' &&
+    typeof value.lastNames === 'string' &&
     typeof value.email === 'string' &&
+    typeof value.phone === 'string' &&
+    ['Inactive', 'Active', 'Blocked'].includes(String(value.status)) &&
     typeof value.onboardingCompleted === 'boolean' &&
     isStringArray(value.enabledModuleIds) &&
+    isNullableString(value.businessProfile.id) &&
     isNullableString(value.businessProfile.name) &&
-    isNullableString(value.businessProfile.category) &&
-    isNullableString(value.businessProfile.currencyCode)
+    isNullableString(value.businessProfile.category)
   );
 }
 
@@ -286,9 +292,7 @@ export function resolvePostAuthRoute(session: {
   }
 
   const hasBusinessProfile = Boolean(
-    session.user.businessProfile.name &&
-    session.user.businessProfile.category &&
-    session.user.businessProfile.currencyCode,
+    session.user.businessProfile.name && session.user.businessProfile.category,
   );
 
   return hasBusinessProfile ? '/onboarding/modules' : '/onboarding';
