@@ -97,12 +97,26 @@ export default function ProductoDetalleScreen() {
                 <Text className="text-sm font-bold text-slate-800">{item.sku}</Text>
               </View>
             ) : null}
-            {item.unit ? (
+            {item.kind === 'Producto' && item.unit ? (
               <View className="mt-3 flex-row items-center justify-between">
                 <Text className="text-sm text-slate-500">Unidad</Text>
                 <Text className="text-sm font-bold text-slate-800">{item.unit}</Text>
               </View>
             ) : null}
+
+            {item.kind === 'Servicio' && item.category ? (
+              <View className="mt-3 flex-row items-center justify-between">
+                <Text className="text-sm text-slate-500">Categoría</Text>
+                <Text className="text-sm font-bold text-slate-800">{item.category}</Text>
+              </View>
+            ) : null}
+            {/* Stock sólo para productos */}
+            {item.kind === 'Producto' && (
+              <View className="mt-3 flex-row items-center justify-between">
+                <Text className="text-sm text-slate-500">Stock</Text>
+                <Text className={`text-sm font-semibold ${item.stock && item.stock > 0 ? 'text-violet-800' : 'text-slate-400'}`}>{typeof item.stock === 'number' ? (item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock') : 'Sin stock'}</Text>
+              </View>
+            )}
             <View className="mt-3 flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Precio base</Text>
               <Text className="text-xl font-extrabold text-slate-800">

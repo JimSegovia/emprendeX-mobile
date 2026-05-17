@@ -111,12 +111,25 @@ export default function ProductosScreen() {
             )}
           </View>
         </View>
-        <View className="mt-5 flex-row items-center justify-between">
-          <Text className="text-sm text-slate-500">Código {item.id}</Text>
-          <Text className="text-xl font-extrabold text-slate-800">
-            {formatMoney(item.currencySymbol, item.price)}
-          </Text>
-        </View>
+          <View className="mt-5 flex-row items-center justify-between">
+            <Text className="text-sm text-slate-500">Código {item.id}</Text>
+            <Text className="text-xl font-extrabold text-slate-800">
+              {formatMoney(item.currencySymbol, item.price)}
+            </Text>
+          </View>
+          {item.kind === 'Servicio' && item.category ? (
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="text-sm text-slate-500">Categoría</Text>
+              <Text className="text-sm font-bold text-emerald-800">{item.category}</Text>
+            </View>
+          ) : null}
+          {/* Stock/Inventario solo productos */}
+          {item.kind === 'Producto' && (
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="text-sm text-slate-500">Stock</Text>
+              <Text className={`text-sm font-bold ${item.stock && item.stock > 0 ? 'text-violet-800' : 'text-slate-400'}`}>{typeof item.stock === 'number' ? (item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock') : 'Sin stock'}</Text>
+            </View>
+          )}
       </AnimatedTouchableOpacity>
     );
   };

@@ -11,6 +11,8 @@ export type CatalogItem = {
   description: string;
   sku?: string;
   unit?: string;
+  category?: string;
+  stock?: number; // agregado campo de stock opcional
   isActive: boolean;
 };
 
@@ -25,6 +27,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     description: 'Caja cerrada con 6 cupcakes en sabores fijos.',
     sku: 'CUP-BOX-06',
     unit: 'Caja',
+    stock: 12,
     isActive: true,
   },
   {
@@ -37,6 +40,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     description: 'Base editable por tema, porciones y acabados decorativos.',
     sku: 'CAKE-CUSTOM',
     unit: 'Unidad',
+    stock: 0,
     isActive: true,
   },
   {
@@ -48,7 +52,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     currencySymbol: 'S/',
     description: 'Incluye montaje, exhibicion y seleccion segun la ocasion.',
     sku: 'SWEET-TABLE',
-    unit: 'Evento',
+    category: 'Evento',
     isActive: true,
   },
   {
@@ -61,6 +65,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     description: 'Diseños a pedido con glaseado real y empaques individuales.',
     sku: 'COOKIES-12',
     unit: 'Docena',
+    stock: 6,
     isActive: true,
   },
   {
@@ -72,7 +77,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     currencySymbol: 'S/',
     description: 'Entrega el mismo día dentro de zonas seleccionadas.',
     sku: 'DELIVERY-EXP',
-    unit: 'Servicio',
+    category: 'Servicio',
     isActive: false,
   },
 ];
