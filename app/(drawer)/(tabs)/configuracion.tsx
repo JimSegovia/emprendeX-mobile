@@ -23,11 +23,6 @@ const premiumModules = [
     label: 'Reportes avanzados',
     detail: 'Comparativos, periodos y tendencias.',
   },
-  {
-    id: 'alertas',
-    label: 'Alertas inteligentes',
-    detail: 'Recordatorios automáticos por prioridad.',
-  },
 ];
 
 const CURRENCY_LABELS: Record<string, string> = {

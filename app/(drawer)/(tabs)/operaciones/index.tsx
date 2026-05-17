@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, FlatList, TextInput } from 'react-native';
 import { Search, Filter, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
 export default function OperacionesScreen() {
   const [activeTab, setActiveTab] = useState('Todas');
+  const [query, setQuery] = useState("");
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -34,9 +35,15 @@ export default function OperacionesScreen() {
   };
 
   const filteredOperaciones = operacionesData.filter((item) => {
-    if (activeTab === 'Todas') return true;
-    if (activeTab === 'Pedidos') return item.tipo === 'Pedido';
-    if (activeTab === 'Cotizaciones') return item.tipo === 'Cotización';
+    if (activeTab !== 'Todas') {
+      if (activeTab === 'Pedidos' && item.tipo !== 'Pedido') return false;
+      if (activeTab === 'Cotizaciones' && item.tipo !== 'Cotización') return false;
+    }
+    if (query) {
+      const q = query.trim().toLowerCase();
+      const matchText = `${item.id} ${item.cliente || ''} ${item.fecha || ''} ${item.tipo}`.toLowerCase();
+      if (!matchText.includes(q)) return false;
+    }
     return true;
   });
 
@@ -80,15 +87,7 @@ export default function OperacionesScreen() {
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Operaciones</Text>
-        </View>
-        <View className="flex-row">
-          <TouchableOpacity className="mr-4">
-            <Search color="white" size={24} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Filter color="white" size={24} />
-          </TouchableOpacity>
+          <Text className="text-white text-2xl font-bold">Operaciones</Text>
         </View>
       </Animated.View>
 
@@ -117,6 +116,28 @@ export default function OperacionesScreen() {
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Animated.View className="mb-4" entering={sectionEntering(2)}>
+            <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+              <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
+                <Search size={18} color="#64748b" />
+                <TextInput
+                  className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
+                  placeholder="Buscar por ID, cliente, fecha..."
+                  placeholderTextColor="#94a3b8"
+                  value={query}
+                  onChangeText={setQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                />
+              </View>
+              <Text className="mt-3 text-xs text-slate-500">
+                {filteredOperaciones.length} resultado(s)
+              </Text>
+            </View>
+          </Animated.View>
+        }
       />
     </Animated.View>
   );
