@@ -101,7 +101,7 @@ export default function ClienteDetalleScreen() {
               <Text className="mt-2 text-2xl font-bold text-slate-800">{client.operations.length}</Text>
             </View>
             <View className="mb-3 w-[48%] rounded-2xl border border-slate-100 bg-white p-4">
-              <Text className="text-xs font-medium text-slate-500">Ultimo total</Text>
+              <Text className="text-xs font-medium text-slate-500">Último total</Text>
               <Text className="mt-2 text-2xl font-bold text-slate-800">{client.operations[0]?.total ?? 'S/ 0.00'}</Text>
             </View>
           </View>
@@ -110,7 +110,7 @@ export default function ClienteDetalleScreen() {
         <Animated.View className="mt-6" entering={sectionEntering(3)}>
           <View className="mb-4 flex-row items-end justify-between">
             <Text className="text-lg font-bold text-slate-800">Operaciones asociadas</Text>
-            <Text className="text-sm font-medium text-violet-600">Relacion cliente-operacion</Text>
+            <Text className="text-sm font-medium text-violet-600">Relacion cliente-operación</Text>
           </View>
 
           {client.operations.map((operation) => {

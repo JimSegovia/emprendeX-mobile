@@ -66,7 +66,7 @@ export default function ProductoDetalleScreen() {
 
           <View className="mt-6 rounded-2xl bg-slate-50 p-4">
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-slate-500">Codigo</Text>
+              <Text className="text-sm text-slate-500">Código</Text>
               <Text className="text-sm font-bold text-slate-800">{item.id}</Text>
             </View>
             {item.sku ? (

@@ -38,7 +38,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
   { id: 'index', label: 'Inicio', icon: Home, tab: 'index', match: ['/'] },
   { id: 'operaciones', label: 'Operaciones', icon: FileText, tab: 'operaciones', match: ['/operaciones'], detail: 'Registros, tareas y seguimiento.' },
   { id: 'clientes', label: 'Clientes', icon: Users, tab: 'clientes', match: ['/clientes'], detail: 'Gestion de contactos y fichas.' },
-  { id: 'productos', label: 'Productos / Servicios', icon: Package, tab: 'productos', match: ['/productos'], detail: 'Catalogo reutilizable para pedidos.' },
+  { id: 'productos', label: 'Productos / Servicios', icon: Package, tab: 'productos', match: ['/productos'], detail: 'Catálogo reutilizable para pedidos.' },
   { id: 'cotizaciones', label: 'Cotizaciones', icon: FileSignature, tab: 'cotizaciones', match: ['/cotizaciones'], detail: 'Respuestas rapidas para leads.' },
   { id: 'pagos', label: 'Pagos', icon: CreditCard, tab: 'pagos', match: ['/pagos'], detail: 'Control de adelantos y saldos.' },
   { id: 'calendario', label: 'Calendario', icon: Calendar, tab: 'calendario', match: ['/calendario'], premium: true, detail: 'Agenda y recordatorios.' },

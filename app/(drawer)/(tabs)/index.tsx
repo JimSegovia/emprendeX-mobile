@@ -57,7 +57,7 @@ export default function DashboardScreen() {
 
         {/* Stats Grid */}
         <Animated.View className="px-6 flex-row flex-wrap justify-between" entering={sectionEntering(2)}>
-          {/* Venta del dia */}
+          {/* Venta del día */}
           <Animated.View className="w-[48%] bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm shadow-slate-100" entering={itemEntering(0)}>
             <Text className="text-slate-500 font-medium text-xs mb-2">Ventas del día</Text>
             <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 1,250.00</Text>

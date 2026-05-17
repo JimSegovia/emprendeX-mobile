@@ -120,7 +120,7 @@ export default function LoginScreen() {
             <Animated.View className="w-full" entering={sectionEntering(2)}>
               <View className="mb-5">
                 <Text className="text-slate-700 font-semibold mb-2">
-                  Correo electronico
+                  Correo electrónico
                 </Text>
                 <TextInput
                   className={`rounded-xl border px-4 py-3.5 text-base text-slate-800 ${hasEmailError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
@@ -134,13 +134,13 @@ export default function LoginScreen() {
                 />
                 {hasEmailError ? (
                   <Text className="mt-2 text-sm text-rose-500">
-                    Ingresa un correo valido.
+                    Ingresa un correo válido.
                   </Text>
                 ) : null}
               </View>
 
               <View className="mb-2">
-                <Text className="text-slate-700 font-semibold mb-2">Contrasena</Text>
+                <Text className="text-slate-700 font-semibold mb-2">Contraseña</Text>
                 <View className="relative justify-center">
                   <TextInput
                     className={`rounded-xl border px-4 py-3.5 pr-12 text-base text-slate-800 ${hasPasswordError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
@@ -163,7 +163,7 @@ export default function LoginScreen() {
                 </View>
                 {hasPasswordError ? (
                   <Text className="mt-2 text-sm text-rose-500">
-                    La contrasena debe tener al menos 6 caracteres.
+                    La contraseña debe tener al menos 6 caracteres.
                   </Text>
                 ) : null}
               </View>
@@ -171,7 +171,7 @@ export default function LoginScreen() {
               <View className="items-end mb-8">
                 <TouchableOpacity>
                   <Text className="text-violet-600 font-medium text-sm">
-                    ¿Olvidaste tu contrasena?
+                    ¿Olvidaste tu contraseña?
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -200,7 +200,7 @@ export default function LoginScreen() {
                   </View>
                 ) : (
                   <Text className="text-white font-bold text-lg">
-                    Iniciar sesion
+                    Iniciar sesión
                   </Text>
                 )}
               </TouchableOpacity>
@@ -211,7 +211,7 @@ export default function LoginScreen() {
                 </Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity>
-                    <Text className="text-violet-600 font-bold">Registrate</Text>
+                    <Text className="text-violet-600 font-bold">Regístrate</Text>
                   </TouchableOpacity>
                 </Link>
               </View>

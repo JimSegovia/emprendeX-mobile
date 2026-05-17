@@ -188,14 +188,14 @@ export default function RegisterScreen() {
               />
               {hasPhoneError ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa tu numero de celular.
+                  Ingresa tu número de celular.
                 </Text>
               ) : null}
             </View>
 
             <View className="mb-5">
               <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Correo electronico *
+                Correo electrónico *
               </Text>
               <TextInput
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasEmailError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
@@ -209,14 +209,14 @@ export default function RegisterScreen() {
               />
               {hasEmailError ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa un correo valido.
+                  Ingresa un correo válido.
                 </Text>
               ) : null}
             </View>
 
             <View className="mb-5">
               <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Contrasena *
+                Contraseña *
               </Text>
               <View className="relative justify-center">
                 <TextInput
@@ -240,19 +240,19 @@ export default function RegisterScreen() {
               </View>
               {hasPasswordError ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  La contrasena debe tener al menos 8 caracteres.
+                  La contraseña debe tener al menos 8 caracteres.
                 </Text>
               ) : null}
             </View>
 
             <View>
               <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Confirma tu contrasena *
+                Confirma tu contraseña *
               </Text>
               <View className="relative justify-center">
                 <TextInput
                   className={`rounded-2xl border px-4 py-4 pr-12 text-base text-slate-800 ${hasConfirmPasswordError || (attemptedSubmit && !confirmPassword.trim()) ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
-                  placeholder="Repite tu contrasena"
+                  placeholder="Repite tu contraseña"
                   placeholderTextColor="#94a3b8"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
@@ -273,12 +273,12 @@ export default function RegisterScreen() {
               </View>
               {attemptedSubmit && !confirmPassword.trim() ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  Confirma tu contrasena.
+                  Confirma tu contraseña.
                 </Text>
               ) : null}
               {hasConfirmPasswordError ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  Las contrasenas no coinciden.
+                  Las contraseñas no coinciden.
                 </Text>
               ) : null}
             </View>

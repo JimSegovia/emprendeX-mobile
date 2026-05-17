@@ -137,7 +137,7 @@ function parseResponseBody(rawBody: string): unknown {
   try {
     return JSON.parse(rawBody) as unknown;
   } catch {
-    throw new Error('El servidor respondio con un formato invalido.');
+    throw new Error('El servidor respondio con un formato inválido.');
   }
 }
 
@@ -153,7 +153,7 @@ function assertAuthStatePayload(
   payload: unknown,
 ): asserts payload is AuthStateResponse {
   if (!isAuthStateResponse(payload)) {
-    throw new Error('El servidor devolvio un estado de sesion invalido.');
+    throw new Error('El servidor devolvio un estado de sesión inválido.');
   }
 }
 

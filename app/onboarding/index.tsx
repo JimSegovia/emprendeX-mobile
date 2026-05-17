@@ -32,14 +32,14 @@ const FEATURE_SLIDES: FeatureSlide[] = [
     id: 'ahorra',
     title: 'Ahorra tiempo',
     description: 'Automatiza y simplifica procesos.',
-    detail: 'Menos pasos manuales y mas foco en resolver rapido lo importante de tu dia.',
+    detail: 'Menos pasos manuales y más foco en resolver rápido lo importante de tu día.',
     icon: Clock,
   },
   {
     id: 'crece',
     title: 'Haz crecer tu negocio',
     description: 'Toma mejores decisiones.',
-    detail: 'Ten una vista mas clara de tu operacion para detectar oportunidades con facilidad.',
+    detail: 'Ten una vista más clara de tu operación para detectar oportunidades con facilidad.',
     icon: TrendingUp,
   },
 ];

@@ -137,7 +137,7 @@ export default function ProductosScreen() {
           </View>
         </View>
         <View className="mt-5 flex-row items-center justify-between">
-          <Text className="text-sm text-slate-500">Codigo {item.id}</Text>
+          <Text className="text-sm text-slate-500">Código {item.id}</Text>
           <Text className="text-xl font-extrabold text-slate-800">
             {formatMoney(item.currencySymbol, item.price)}
           </Text>
@@ -234,7 +234,7 @@ export default function ProductosScreen() {
                   <Search size={18} color="#64748b" />
                   <TextInput
                     className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
-                    placeholder="Buscar por nombre, codigo o SKU"
+                    placeholder="Buscar por nombre, código o SKU"
                     placeholderTextColor="#94a3b8"
                     value={query}
                     onChangeText={setQuery}
@@ -245,7 +245,7 @@ export default function ProductosScreen() {
                 </View>
                 <Text className="mt-3 text-xs text-slate-500">
                   {filteredItems.length} resultado(s) en{" "}
-                  {filter === "all" ? "todo el catalogo" : filter.toLowerCase()}
+                  {filter === "all" ? "todo el catálogo" : filter.toLowerCase()}
                   .
                 </Text>
               </View>
@@ -296,7 +296,7 @@ export default function ProductosScreen() {
               Sin resultados
             </Text>
             <Text className="mt-2 text-sm leading-6 text-slate-500">
-              Prueba con otro nombre, codigo o cambia el filtro.
+              Prueba con otro nombre, código o cambia el filtro.
             </Text>
             <TouchableOpacity
               className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"

@@ -70,7 +70,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     type: 'Simple',
     price: 18,
     currencySymbol: 'S/',
-    description: 'Entrega el mismo dia dentro de zonas seleccionadas.',
+    description: 'Entrega el mismo día dentro de zonas seleccionadas.',
     sku: 'DELIVERY-EXP',
     unit: 'Servicio',
     isActive: false,
