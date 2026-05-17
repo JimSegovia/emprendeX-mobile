@@ -78,7 +78,17 @@ export default function ConfiguracionScreen() {
 
   const handleLogout = async () => {
     await signOut();
-    router.replace('/');
+    
+    // Obtener el navegador raíz para evitar el conflicto de rutas con (tabs)/index
+    const rootNav = navigation.getParent('root') || navigation.getParent()?.getParent();
+    if (rootNav) {
+      rootNav.reset({
+        index: 0,
+        routes: [{ name: 'index' }],
+      });
+    } else {
+      router.replace('/');
+    }
   };
 
   return (
@@ -212,9 +222,8 @@ export default function ConfiguracionScreen() {
                   const Icon = item.icon;
 
                   return (
-                    <AnimatedTouchableOpacity
+                    <TouchableOpacity
                       className={`rounded-[24px] border border-slate-100 p-4 ${index === 0 ? '' : 'mt-3'} ${isActive ? 'bg-violet-50' : 'bg-slate-50'}`}
-                      layout={smoothLayout}
                       activeOpacity={0.9}
                     >
                       <View className="flex-row items-center justify-between">
@@ -246,7 +255,7 @@ export default function ConfiguracionScreen() {
                           />
                         </TouchableOpacity>
                       </View>
-                    </AnimatedTouchableOpacity>
+                    </TouchableOpacity>
                   );
                 }}
               />
@@ -312,7 +321,7 @@ export default function ConfiguracionScreen() {
               void handleLogout();
             }}
           >
-            <Text className="text-base font-bold text-rose-600">Volver al login</Text>
+            <Text className="text-base font-bold text-rose-600">Cerrar sesión</Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

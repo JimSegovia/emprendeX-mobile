@@ -116,11 +116,16 @@ function isAuthStateResponse(value: unknown): value is AuthStateResponse {
 }
 
 function isAuthSessionResponse(value: unknown): value is AuthSessionResponse {
+  if (!isAuthStateResponse(value)) {
+    return false;
+  }
+
+  const session = value as Partial<AuthSessionResponse>;
+
   return (
-    isAuthStateResponse(value) &&
-    typeof value.accessToken === 'string' &&
-    value.tokenType === 'Bearer' &&
-    typeof value.expiresIn === 'number'
+    typeof session.accessToken === 'string' &&
+    session.tokenType === 'Bearer' &&
+    typeof session.expiresIn === 'number'
   );
 }
 
