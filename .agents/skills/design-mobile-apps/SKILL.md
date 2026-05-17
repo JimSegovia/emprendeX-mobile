@@ -54,17 +54,17 @@ Create a key with only the scopes needed for the task.
 
 ## Quick Reference — All Endpoints
 
-| Method   | Path                                    | Scope             | Description       |
-| -------- | --------------------------------------- | ----------------- | ----------------- |
-| `GET`    | `/api/v1/projects`                      | `projects:read`   | List projects     |
-| `POST`   | `/api/v1/projects`                      | `projects:write`  | Create project    |
-| `GET`    | `/api/v1/projects/:id`                  | `projects:read`   | Get project       |
-| `DELETE` | `/api/v1/projects/:id`                  | `projects:write`  | Delete project    |
-| `GET`    | `/api/v1/projects/:id/components`       | `components:read` | List components   |
-| `GET`    | `/api/v1/projects/:id/components/:componentId` | `components:read` | Get component |
-| `POST`   | `/api/v1/projects/:id/chat/messages`    | `chats:write`     | Send chat message |
-| `GET`    | `/api/v1/projects/:id/chat/runs/:runId` | `chats:read`      | Poll run status   |
-| `POST`   | `/api/v1/screenshots`                   | `screenshots`     | Render screenshot |
+| Method   | Path                                           | Scope             | Description       |
+| -------- | ---------------------------------------------- | ----------------- | ----------------- |
+| `GET`    | `/api/v1/projects`                             | `projects:read`   | List projects     |
+| `POST`   | `/api/v1/projects`                             | `projects:write`  | Create project    |
+| `GET`    | `/api/v1/projects/:id`                         | `projects:read`   | Get project       |
+| `DELETE` | `/api/v1/projects/:id`                         | `projects:write`  | Delete project    |
+| `GET`    | `/api/v1/projects/:id/components`              | `components:read` | List components   |
+| `GET`    | `/api/v1/projects/:id/components/:componentId` | `components:read` | Get component     |
+| `POST`   | `/api/v1/projects/:id/chat/messages`           | `chats:write`     | Send chat message |
+| `GET`    | `/api/v1/projects/:id/chat/runs/:runId`        | `chats:read`      | Poll run status   |
+| `POST`   | `/api/v1/screenshots`                          | `screenshots`     | Render screenshot |
 
 All IDs are stable string identifiers.
 
@@ -137,7 +137,9 @@ Response `200`:
       "id": "cmp_xyz",
       "name": "Hero Section",
       "activeVersion": 3,
-      "versions": [{ "id": "ver_001", "version": 1, "code": "<!DOCTYPE html>...</html>", "createdAt": "..." }],
+      "versions": [
+        { "id": "ver_001", "version": 1, "code": "<!DOCTYPE html>...</html>", "createdAt": "..." }
+      ],
       "createdAt": "...",
       "updatedAt": "..."
     }
@@ -163,7 +165,9 @@ Response `200` — same shape as a single item from the list endpoint:
     "id": "cmp_xyz",
     "name": "Hero Section",
     "activeVersion": 3,
-    "versions": [{ "id": "ver_001", "version": 1, "code": "<!DOCTYPE html>...</html>", "createdAt": "..." }],
+    "versions": [
+      { "id": "ver_001", "version": 1, "code": "<!DOCTYPE html>...</html>", "createdAt": "..." }
+    ],
     "createdAt": "...",
     "updatedAt": "..."
   }
@@ -189,13 +193,13 @@ idempotency-key: <optional, max 255 chars>
 }
 ```
 
-| Field                    | Required | Notes                                         |
-| ------------------------ | -------- | --------------------------------------------- |
-| `message.text`           | Yes      | 1+ chars, trimmed                             |
-| `imageUrls`              | No       | HTTPS URLs only; included as visual context   |
+| Field                    | Required | Notes                                                                                  |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------- |
+| `message.text`           | Yes      | 1+ chars, trimmed                                                                      |
+| `imageUrls`              | No       | HTTPS URLs only; included as visual context                                            |
 | `target.screenId`        | No       | Edit a specific screen using its `screenId` (not `componentId`); omit to let AI decide |
-| `?wait=true/false`       | No       | Sync wait mode (default: false)               |
-| `idempotency-key` header | No       | Replay-safe re-sends                          |
+| `?wait=true/false`       | No       | Sync wait mode (default: false)                                                        |
+| `idempotency-key` header | No       | Replay-safe re-sends                                                                   |
 
 #### Response — async (default, `wait=false`)
 
@@ -224,7 +228,12 @@ Blocks up to **300 seconds**. Returns `200` when completed, `202` if timed out.
     "result": {
       "assistantText": "I added a pricing section with...",
       "operations": [
-        { "type": "screen_created", "screenId": "scr_xyz", "screenName": "Pricing", "componentId": "cmp_xyz" },
+        {
+          "type": "screen_created",
+          "screenId": "scr_xyz",
+          "screenName": "Pricing",
+          "componentId": "cmp_xyz"
+        },
         { "type": "screen_updated", "screenId": "scr_abc", "componentId": "cmp_abc" },
         { "type": "theme_updated" }
       ]
@@ -309,11 +318,11 @@ Content-Type: application/json
 }
 ```
 
-| Field        | Default       | Notes                                                                 |
-| ------------ | ------------- | --------------------------------------------------------------------- |
-| `format`     | `png`         | `png` or `webp`                                                      |
-| `scale`      | `2`           | 1–3 (device pixel ratio)                                             |
-| `gap`        | `40`          | Pixels between components                                            |
+| Field           | Default       | Notes                                                                |
+| --------------- | ------------- | -------------------------------------------------------------------- |
+| `format`        | `png`         | `png` or `webp`                                                      |
+| `scale`         | `2`           | 1–3 (device pixel ratio)                                             |
+| `gap`           | `40`          | Pixels between components                                            |
 | `padding`       | `40`          | Uniform padding on all sides                                         |
 | `paddingX`      | _(optional)_  | Horizontal padding; overrides `padding` for left/right when provided |
 | `paddingY`      | _(optional)_  | Vertical padding; overrides `padding` for top/bottom when provided   |
@@ -416,7 +425,7 @@ Use both the HTML code and the screenshots together:
 - **HTML code** is the implementation reference — it contains the exact structure, layout, styling, colors, spacing, content, image URLs, and icon names.
 - **Screenshots** are the visual target — use them to verify your implementation matches the intended look.
 
-The HTML tells you *how* to build it; the screenshot tells you *what* it should look like.
+The HTML tells you _how_ to build it; the screenshot tells you _what_ it should look like.
 
 #### Icons
 
@@ -428,9 +437,11 @@ When implementing icons:
 
 1. **Check if the project already has an icon system** that supports the same sets Sleek uses (Solar, Hugeicons, Material Symbols, MDI). If so, use it. Note: `@expo/vector-icons` does **not** support these sets — do not use it as a substitute.
 2. **Otherwise, fetch the SVGs from the Iconify API and embed them in the code:**
+
    ```
    GET https://api.iconify.design/{prefix}/{name}.svg
    ```
+
    Example: `https://api.iconify.design/solar/heart-bold.svg`
 
    Collect all icon names from the HTML, fetch their SVGs, and save them as static assets or string constants in the codebase. For **React Native / Expo**, render them with `react-native-svg`'s `SvgXml` component — this works in Expo Go with no additional native dependencies.
@@ -465,12 +476,12 @@ Component code can be large. When saving it to `.html` files, avoid writing the 
 
 ## Common Mistakes
 
-| Mistake                                             | Fix                                                                             |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Sending to `/api/v1` without `Authorization` header | Add `Authorization: Bearer $SLEEK_API_KEY` to every request                              |
-| Using wrong scope                                   | Check key's scopes match the endpoint (e.g. `chats:write` for sending messages) |
-| Sending next message before run completes           | Poll until `completed`/`failed` before next send                                |
-| Using `wait=true` on long generations               | It blocks 300s max; have a fallback to polling for `202` response               |
-| HTTP URLs in `imageUrls`                            | Only HTTPS URLs are accepted                                                    |
-| Assuming `result` is present on `202`               | `result` is absent until status is `completed`                                  |
+| Mistake                                             | Fix                                                                                                  |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Sending to `/api/v1` without `Authorization` header | Add `Authorization: Bearer $SLEEK_API_KEY` to every request                                          |
+| Using wrong scope                                   | Check key's scopes match the endpoint (e.g. `chats:write` for sending messages)                      |
+| Sending next message before run completes           | Poll until `completed`/`failed` before next send                                                     |
+| Using `wait=true` on long generations               | It blocks 300s max; have a fallback to polling for `202` response                                    |
+| HTTP URLs in `imageUrls`                            | Only HTTPS URLs are accepted                                                                         |
+| Assuming `result` is present on `202`               | `result` is absent until status is `completed`                                                       |
 | Using `screenId` as `componentIds` in screenshots   | `screenId` and `componentId` are different; always use `componentId` from operations for screenshots |

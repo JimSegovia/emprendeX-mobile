@@ -5,9 +5,7 @@ import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
-import DraggableFlatList, {
-  type RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
@@ -52,9 +50,7 @@ export default function ConfiguracionScreen() {
   const selectedModules = useMemo(() => {
     const enabledModuleIds = authState?.user.enabledModuleIds ?? [];
 
-    return enabledModuleIds
-      .map((id) => modulesById.get(id))
-      .filter(Boolean) as ModuleDefinition[];
+    return enabledModuleIds.map((id) => modulesById.get(id)).filter(Boolean) as ModuleDefinition[];
   }, [authState, modulesById]);
 
   const businessProfile = authState?.user.businessProfile;
@@ -70,7 +66,7 @@ export default function ConfiguracionScreen() {
 
   const handleLogout = async () => {
     await signOut();
-    
+
     // Obtener el navegador raíz para evitar el conflicto de rutas con (tabs)/index
     const rootNav = navigation.getParent('root') || navigation.getParent()?.getParent();
     if (rootNav) {
@@ -133,8 +129,7 @@ export default function ConfiguracionScreen() {
               <Text className="text-sm text-slate-500">Moneda</Text>
               <Text className="font-semibold text-slate-800">
                 {businessProfile?.currencyCode
-                  ? CURRENCY_LABELS[businessProfile.currencyCode] ??
-                    businessProfile.currencyCode
+                  ? (CURRENCY_LABELS[businessProfile.currencyCode] ?? businessProfile.currencyCode)
                   : 'Pendiente'}
               </Text>
             </View>
@@ -196,9 +191,7 @@ export default function ConfiguracionScreen() {
           <View className="mt-4">
             {!isHydrated ? (
               <View className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <Text className="text-sm font-semibold text-slate-700">
-                  Cargando preferencias…
-                </Text>
+                <Text className="text-sm font-semibold text-slate-700">Cargando preferencias…</Text>
               </View>
             ) : (
               <DraggableFlatList
@@ -209,7 +202,12 @@ export default function ConfiguracionScreen() {
                 }}
                 activationDistance={10}
                 scrollEnabled={false}
-                renderItem={({ item, drag, isActive, getIndex }: RenderItemParams<ModuleDefinition>) => {
+                renderItem={({
+                  item,
+                  drag,
+                  isActive,
+                  getIndex,
+                }: RenderItemParams<ModuleDefinition>) => {
                   const index = getIndex?.() ?? 0;
                   const Icon = item.icon;
 
@@ -241,10 +239,7 @@ export default function ConfiguracionScreen() {
                           accessibilityRole="button"
                           accessibilityLabel={`Reordenar ${item.label}`}
                         >
-                          <GripVertical
-                            size={18}
-                            color={isActive ? '#7c3aed' : '#475569'}
-                          />
+                          <GripVertical size={18} color={isActive ? '#7c3aed' : '#475569'} />
                         </TouchableOpacity>
                       </View>
                     </TouchableOpacity>
@@ -264,9 +259,7 @@ export default function ConfiguracionScreen() {
               <Crown size={22} color="#d97706" />
             </View>
             <View>
-              <Text className="text-lg font-bold text-amber-900">
-                Módulos premium bloqueados
-              </Text>
+              <Text className="text-lg font-bold text-amber-900">Módulos premium bloqueados</Text>
             </View>
           </View>
 
@@ -278,9 +271,7 @@ export default function ConfiguracionScreen() {
               <View className="flex-row items-center justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="font-bold text-slate-800">{module.label}</Text>
-                  <Text className="mt-1 text-sm leading-6 text-slate-500">
-                    {module.detail}
-                  </Text>
+                  <Text className="mt-1 text-sm leading-6 text-slate-500">{module.detail}</Text>
                 </View>
                 <View className="rounded-full bg-amber-100 px-3 py-1.5">
                   <Text className="text-xs font-semibold text-amber-700">Pro</Text>
@@ -303,8 +294,8 @@ export default function ConfiguracionScreen() {
         >
           <Text className="text-lg font-bold text-slate-800">Sesión</Text>
           <Text className="mt-2 text-sm leading-6 text-slate-500">
-            Si necesitas salir del espacio interno de la app, este es el punto más
-            seguro y consistente para volver al login.
+            Si necesitas salir del espacio interno de la app, este es el punto más seguro y
+            consistente para volver al login.
           </Text>
 
           <TouchableOpacity

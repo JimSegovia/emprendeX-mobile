@@ -12,10 +12,7 @@ export default function OperacionesLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen
-        name="nueva"
-        options={{ animation: 'slide_from_right' }}
-      />
+      <Stack.Screen name="nueva" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="[id]" />
     </Stack>
   );

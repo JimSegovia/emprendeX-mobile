@@ -64,7 +64,11 @@ export default function NuevoPagoScreen() {
   const sanitizedAmount = amount.replace(',', '.');
   const parsedAmount = Number.parseFloat(sanitizedAmount);
   const remainingBalance = selectedQuote
-    ? Math.max(0, Number.parseFloat(selectedQuote.balance.replace('S/ ', '')) - (Number.isNaN(parsedAmount) ? 0 : parsedAmount))
+    ? Math.max(
+        0,
+        Number.parseFloat(selectedQuote.balance.replace('S/ ', '')) -
+          (Number.isNaN(parsedAmount) ? 0 : parsedAmount),
+      )
     : 0;
 
   const isFormValid = Boolean(quote && amount.trim().length > 0 && method);
@@ -91,8 +95,10 @@ export default function NuevoPagoScreen() {
         <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
           <View className="mb-4 flex-row items-center justify-between">
             <View>
-          <Text className="text-lg font-extrabold text-slate-800">Cotizacion pendiente</Text>
-          <Text className="mt-1 text-sm text-slate-500">Selecciona la cotizacion que sigue con saldo pendiente.</Text>
+              <Text className="text-lg font-extrabold text-slate-800">Cotizacion pendiente</Text>
+              <Text className="mt-1 text-sm text-slate-500">
+                Selecciona la cotizacion que sigue con saldo pendiente.
+              </Text>
             </View>
             <View className="h-11 w-11 items-center justify-center rounded-2xl bg-violet-50">
               <Receipt size={20} color="#7c3aed" />
@@ -141,7 +147,9 @@ export default function NuevoPagoScreen() {
 
         <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
           <Text className="text-lg font-extrabold text-slate-800">Detalle del pago</Text>
-          <Text className="mt-1 text-sm text-slate-500">Registra adelanto o cancelacion total.</Text>
+          <Text className="mt-1 text-sm text-slate-500">
+            Registra adelanto o cancelacion total.
+          </Text>
 
           <View className="mt-4">
             <Text className="text-sm font-bold text-slate-800 mb-2">Tipo de pago</Text>
@@ -151,14 +159,22 @@ export default function NuevoPagoScreen() {
                 activeOpacity={0.85}
                 onPress={() => setPaymentType('Adelanto')}
               >
-                <Text className={`font-semibold ${paymentType === 'Adelanto' ? 'text-amber-700' : 'text-slate-600'}`}>Adelanto</Text>
+                <Text
+                  className={`font-semibold ${paymentType === 'Adelanto' ? 'text-amber-700' : 'text-slate-600'}`}
+                >
+                  Adelanto
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 items-center rounded-2xl border px-4 py-3 ${paymentType === 'Cancelado' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}
                 activeOpacity={0.85}
                 onPress={() => setPaymentType('Cancelado')}
               >
-                <Text className={`font-semibold ${paymentType === 'Cancelado' ? 'text-emerald-700' : 'text-slate-600'}`}>Cancelado</Text>
+                <Text
+                  className={`font-semibold ${paymentType === 'Cancelado' ? 'text-emerald-700' : 'text-slate-600'}`}
+                >
+                  Cancelado
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -192,7 +208,12 @@ export default function NuevoPagoScreen() {
               <CalendarIcon color="#94a3b8" size={20} />
             </TouchableOpacity>
             {showDate ? (
-              <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
             ) : null}
           </View>
 
@@ -228,11 +249,15 @@ export default function NuevoPagoScreen() {
             </View>
             <View className="mt-2 flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Monto</Text>
-              <Text className="text-lg font-extrabold text-slate-800">S/ {amount.trim().length > 0 ? amount : '0.00'}</Text>
+              <Text className="text-lg font-extrabold text-slate-800">
+                S/ {amount.trim().length > 0 ? amount : '0.00'}
+              </Text>
             </View>
             <View className="mt-2 flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Saldo restante</Text>
-              <Text className="text-sm font-semibold text-slate-800">S/ {remainingBalance.toFixed(2)}</Text>
+              <Text className="text-sm font-semibold text-slate-800">
+                S/ {remainingBalance.toFixed(2)}
+              </Text>
             </View>
           </View>
         </View>
@@ -249,7 +274,9 @@ export default function NuevoPagoScreen() {
           </View>
           <View>
             <Text className="text-slate-500 font-medium">Pago a registrar</Text>
-            <Text className="text-lg font-bold text-slate-800">S/ {amount.trim().length > 0 ? amount : '0.00'}</Text>
+            <Text className="text-lg font-bold text-slate-800">
+              S/ {amount.trim().length > 0 ? amount : '0.00'}
+            </Text>
           </View>
         </View>
         <TouchableOpacity
@@ -258,7 +285,9 @@ export default function NuevoPagoScreen() {
           activeOpacity={0.85}
           onPress={() => router.replace('/(drawer)/(tabs)/pagos')}
         >
-          <Text className={`font-semibold ${isFormValid ? 'text-white' : 'text-slate-400'}`}>Registrar</Text>
+          <Text className={`font-semibold ${isFormValid ? 'text-white' : 'text-slate-400'}`}>
+            Registrar
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>

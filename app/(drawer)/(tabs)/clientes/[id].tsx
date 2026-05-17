@@ -13,7 +13,13 @@ const CLIENTS = [
     district: 'Los Olivos',
     notes: 'Prefiere coordinar por WhatsApp luego de las 4 p.m.',
     operations: [
-      { id: 'COT-204', type: 'Cotización', total: 'S/ 320.00', status: 'Pendiente', accent: 'violet' },
+      {
+        id: 'COT-204',
+        type: 'Cotización',
+        total: 'S/ 320.00',
+        status: 'Pendiente',
+        accent: 'violet',
+      },
       { id: 'PED-1023', type: 'Pedido', total: 'S/ 150.00', status: 'En camino', accent: 'orange' },
     ],
   },
@@ -34,8 +40,20 @@ const CLIENTS = [
     district: 'Surco',
     notes: 'Pide tortas personalizadas para eventos corporativos.',
     operations: [
-      { id: 'PED-1025', type: 'Pedido', total: 'S/ 480.00', status: 'Confirmado', accent: 'emerald' },
-      { id: 'COT-206', type: 'Cotización', total: 'S/ 290.00', status: 'Aprobada', accent: 'violet' },
+      {
+        id: 'PED-1025',
+        type: 'Pedido',
+        total: 'S/ 480.00',
+        status: 'Confirmado',
+        accent: 'emerald',
+      },
+      {
+        id: 'COT-206',
+        type: 'Cotización',
+        total: 'S/ 290.00',
+        status: 'Aprobada',
+        accent: 'violet',
+      },
     ],
   },
 ];
@@ -74,16 +92,30 @@ export default function ClienteDetalleScreen() {
         </View>
       </Animated.View>
 
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
-        <Animated.View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" entering={sectionEntering(1)}>
+      <ScrollView
+        className="flex-1 px-5 pt-6"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+      >
+        <Animated.View
+          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
+          entering={sectionEntering(1)}
+        >
           <Text className="text-2xl font-extrabold text-slate-800">{client.name}</Text>
-          <Text className="mt-2 text-sm text-slate-500">{client.phone} · {client.district}</Text>
+          <Text className="mt-2 text-sm text-slate-500">
+            {client.phone} · {client.district}
+          </Text>
           <Text className="mt-4 text-sm leading-6 text-slate-600">{client.notes}</Text>
 
           <View className="mt-5 flex-row">
             <TouchableOpacity
               className="mr-3 rounded-2xl bg-violet-600 px-4 py-3"
-              onPress={() => router.push({ pathname: '/(drawer)/(tabs)/clientes/form', params: { id: client.id } })}
+              onPress={() =>
+                router.push({
+                  pathname: '/(drawer)/(tabs)/clientes/form',
+                  params: { id: client.id },
+                })
+              }
             >
               <Text className="font-semibold text-white">Editar</Text>
             </TouchableOpacity>
@@ -93,16 +125,23 @@ export default function ClienteDetalleScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View className="mt-6 rounded-[28px] border border-slate-100 bg-slate-50 p-5" entering={sectionEntering(2)}>
+        <Animated.View
+          className="mt-6 rounded-[28px] border border-slate-100 bg-slate-50 p-5"
+          entering={sectionEntering(2)}
+        >
           <Text className="text-lg font-bold text-slate-800">Resumen comercial</Text>
           <View className="mt-4 flex-row flex-wrap justify-between">
             <View className="mb-3 w-[48%] rounded-2xl border border-slate-100 bg-white p-4">
               <Text className="text-xs font-medium text-slate-500">Operaciones</Text>
-              <Text className="mt-2 text-2xl font-bold text-slate-800">{client.operations.length}</Text>
+              <Text className="mt-2 text-2xl font-bold text-slate-800">
+                {client.operations.length}
+              </Text>
             </View>
             <View className="mb-3 w-[48%] rounded-2xl border border-slate-100 bg-white p-4">
               <Text className="text-xs font-medium text-slate-500">Último total</Text>
-              <Text className="mt-2 text-2xl font-bold text-slate-800">{client.operations[0]?.total ?? 'S/ 0.00'}</Text>
+              <Text className="mt-2 text-2xl font-bold text-slate-800">
+                {client.operations[0]?.total ?? 'S/ 0.00'}
+              </Text>
             </View>
           </View>
         </Animated.View>
@@ -117,14 +156,19 @@ export default function ClienteDetalleScreen() {
             const styles = statusStyles[operation.accent as keyof typeof statusStyles];
 
             return (
-              <View key={operation.id} className="mb-3 rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+              <View
+                key={operation.id}
+                className="mb-3 rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100"
+              >
                 <View className="flex-row items-center justify-between">
                   <View>
                     <Text className="text-base font-bold text-slate-800">{operation.id}</Text>
                     <Text className="mt-1 text-sm text-slate-500">{operation.type}</Text>
                   </View>
                   <View className={`rounded-full px-3 py-1.5 ${styles.bg}`}>
-                    <Text className={`text-xs font-semibold ${styles.text}`}>{operation.status}</Text>
+                    <Text className={`text-xs font-semibold ${styles.text}`}>
+                      {operation.status}
+                    </Text>
                   </View>
                 </View>
                 <Text className="mt-4 text-lg font-bold text-slate-800">{operation.total}</Text>

@@ -74,8 +74,15 @@ export default function PagosScreen() {
         </View>
       </Animated.View>
 
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
-        <Animated.View className="mb-6 flex-row flex-wrap justify-between" entering={sectionEntering(1)}>
+      <ScrollView
+        className="flex-1 px-5 pt-6"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+      >
+        <Animated.View
+          className="mb-6 flex-row flex-wrap justify-between"
+          entering={sectionEntering(1)}
+        >
           <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
             <Text className="text-xs font-medium text-slate-500">Cobrado hoy</Text>
             <Text className="mt-2 text-2xl font-extrabold text-slate-800">S/ 440.00</Text>
@@ -90,7 +97,11 @@ export default function PagosScreen() {
           const styles = paymentStyles[payment.accent as keyof typeof paymentStyles];
 
           return (
-            <Animated.View key={payment.id} className="mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" entering={itemEntering(index + 1)}>
+            <Animated.View
+              key={payment.id}
+              className="mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
+              entering={itemEntering(index + 1)}
+            >
               <View className="flex-row items-start justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="text-lg font-bold text-slate-800">{payment.order}</Text>

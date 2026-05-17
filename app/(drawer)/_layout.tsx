@@ -41,9 +41,7 @@ function CustomDrawerContent(props: any) {
 
           <View className="flex-1">
             <Text className="text-base font-bold text-white">{displayName}</Text>
-            <Text className="mt-1 text-sm font-medium text-violet-100">
-              {accountLabel}
-            </Text>
+            <Text className="mt-1 text-sm font-medium text-violet-100">{accountLabel}</Text>
           </View>
         </View>
       </View>
@@ -52,31 +50,44 @@ function CustomDrawerContent(props: any) {
       <ScrollView className="flex-1 px-3 py-4" showsVerticalScrollIndicator={false}>
         {DRAWER_ITEMS.map((item, index) => {
           const Icon = item.icon;
-          const isActive = item.match.includes('/') ? pathname === '/' : item.match.some((match) => pathname.startsWith(match));
+          const isActive = item.match.includes('/')
+            ? pathname === '/'
+            : item.match.some((match) => pathname.startsWith(match));
           const isPremium = Boolean(item.premium);
           const iconColor = isActive ? '#7c3aed' : isPremium ? '#d97706' : '#475569';
-          const textColor = isActive ? 'text-violet-600' : isPremium ? 'text-amber-700' : 'text-slate-700';
+          const textColor = isActive
+            ? 'text-violet-600'
+            : isPremium
+              ? 'text-amber-700'
+              : 'text-slate-700';
 
           return (
             <Animated.View
-               key={item.id}
-               className="relative mb-1 overflow-hidden rounded-xl"
-               entering={itemEntering(index)}
-               layout={smoothLayout}
-             >
-              {isActive && <Animated.View className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-violet-500" entering={itemEntering(0)} />}
+              key={item.id}
+              className="relative mb-1 overflow-hidden rounded-xl"
+              entering={itemEntering(index)}
+              layout={smoothLayout}
+            >
+              {isActive && (
+                <Animated.View
+                  className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-violet-500"
+                  entering={itemEntering(0)}
+                />
+              )}
               <TouchableOpacity
                 className={`flex-row items-center py-3.5 px-4 ${isActive ? 'bg-violet-50' : 'bg-transparent'}`}
                 activeOpacity={0.75}
                 onPress={() => navigateFromDrawer(item)}
               >
                 <Icon size={19} color={iconColor} />
-                  <Text className={`ml-4 flex-1 text-[15px] font-semibold ${textColor}`}>
-                    {item.label}
-                  </Text>
+                <Text className={`ml-4 flex-1 text-[15px] font-semibold ${textColor}`}>
+                  {item.label}
+                </Text>
                 {isPremium && !isActive && (
                   <View className="rounded-full bg-amber-100 px-2.5 py-1">
-                    <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Pro</Text>
+                    <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      Pro
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -114,7 +125,7 @@ function CustomDrawerContent(props: any) {
 
 export default function DrawerLayout() {
   return (
-    <Drawer 
+    <Drawer
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,

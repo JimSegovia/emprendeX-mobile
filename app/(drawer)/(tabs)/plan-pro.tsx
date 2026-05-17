@@ -3,7 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Crown, Check, Sparkles } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import Animated, { AnimatedTouchableOpacity, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
+import Animated, {
+  AnimatedTouchableOpacity,
+  screenEntering,
+  sectionEntering,
+  smoothLayout,
+} from '@/components/ui/motion';
 
 export default function PlanProScreen() {
   const insets = useSafeAreaInsets();
@@ -15,13 +20,13 @@ export default function PlanProScreen() {
     'Reportes avanzados',
     'Respaldos automáticos en la nube',
     'Exportación de datos',
-    'Soporte prioritario'
+    'Soporte prioritario',
   ];
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       {/* Header */}
-      <Animated.View 
+      <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
@@ -35,13 +40,16 @@ export default function PlanProScreen() {
       </Animated.View>
 
       <Animated.ScrollView
-        className="flex-1 px-6 pt-8"
+        className="flex-1 px-5 pt-6"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
         entering={sectionEntering(1)}
       >
         {/* Crown Icon */}
-        <Animated.View className="items-center justify-center mb-8 relative" entering={sectionEntering(2)}>
+        <Animated.View
+          className="items-center justify-center mb-8 relative"
+          entering={sectionEntering(2)}
+        >
           <Crown size={80} color="#f59e0b" strokeWidth={1.5} />
           <View className="absolute top-0 right-1/4">
             <Sparkles size={24} color="#f59e0b" />
@@ -70,22 +78,30 @@ export default function PlanProScreen() {
         {/* Pricing Plans */}
         <Animated.View className="flex-row justify-between mb-8" entering={sectionEntering(4)}>
           {/* Mensual */}
-          <AnimatedTouchableOpacity 
+          <AnimatedTouchableOpacity
             className={`w-[48%] p-4 rounded-2xl border-2 ${selectedPlan === 'mensual' ? 'border-violet-600 bg-violet-50' : 'border-slate-100 bg-white'}`}
             onPress={() => setSelectedPlan('mensual')}
             layout={smoothLayout}
           >
-            <Text className={`font-bold mb-2 ${selectedPlan === 'mensual' ? 'text-violet-900' : 'text-slate-800'}`}>Mensual</Text>
+            <Text
+              className={`font-bold mb-2 ${selectedPlan === 'mensual' ? 'text-violet-900' : 'text-slate-800'}`}
+            >
+              Mensual
+            </Text>
             <Text className="text-2xl font-extrabold text-slate-800">S/ 29.90</Text>
           </AnimatedTouchableOpacity>
 
           {/* Anual */}
-          <AnimatedTouchableOpacity 
+          <AnimatedTouchableOpacity
             className={`w-[48%] p-4 rounded-2xl border-2 ${selectedPlan === 'anual' ? 'border-violet-600 bg-violet-50' : 'border-slate-100 bg-slate-50'}`}
             onPress={() => setSelectedPlan('anual')}
             layout={smoothLayout}
           >
-            <Text className={`font-bold mb-2 ${selectedPlan === 'anual' ? 'text-violet-900' : 'text-slate-600'}`}>Anual</Text>
+            <Text
+              className={`font-bold mb-2 ${selectedPlan === 'anual' ? 'text-violet-900' : 'text-slate-600'}`}
+            >
+              Anual
+            </Text>
             <Text className="text-2xl font-extrabold text-slate-800 mb-1">S/ 299.00</Text>
             <Text className="text-slate-500 text-xs">Ahorra 17%</Text>
           </AnimatedTouchableOpacity>
@@ -100,7 +116,6 @@ export default function PlanProScreen() {
         <TouchableOpacity className="items-center pb-8" onPress={() => router.back()}>
           <Text className="text-violet-600 font-medium">Ahora no, continuar gratis</Text>
         </TouchableOpacity>
-
       </Animated.ScrollView>
     </Animated.View>
   );

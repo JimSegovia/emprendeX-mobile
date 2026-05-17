@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { DEFAULT_MODULE_ORDER, DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
-import { loadModulePreferences, resetModulePreferences, saveModuleOrder } from '@/lib/module-preferences';
+import {
+  DEFAULT_MODULE_ORDER,
+  DEFAULT_MODULES,
+  type ModuleDefinition,
+  type ModuleId,
+} from '@/lib/modules';
+import {
+  loadModulePreferences,
+  resetModulePreferences,
+  saveModuleOrder,
+} from '@/lib/module-preferences';
 
 type ModulePreferencesContextValue = {
   isHydrated: boolean;
@@ -50,7 +59,9 @@ export function ModulePreferencesProvider({ children }: { children: React.ReactN
     };
   }, [isHydrated, modules, order]);
 
-  return <ModulePreferencesContext.Provider value={value}>{children}</ModulePreferencesContext.Provider>;
+  return (
+    <ModulePreferencesContext.Provider value={value}>{children}</ModulePreferencesContext.Provider>
+  );
 }
 
 export function useModulePreferences() {

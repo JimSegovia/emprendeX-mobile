@@ -15,11 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronLeft, Info } from 'lucide-react-native';
 import Animated, { sectionEntering } from '@/components/ui/motion';
-import {
-  getReadableAuthError,
-  resolvePostAuthRoute,
-  updateOnboardingSetup,
-} from '@/lib/auth';
+import { getReadableAuthError, resolvePostAuthRoute, updateOnboardingSetup } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 const CATEGORIES = [
@@ -49,7 +45,6 @@ export default function SetupScreen() {
 
     setBusinessName(authState.user.businessProfile.name ?? '');
     setCategory(authState.user.businessProfile.category ?? '');
-    
   }, [authState]);
 
   useEffect(() => {
@@ -131,9 +126,7 @@ export default function SetupScreen() {
 
           <Animated.View entering={sectionEntering(2)} className="space-y-6">
             <View>
-              <Text className="text-sm font-bold text-slate-700 mb-2">
-                Nombre de tu negocio
-              </Text>
+              <Text className="text-sm font-bold text-slate-700 mb-2">Nombre de tu negocio</Text>
               <TextInput
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
                 placeholder="Ej. Pastelería Dulce Momento"
@@ -147,9 +140,7 @@ export default function SetupScreen() {
             </View>
 
             <View>
-              <Text className="text-sm font-bold text-slate-700 mb-2">
-                Rubro o categoría
-              </Text>
+              <Text className="text-sm font-bold text-slate-700 mb-2">Rubro o categoría</Text>
               <TouchableOpacity
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 flex-row items-center justify-between"
                 onPress={() => setCategoryModalVisible(true)}
@@ -164,7 +155,6 @@ export default function SetupScreen() {
               </Text>
             </View>
 
-
             <View className="bg-violet-50 rounded-2xl p-4 flex-row items-start border border-violet-100 mt-4">
               <View className="mt-0.5 mr-3">
                 <Info size={20} color="#7c3aed" />
@@ -174,8 +164,8 @@ export default function SetupScreen() {
                   ¿Por qué te pedimos esto?
                 </Text>
                 <Text className="text-violet-800/80 text-xs leading-5">
-                  Con esta información configuraremos tu espacio de trabajo y tus
-                  reportes con los valores y opciones correctas para tu negocio.
+                  Con esta información configuraremos tu espacio de trabajo y tus reportes con los
+                  valores y opciones correctas para tu negocio.
                 </Text>
               </View>
             </View>
@@ -218,9 +208,7 @@ export default function SetupScreen() {
             onPress={handleSkip}
             disabled={isSubmitting}
           >
-            <Text className="text-violet-600 font-semibold text-sm">
-              Ahora no, lo haré después
-            </Text>
+            <Text className="text-violet-600 font-semibold text-sm">Ahora no, lo haré después</Text>
           </TouchableOpacity>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -234,9 +222,7 @@ export default function SetupScreen() {
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-white rounded-t-3xl pt-6 pb-8 px-6 max-h-[80%]">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-slate-800">
-                Selecciona el rubro
-              </Text>
+              <Text className="text-xl font-bold text-slate-800">Selecciona el rubro</Text>
               <TouchableOpacity
                 onPress={() => setCategoryModalVisible(false)}
                 className="p-2 bg-slate-100 rounded-full"
@@ -268,7 +254,6 @@ export default function SetupScreen() {
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 }

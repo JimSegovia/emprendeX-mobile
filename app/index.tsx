@@ -14,11 +14,7 @@ import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
-import {
-  getReadableAuthError,
-  loginUser,
-  resolvePostAuthRoute,
-} from '@/lib/auth';
+import { getReadableAuthError, loginUser, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,18 +83,11 @@ export default function LoginScreen() {
           className="bg-white"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View
-            className="flex-1 px-8 py-10 justify-between"
-            entering={screenEntering}
-          >
+          <Animated.View className="flex-1 px-8 py-10 justify-between" entering={screenEntering}>
             <Animated.View className="items-center mt-4" entering={sectionEntering(0)}>
               <View className="flex-row items-center justify-center">
-                <Text className="text-3xl font-bold text-slate-800 tracking-tight">
-                  Emprende
-                </Text>
-                <Text className="text-4xl font-extrabold text-violet-600 italic ml-1">
-                  X
-                </Text>
+                <Text className="text-3xl font-bold text-slate-800 tracking-tight">Emprende</Text>
+                <Text className="text-4xl font-extrabold text-violet-600 italic ml-1">X</Text>
               </View>
               <Text className="text-slate-500 text-base font-medium mt-1">
                 Tu negocio, en orden.
@@ -119,9 +108,7 @@ export default function LoginScreen() {
 
             <Animated.View className="w-full" entering={sectionEntering(2)}>
               <View className="mb-5">
-                <Text className="text-slate-700 font-semibold mb-2">
-                  Correo electrónico
-                </Text>
+                <Text className="text-slate-700 font-semibold mb-2">Correo electrónico</Text>
                 <TextInput
                   className={`rounded-xl border px-4 py-3.5 text-base text-slate-800 ${hasEmailError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                   placeholder="ejemplo@correo.com"
@@ -133,9 +120,7 @@ export default function LoginScreen() {
                   onChangeText={setEmail}
                 />
                 {hasEmailError ? (
-                  <Text className="mt-2 text-sm text-rose-500">
-                    Ingresa un correo válido.
-                  </Text>
+                  <Text className="mt-2 text-sm text-rose-500">Ingresa un correo válido.</Text>
                 ) : null}
               </View>
 
@@ -178,9 +163,7 @@ export default function LoginScreen() {
 
               {submitError ? (
                 <View className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
-                  <Text className="text-sm font-medium text-rose-600">
-                    {submitError}
-                  </Text>
+                  <Text className="text-sm font-medium text-rose-600">{submitError}</Text>
                 </View>
               ) : null}
 
@@ -194,21 +177,15 @@ export default function LoginScreen() {
                 {isSubmitting ? (
                   <View className="flex-row items-center">
                     <ActivityIndicator color="white" />
-                    <Text className="ml-3 text-white font-bold text-lg">
-                      Ingresando...
-                    </Text>
+                    <Text className="ml-3 text-white font-bold text-lg">Ingresando...</Text>
                   </View>
                 ) : (
-                  <Text className="text-white font-bold text-lg">
-                    Iniciar sesión
-                  </Text>
+                  <Text className="text-white font-bold text-lg">Iniciar sesión</Text>
                 )}
               </TouchableOpacity>
 
               <View className="flex-row justify-center items-center mb-4">
-                <Text className="text-slate-500 font-medium mr-1">
-                  ¿No tienes cuenta?
-                </Text>
+                <Text className="text-slate-500 font-medium mr-1">¿No tienes cuenta?</Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity>
                     <Text className="text-violet-600 font-bold">Regístrate</Text>

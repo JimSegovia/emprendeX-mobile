@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
@@ -27,11 +22,7 @@ import Animated, {
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
-import {
-  completeOnboardingModules,
-  getReadableAuthError,
-  resolvePostAuthRoute,
-} from '@/lib/auth';
+import { completeOnboardingModules, getReadableAuthError, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 type SelectableModuleId = Extract<
@@ -198,10 +189,7 @@ export default function ModulesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white pt-12">
-      <Animated.View
-        className="flex-row items-center px-4 mb-4"
-        entering={sectionEntering(0)}
-      >
+      <Animated.View className="flex-row items-center px-4 mb-4" entering={sectionEntering(0)}>
         <TouchableOpacity className="p-2 rounded-full" onPress={() => router.back()}>
           <ArrowLeft size={24} color="#334155" />
         </TouchableOpacity>
@@ -239,14 +227,14 @@ export default function ModulesScreen() {
                 entering={sectionEntering(index)}
                 layout={smoothLayout}
               >
-                <View className={`${isPremium ? 'bg-amber-100' : 'bg-violet-50'} p-2 rounded-xl mr-4`}>
+                <View
+                  className={`${isPremium ? 'bg-amber-100' : 'bg-violet-50'} p-2 rounded-xl mr-4`}
+                >
                   <Icon size={24} color={isPremium ? '#d97706' : '#7c3aed'} />
                 </View>
                 <View className="flex-1 pr-4">
                   <View className="mb-1 flex-row items-center">
-                    <Text className="text-slate-800 font-bold text-base">
-                      {module.title}
-                    </Text>
+                    <Text className="text-slate-800 font-bold text-base">{module.title}</Text>
                     {isPremium ? (
                       <View className="ml-2 rounded-full bg-amber-500 px-2 py-1">
                         <Text className="text-[10px] font-bold uppercase tracking-wide text-white">
@@ -255,28 +243,21 @@ export default function ModulesScreen() {
                       </View>
                     ) : null}
                   </View>
-                  <Text
-                    className={`text-xs ${isPremium ? 'text-amber-800' : 'text-slate-500'}`}
-                  >
+                  <Text className={`text-xs ${isPremium ? 'text-amber-800' : 'text-slate-500'}`}>
                     {module.desc}
                   </Text>
                 </View>
 
                 {isPremium ? (
                   <View className="rounded-full border border-amber-200 bg-white px-3 py-1.5">
-                    <Text className="text-xs font-semibold text-amber-700">
-                      Ver plan
-                    </Text>
+                    <Text className="text-xs font-semibold text-amber-700">Ver plan</Text>
                   </View>
                 ) : (
                   <View
                     className={`w-6 h-6 rounded flex items-center justify-center border ${isSelected ? 'bg-violet-600 border-violet-600' : 'bg-transparent border-slate-300'}`}
                   >
                     {isSelected ? (
-                      <Animated.View
-                        entering={quickCheckEntering}
-                        exiting={quickCheckExiting}
-                      >
+                      <Animated.View entering={quickCheckEntering} exiting={quickCheckExiting}>
                         <Check size={16} color="white" strokeWidth={3} />
                       </Animated.View>
                     ) : null}

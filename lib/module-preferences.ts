@@ -1,5 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_MODULE_ORDER, DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
+import {
+  DEFAULT_MODULE_ORDER,
+  DEFAULT_MODULES,
+  type ModuleDefinition,
+  type ModuleId,
+} from '@/lib/modules';
 
 const STORAGE_KEY = 'emprendex:modulePrefs:v1';
 

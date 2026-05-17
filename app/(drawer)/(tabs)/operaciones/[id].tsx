@@ -13,7 +13,7 @@ export default function OperacionDetalleScreen() {
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       {/* Header */}
-      <Animated.View 
+      <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
@@ -29,7 +29,12 @@ export default function OperacionDetalleScreen() {
         </TouchableOpacity>
       </Animated.View>
 
-      <Animated.ScrollView className="flex-1 px-4 pt-6" showsVerticalScrollIndicator={false} entering={sectionEntering(1)}>
+      <Animated.ScrollView
+        className="flex-1 px-5 pt-6"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        entering={sectionEntering(1)}
+      >
         {/* Status Badge */}
         <Animated.View className="items-end mb-6" entering={sectionEntering(2)}>
           <View className="bg-orange-100 px-4 py-1.5 rounded-full">
@@ -40,7 +45,7 @@ export default function OperacionDetalleScreen() {
         {/* Información Section */}
         <Animated.View className="mb-8" entering={sectionEntering(3)}>
           <Text className="text-lg font-bold text-slate-800 mb-4">Información</Text>
-          
+
           <View className="space-y-4">
             <View className="flex-row justify-between">
               <Text className="text-slate-500">Tipo de operación</Text>
@@ -78,13 +83,15 @@ export default function OperacionDetalleScreen() {
         {/* Productos Section */}
         <Animated.View className="mb-8" entering={sectionEntering(4)}>
           <Text className="text-lg font-bold text-slate-800 mb-4">Productos</Text>
-          
+
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center flex-1">
               <View className="w-16 h-16 bg-slate-100 rounded-xl mr-4 overflow-hidden">
                 {/* Placeholder for the cake image. We can use a generic URL or color if no local asset exists */}
-                <Image 
-                  source={{ uri: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&q=80' }} 
+                <Image
+                  source={{
+                    uri: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&q=80',
+                  }}
                   className="w-full h-full"
                   resizeMode="cover"
                 />
@@ -103,13 +110,12 @@ export default function OperacionDetalleScreen() {
         {/* Resumen Section */}
         <Animated.View className="mb-12" entering={sectionEntering(5)}>
           <Text className="text-lg font-bold text-slate-800 mb-4">Resumen</Text>
-          
+
           <View className="flex-row justify-between">
             <Text className="text-slate-500">Subtotal</Text>
             <Text className="text-slate-800 font-medium">S/ 150.00</Text>
           </View>
         </Animated.View>
-
       </Animated.ScrollView>
     </Animated.View>
   );

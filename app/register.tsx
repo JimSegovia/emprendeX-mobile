@@ -9,13 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, CreditCard, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
-import {
-  getReadableAuthError,
-  registerUser,
-  resolvePostAuthRoute,
-} from '@/lib/auth';
+import { getReadableAuthError, registerUser, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -122,9 +118,7 @@ export default function RegisterScreen() {
           </Animated.View>
 
           <Animated.View className="px-6 pt-5" entering={sectionEntering(1)}>
-            <Text className="text-3xl font-extrabold text-slate-800">
-              Crea tu cuenta
-            </Text>
+            <Text className="text-3xl font-extrabold text-slate-800">Crea tu cuenta</Text>
             <Text className="mt-2 text-base leading-6 text-slate-500">
               Registra tu acceso y los datos base de tu negocio para empezar.
             </Text>
@@ -139,9 +133,7 @@ export default function RegisterScreen() {
             </Text>
 
             <View className="mb-5">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Nombres *
-              </Text>
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Nombres *</Text>
               <TextInput
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasFirstNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. Juan"
@@ -150,16 +142,12 @@ export default function RegisterScreen() {
                 onChangeText={setFirstName}
               />
               {hasFirstNameError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa tus nombres.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa tus nombres.</Text>
               ) : null}
             </View>
 
             <View className="mb-5">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Apellidos *
-              </Text>
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Apellidos *</Text>
               <TextInput
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasLastNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. Perez"
@@ -168,16 +156,12 @@ export default function RegisterScreen() {
                 onChangeText={setLastName}
               />
               {hasLastNameError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa tus apellidos.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa tus apellidos.</Text>
               ) : null}
             </View>
 
             <View className="mb-5">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Celular *
-              </Text>
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Celular *</Text>
               <TextInput
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasPhoneError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. 999888777"
@@ -187,9 +171,7 @@ export default function RegisterScreen() {
                 onChangeText={setPhone}
               />
               {hasPhoneError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa tu número de celular.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa tu número de celular.</Text>
               ) : null}
             </View>
 
@@ -208,16 +190,12 @@ export default function RegisterScreen() {
                 onChangeText={setEmail}
               />
               {hasEmailError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa un correo válido.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa un correo válido.</Text>
               ) : null}
             </View>
 
             <View className="mb-5">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Contraseña *
-              </Text>
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Contraseña *</Text>
               <View className="relative justify-center">
                 <TextInput
                   className={`rounded-2xl border px-4 py-4 pr-12 text-base text-slate-800 ${hasPasswordError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
@@ -260,9 +238,7 @@ export default function RegisterScreen() {
                 />
                 <TouchableOpacity
                   className="absolute right-4"
-                  onPress={() =>
-                    setShowConfirmPassword((currentValue) => !currentValue)
-                  }
+                  onPress={() => setShowConfirmPassword((currentValue) => !currentValue)}
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={20} color="#94a3b8" />
@@ -272,14 +248,10 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {attemptedSubmit && !confirmPassword.trim() ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Confirma tu contraseña.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Confirma tu contraseña.</Text>
               ) : null}
               {hasConfirmPasswordError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Las contraseñas no coinciden.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Las contraseñas no coinciden.</Text>
               ) : null}
             </View>
           </Animated.View>
@@ -304,16 +276,12 @@ export default function RegisterScreen() {
                 onChangeText={setBusinessName}
               />
               {hasNameError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa el nombre del negocio.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa el nombre del negocio.</Text>
               ) : null}
             </View>
 
             <View className="mb-5">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Rubro principal *
-              </Text>
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Rubro principal *</Text>
               <TextInput
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasCategoryError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. Pasteleria personalizada"
@@ -322,9 +290,7 @@ export default function RegisterScreen() {
                 onChangeText={setBusinessCategory}
               />
               {hasCategoryError ? (
-                <Text className="mt-2 text-sm text-rose-500">
-                  Ingresa el rubro principal.
-                </Text>
+                <Text className="mt-2 text-sm text-rose-500">Ingresa el rubro principal.</Text>
               ) : null}
             </View>
           </Animated.View>
@@ -332,9 +298,7 @@ export default function RegisterScreen() {
           <Animated.View className="px-6 pt-6" entering={sectionEntering(4)}>
             {submitError ? (
               <View className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
-                <Text className="text-sm font-medium text-rose-600">
-                  {submitError}
-                </Text>
+                <Text className="text-sm font-medium text-rose-600">{submitError}</Text>
               </View>
             ) : null}
 
@@ -348,21 +312,15 @@ export default function RegisterScreen() {
               {isSubmitting ? (
                 <View className="flex-row items-center">
                   <ActivityIndicator color="white" />
-                  <Text className="ml-3 text-lg font-bold text-white">
-                    Creando cuenta...
-                  </Text>
+                  <Text className="ml-3 text-lg font-bold text-white">Creando cuenta...</Text>
                 </View>
               ) : (
-                <Text className="text-lg font-bold text-white">
-                  Crear cuenta y continuar
-                </Text>
+                <Text className="text-lg font-bold text-white">Crear cuenta y continuar</Text>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity className="mt-4 items-center" onPress={() => router.back()}>
-              <Text className="font-medium text-violet-600">
-                Ya tengo cuenta, volver
-              </Text>
+              <Text className="font-medium text-violet-600">Ya tengo cuenta, volver</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>

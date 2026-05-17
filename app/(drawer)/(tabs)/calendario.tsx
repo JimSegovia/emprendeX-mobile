@@ -45,9 +45,12 @@ export default function CalendarioScreen() {
               <Sparkles size={18} color="#f59e0b" />
             </View>
           </View>
-          <Text className="text-center text-2xl font-extrabold text-amber-950">Calendario inteligente</Text>
+          <Text className="text-center text-2xl font-extrabold text-amber-950">
+            Calendario inteligente
+          </Text>
           <Text className="mt-3 text-center text-sm leading-6 text-amber-900">
-            Organiza pedidos, reuniones y entregas en un solo lugar. Esta vista muestra como se veria el calendario premium, pero esta bloqueado en el plan gratis.
+            Organiza pedidos, reuniones y entregas en un solo lugar. Esta vista muestra como se
+            veria el calendario premium, pero esta bloqueado en el plan gratis.
           </Text>
         </Animated.View>
 
@@ -58,7 +61,9 @@ export default function CalendarioScreen() {
           <View className="mb-4 flex-row items-center justify-between">
             <View>
               <Text className="text-lg font-bold text-slate-800">Lo que desbloquea</Text>
-              <Text className="mt-1 text-sm text-slate-500">Tu agenda con recordatorios y estados visuales.</Text>
+              <Text className="mt-1 text-sm text-slate-500">
+                Tu agenda con recordatorios y estados visuales.
+              </Text>
             </View>
             <View className="h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
               <Calendar size={22} color="#7c3aed" />
@@ -76,7 +81,9 @@ export default function CalendarioScreen() {
           </View>
 
           <View className="rounded-2xl bg-slate-50 p-4">
-            <Text className="text-sm font-semibold text-slate-700">Clientes con entregas pendientes</Text>
+            <Text className="text-sm font-semibold text-slate-700">
+              Clientes con entregas pendientes
+            </Text>
             <View className="mt-4 h-20 rounded-2xl bg-slate-200" />
           </View>
         </Animated.View>

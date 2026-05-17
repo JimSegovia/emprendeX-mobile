@@ -4,10 +4,22 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
-import { 
-  Menu, Search, Bell, ArrowUpRight, FileText, UserPlus, Calendar, PlusSquare
+import {
+  Menu,
+  Search,
+  Bell,
+  ArrowUpRight,
+  FileText,
+  UserPlus,
+  Calendar,
+  PlusSquare,
 } from 'lucide-react-native';
-import Animated, { AnimatedTouchableOpacity, itemEntering, screenEntering, sectionEntering } from '@/components/ui/motion';
+import Animated, {
+  AnimatedTouchableOpacity,
+  itemEntering,
+  screenEntering,
+  sectionEntering,
+} from '@/components/ui/motion';
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
@@ -56,9 +68,15 @@ export default function DashboardScreen() {
         </Animated.View>
 
         {/* Stats Grid */}
-        <Animated.View className="px-6 flex-row flex-wrap justify-between" entering={sectionEntering(2)}>
+        <Animated.View
+          className="px-6 flex-row flex-wrap justify-between"
+          entering={sectionEntering(2)}
+        >
           {/* Venta del día */}
-          <Animated.View className="w-[48%] bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm shadow-slate-100" entering={itemEntering(0)}>
+          <Animated.View
+            className="w-[48%] bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm shadow-slate-100"
+            entering={itemEntering(0)}
+          >
             <Text className="text-slate-500 font-medium text-xs mb-2">Ventas del día</Text>
             <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 1,250.00</Text>
             <View className="flex-row items-center">
@@ -68,20 +86,29 @@ export default function DashboardScreen() {
           </Animated.View>
 
           {/* Pedidos */}
-          <Animated.View className="w-[48%] bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm shadow-slate-100" entering={itemEntering(1)}>
+          <Animated.View
+            className="w-[48%] bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm shadow-slate-100"
+            entering={itemEntering(1)}
+          >
             <Text className="text-slate-500 font-medium text-xs mb-2">Pedidos</Text>
             <Text className="text-2xl font-bold text-slate-800 mb-2">12</Text>
             <Text className="text-violet-600 font-semibold text-xs">3 pendientes</Text>
           </Animated.View>
 
           {/* Cobros pendientes */}
-          <Animated.View className="w-[48%] bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100" entering={itemEntering(2)}>
+          <Animated.View
+            className="w-[48%] bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100"
+            entering={itemEntering(2)}
+          >
             <Text className="text-slate-500 font-medium text-xs mb-2">Cobros pendientes</Text>
             <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 350.00</Text>
           </Animated.View>
 
           {/* Clientes nuevos */}
-          <Animated.View className="w-[48%] bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100" entering={itemEntering(3)}>
+          <Animated.View
+            className="w-[48%] bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100"
+            entering={itemEntering(3)}
+          >
             <Text className="text-slate-500 font-medium text-xs mb-2">Clientes nuevos</Text>
             <Text className="text-2xl font-bold text-slate-800 mb-2">5</Text>
             <View className="flex-row items-center">
@@ -148,41 +175,64 @@ export default function DashboardScreen() {
         {/* Acciones rápidas */}
         <Animated.View className="mt-4 mb-10" entering={sectionEntering(4)}>
           <Text className="px-6 text-lg font-bold text-slate-800 mb-4">Acciones rápidas</Text>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
           >
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(0)} onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}>
+            <AnimatedTouchableOpacity
+              className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]"
+              entering={itemEntering(0)}
+              onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}
+            >
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <PlusSquare size={24} color="#7c3aed" />
               </View>
-              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Nueva{'\n'}cotización</Text>
+              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">
+                Nueva{'\n'}cotización
+              </Text>
             </AnimatedTouchableOpacity>
 
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(1)} onPress={() => router.push('/(drawer)/(tabs)/cotizaciones')}>
+            <AnimatedTouchableOpacity
+              className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]"
+              entering={itemEntering(1)}
+              onPress={() => router.push('/(drawer)/(tabs)/cotizaciones')}
+            >
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <FileText size={24} color="#7c3aed" />
               </View>
-              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Ver{'\n'}cotizaciones</Text>
+              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">
+                Ver{'\n'}cotizaciones
+              </Text>
             </AnimatedTouchableOpacity>
 
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(2)} onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}>
+            <AnimatedTouchableOpacity
+              className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]"
+              entering={itemEntering(2)}
+              onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
+            >
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <UserPlus size={24} color="#7c3aed" />
               </View>
-              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Nuevo{'\n'}cliente</Text>
+              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">
+                Nuevo{'\n'}cliente
+              </Text>
             </AnimatedTouchableOpacity>
 
-            <AnimatedTouchableOpacity className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]" entering={itemEntering(3)} onPress={() => router.push('/calendario')}>
+            <AnimatedTouchableOpacity
+              className="bg-white p-4 rounded-2xl items-center justify-center border border-slate-100 shadow-sm shadow-slate-100 w-[100px] h-[100px]"
+              entering={itemEntering(3)}
+              onPress={() => router.push('/calendario')}
+            >
               <View className="bg-violet-50 p-2 rounded-lg mb-2">
                 <Calendar size={24} color="#7c3aed" />
               </View>
-              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">Ver{'\n'}calendario</Text>
+              <Text className="text-slate-600 font-medium text-xs text-center leading-tight">
+                Ver{'\n'}calendario
+              </Text>
             </AnimatedTouchableOpacity>
           </ScrollView>
         </Animated.View>
-
       </ScrollView>
     </Animated.View>
   );

@@ -2,8 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ModuleId } from '@/lib/modules';
 
 const AUTH_STORAGE_KEY = 'emprendex:auth:v1';
-const DEFAULT_API_BASE_URL =
-  'https://emprendex-backend-production.up.railway.app/api/v1';
+const DEFAULT_API_BASE_URL = 'https://emprendex-backend-production.up.railway.app/api/v1';
 
 export type AuthUser = {
   id: string;
@@ -17,10 +16,7 @@ export type AuthUser = {
   };
 };
 
-export type AuthStateResponse = Pick<
-  AuthSessionResponse,
-  'requiresOnboarding' | 'user'
->;
+export type AuthStateResponse = Pick<AuthSessionResponse, 'requiresOnboarding' | 'user'>;
 
 export type AuthSessionResponse = {
   accessToken: string;
@@ -109,9 +105,7 @@ function isAuthUser(value: unknown): value is AuthUser {
 
 function isAuthStateResponse(value: unknown): value is AuthStateResponse {
   return (
-    isJsonObject(value) &&
-    typeof value.requiresOnboarding === 'boolean' &&
-    isAuthUser(value.user)
+    isJsonObject(value) && typeof value.requiresOnboarding === 'boolean' && isAuthUser(value.user)
   );
 }
 
@@ -141,17 +135,13 @@ function parseResponseBody(rawBody: string): unknown {
   }
 }
 
-function assertAuthSessionResponse(
-  payload: unknown,
-): asserts payload is AuthSessionResponse {
+function assertAuthSessionResponse(payload: unknown): asserts payload is AuthSessionResponse {
   if (!isAuthSessionResponse(payload)) {
     throw new Error('El login devolvio una respuesta con formato inesperado.');
   }
 }
 
-function assertAuthStatePayload(
-  payload: unknown,
-): asserts payload is AuthStateResponse {
+function assertAuthStatePayload(payload: unknown): asserts payload is AuthStateResponse {
   if (!isAuthStateResponse(payload)) {
     throw new Error('El servidor devolvio un estado de sesión inválido.');
   }
@@ -202,9 +192,7 @@ function getErrorMessage(payload: unknown): string {
   return message ?? 'No se pudo completar la solicitud.';
 }
 
-export async function loginUser(
-  payload: LoginPayload,
-): Promise<AuthSessionResponse> {
+export async function loginUser(payload: LoginPayload): Promise<AuthSessionResponse> {
   const session = await request<unknown>('/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -214,9 +202,7 @@ export async function loginUser(
   return session;
 }
 
-export async function registerUser(
-  payload: RegisterPayload,
-): Promise<AuthSessionResponse> {
+export async function registerUser(payload: RegisterPayload): Promise<AuthSessionResponse> {
   const session = await request<unknown>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -226,9 +212,7 @@ export async function registerUser(
   return session;
 }
 
-export async function fetchCurrentUser(
-  accessToken: string,
-): Promise<AuthStateResponse> {
+export async function fetchCurrentUser(accessToken: string): Promise<AuthStateResponse> {
   const authState = await request<unknown>('/auth/me', {
     method: 'GET',
     headers: {
@@ -266,9 +250,7 @@ export async function completeOnboardingModules(
   });
 }
 
-export async function saveAuthSession(
-  session: AuthSessionResponse,
-): Promise<void> {
+export async function saveAuthSession(session: AuthSessionResponse): Promise<void> {
   const authSession: StoredAuthSession = {
     accessToken: session.accessToken,
     tokenType: session.tokenType,
@@ -305,8 +287,8 @@ export function resolvePostAuthRoute(session: {
 
   const hasBusinessProfile = Boolean(
     session.user.businessProfile.name &&
-      session.user.businessProfile.category &&
-      session.user.businessProfile.currencyCode,
+    session.user.businessProfile.category &&
+    session.user.businessProfile.currencyCode,
   );
 
   return hasBusinessProfile ? '/onboarding/modules' : '/onboarding';

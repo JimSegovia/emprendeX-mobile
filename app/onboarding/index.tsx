@@ -10,7 +10,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowRight, Clock, FileText, LucideIcon, TrendingUp } from 'lucide-react-native';
-import Animated, { AnimatedTouchableOpacity, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
+import Animated, {
+  AnimatedTouchableOpacity,
+  screenEntering,
+  sectionEntering,
+  smoothLayout,
+} from '@/components/ui/motion';
 
 type FeatureSlide = {
   id: string;
@@ -101,7 +106,10 @@ export default function OnboardingStep1() {
 
               return (
                 <View style={{ width }} className="px-6">
-                  <Animated.View className="rounded-[28px] border border-slate-100 bg-white px-5 py-6 shadow-sm shadow-slate-100" layout={smoothLayout}>
+                  <Animated.View
+                    className="rounded-[28px] border border-slate-100 bg-white px-5 py-6 shadow-sm shadow-slate-100"
+                    layout={smoothLayout}
+                  >
                     <View className="flex-row items-center justify-between mb-6">
                       <View className="bg-violet-100 p-3 rounded-2xl">
                         <Icon size={24} color="#7c3aed" />

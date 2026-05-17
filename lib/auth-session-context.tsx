@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   type AuthSessionResponse,
   type AuthStateResponse,
@@ -26,11 +20,7 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
-export function AuthSessionProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authState, setAuthState] = useState<AuthStateResponse | null>(null);
@@ -115,11 +105,7 @@ export function AuthSessionProvider({
     };
   }, [accessToken, authState, isHydrated]);
 
-  return (
-    <AuthSessionContext.Provider value={value}>
-      {children}
-    </AuthSessionContext.Provider>
-  );
+  return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
 }
 
 export function useAuthSession() {

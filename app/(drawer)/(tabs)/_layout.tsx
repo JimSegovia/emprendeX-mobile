@@ -41,7 +41,8 @@ export default function TabLayout() {
           lineHeight: 14,
           marginTop: 2,
         },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -66,13 +67,13 @@ export default function TabLayout() {
             </View>
           ),
           tabBarButton: (props: any) => (
-            <TouchableOpacity 
-              {...props} 
+            <TouchableOpacity
+              {...props}
               activeOpacity={0.8}
               style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
               onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen

@@ -8,12 +8,13 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Info } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 
 export default function ClienteFormScreen() {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,22 +40,26 @@ export default function ClienteFormScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView 
-        className="flex-1" 
+      <KeyboardAvoidingView
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <Animated.View className="flex-1" entering={screenEntering}>
           {/* Header */}
-          <Animated.View className="flex-row items-center px-4 pt-4 mb-2" entering={sectionEntering(0)}>
-            <TouchableOpacity 
-              className="p-2 rounded-full"
-              onPress={() => router.back()}
-            >
+          <Animated.View
+            className="flex-row items-center px-4 pt-4 mb-2"
+            entering={sectionEntering(0)}
+          >
+            <TouchableOpacity className="p-2 rounded-full" onPress={() => router.back()}>
               <ArrowLeft size={24} color="#334155" />
             </TouchableOpacity>
           </Animated.View>
 
-          <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+          <ScrollView
+            className="flex-1 px-5"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+          >
             <Animated.View entering={sectionEntering(1)} className="items-center mb-8 mt-2">
               <Text className="text-[28px] font-extrabold text-slate-800 text-center mb-3">
                 Registre un cliente
@@ -82,7 +87,9 @@ export default function ClienteFormScreen() {
 
               {/* Last Name */}
               <View>
-                <Text className="text-sm font-bold text-slate-800 mb-2">Apellido de tu cliente</Text>
+                <Text className="text-sm font-bold text-slate-800 mb-2">
+                  Apellido de tu cliente
+                </Text>
                 <TextInput
                   className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
                   placeholder="Ej. Espinoza Picon"
@@ -153,7 +160,8 @@ export default function ClienteFormScreen() {
                     ¿Por qué te pedimos esto?
                   </Text>
                   <Text className="text-violet-800/80 text-xs leading-5">
-                    Con esta información configuraremos tu espacio de trabajo y tus reportes con los valores y opciones correctas para tu negocio.
+                    Con esta información configuraremos tu espacio de trabajo y tus reportes con los
+                    valores y opciones correctas para tu negocio.
                   </Text>
                 </View>
               </View>
@@ -161,13 +169,20 @@ export default function ClienteFormScreen() {
           </ScrollView>
 
           {/* Footer */}
-          <Animated.View className="px-6 py-6 pb-8 bg-white border-t border-slate-50" entering={sectionEntering(3)}>
-            <TouchableOpacity 
+          <Animated.View
+            className="px-6 py-6 pb-8 bg-white border-t border-slate-50"
+            entering={sectionEntering(3)}
+          >
+            <TouchableOpacity
               className={`w-full rounded-xl py-4 items-center justify-center ${isFormValid ? 'bg-violet-600 active:bg-violet-700' : 'bg-slate-200'}`}
               disabled={!isFormValid}
               onPress={handleContinue}
             >
-              <Text className={`font-bold text-lg ${isFormValid ? 'text-white' : 'text-slate-400'}`}>Continuar</Text>
+              <Text
+                className={`font-bold text-lg ${isFormValid ? 'text-white' : 'text-slate-400'}`}
+              >
+                Continuar
+              </Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

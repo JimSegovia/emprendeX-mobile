@@ -65,15 +65,25 @@ export default function CotizacionesScreen() {
             </TouchableOpacity>
             <Text className="text-white text-xl font-bold">Cotizaciones</Text>
           </View>
-          <TouchableOpacity className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3" onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}>
+          <TouchableOpacity
+            className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3"
+            onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}
+          >
             <Plus size={16} color="white" />
             <Text className="ml-2 font-semibold text-white">Nueva</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
 
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
-        <Animated.View className="mb-6 flex-row flex-wrap justify-between" entering={sectionEntering(1)}>
+      <ScrollView
+        className="flex-1 px-5 pt-6"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+      >
+        <Animated.View
+          className="mb-6 flex-row flex-wrap justify-between"
+          entering={sectionEntering(1)}
+        >
           <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
             <Text className="text-xs font-medium text-slate-500">Borradores</Text>
             <Text className="mt-2 text-2xl font-extrabold text-slate-800">4</Text>
@@ -89,7 +99,11 @@ export default function CotizacionesScreen() {
           const canConvert = quote.status === 'Aprobada';
 
           return (
-            <Animated.View key={quote.id} className="mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" entering={itemEntering(index + 1)}>
+            <Animated.View
+              key={quote.id}
+              className="mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
+              entering={itemEntering(index + 1)}
+            >
               <View className="flex-row items-start justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="text-lg font-bold text-slate-800">{quote.id}</Text>
@@ -110,12 +124,18 @@ export default function CotizacionesScreen() {
                   <Text className="mt-1 text-xl font-extrabold text-slate-800">{quote.total}</Text>
                 </View>
                 {canConvert ? (
-                  <TouchableOpacity className="flex-row items-center rounded-2xl bg-violet-600 px-4 py-3" onPress={() => router.push('/(drawer)/(tabs)/operaciones')}>
+                  <TouchableOpacity
+                    className="flex-row items-center rounded-2xl bg-violet-600 px-4 py-3"
+                    onPress={() => router.push('/(drawer)/(tabs)/operaciones')}
+                  >
                     <Check size={16} color="white" />
                     <Text className="ml-2 font-semibold text-white">Convertir en pedido</Text>
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity className="flex-row items-center rounded-2xl border border-slate-200 bg-white px-4 py-3" onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}>
+                  <TouchableOpacity
+                    className="flex-row items-center rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                    onPress={() => router.push('/(drawer)/(tabs)/operaciones/nueva')}
+                  >
                     <FileText size={16} color="#475569" />
                     <Text className="ml-2 font-semibold text-slate-700">Abrir</Text>
                   </TouchableOpacity>
