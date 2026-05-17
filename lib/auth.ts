@@ -59,6 +59,8 @@ type ApiErrorBody = {
   message?: string | string[];
 };
 
+type JsonObject = Record<string, unknown>;
+
 class ApiError extends Error {
   constructor(
     message: string,
@@ -74,6 +76,90 @@ function getApiBaseUrl(): string {
   return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string';
+}
+
+function isAuthUser(value: unknown): value is AuthUser {
+  if (!isJsonObject(value) || !isJsonObject(value.businessProfile)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.email === 'string' &&
+    typeof value.onboardingCompleted === 'boolean' &&
+    isStringArray(value.enabledModuleIds) &&
+    isNullableString(value.businessProfile.name) &&
+    isNullableString(value.businessProfile.category) &&
+    isNullableString(value.businessProfile.currencyCode)
+  );
+}
+
+function isAuthStateResponse(value: unknown): value is AuthStateResponse {
+  return (
+    isJsonObject(value) &&
+    typeof value.requiresOnboarding === 'boolean' &&
+    isAuthUser(value.user)
+  );
+}
+
+function isAuthSessionResponse(value: unknown): value is AuthSessionResponse {
+  return (
+    isAuthStateResponse(value) &&
+    typeof value.accessToken === 'string' &&
+    value.tokenType === 'Bearer' &&
+    typeof value.expiresIn === 'number'
+  );
+}
+
+function parseResponseBody(rawBody: string): unknown {
+  if (!rawBody) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawBody) as unknown;
+  } catch {
+    throw new Error('El servidor respondio con un formato invalido.');
+  }
+}
+
+function assertAuthSessionResponse(
+  payload: unknown,
+): asserts payload is AuthSessionResponse {
+  if (!isAuthSessionResponse(payload)) {
+    throw new Error('El login devolvio una respuesta con formato inesperado.');
+  }
+}
+
+function assertAuthStatePayload(
+  payload: unknown,
+): asserts payload is AuthStateResponse {
+  if (!isAuthStateResponse(payload)) {
+    throw new Error('El servidor devolvio un estado de sesion invalido.');
+  }
+}
+
+function isLikelyNetworkErrorMessage(message: string): boolean {
+  const normalizedMessage = message.trim().toLowerCase();
+
+  return (
+    normalizedMessage.includes('network request failed') ||
+    normalizedMessage.includes('failed to fetch') ||
+    normalizedMessage.includes('load failed') ||
+    normalizedMessage.includes('networkerror')
+  );
+}
+
 async function request<T>(path: string, options: RequestInit): Promise<T> {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...options,
@@ -85,7 +171,7 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   });
 
   const rawBody = await response.text();
-  const payload: unknown = rawBody ? JSON.parse(rawBody) : null;
+  const payload = parseResponseBody(rawBody);
 
   if (!response.ok) {
     throw new ApiError(getErrorMessage(payload), response.status);
@@ -111,30 +197,39 @@ function getErrorMessage(payload: unknown): string {
 export async function loginUser(
   payload: LoginPayload,
 ): Promise<AuthSessionResponse> {
-  return request<AuthSessionResponse>('/auth/login', {
+  const session = await request<unknown>('/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+
+  assertAuthSessionResponse(session);
+  return session;
 }
 
 export async function registerUser(
   payload: RegisterPayload,
 ): Promise<AuthSessionResponse> {
-  return request<AuthSessionResponse>('/auth/register', {
+  const session = await request<unknown>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+
+  assertAuthSessionResponse(session);
+  return session;
 }
 
 export async function fetchCurrentUser(
   accessToken: string,
 ): Promise<AuthStateResponse> {
-  return request<AuthStateResponse>('/auth/me', {
+  const authState = await request<unknown>('/auth/me', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+
+  assertAuthStatePayload(authState);
+  return authState;
 }
 
 export async function updateOnboardingSetup(
@@ -220,6 +315,14 @@ export function getReadableAuthError(error: unknown): string {
     }
 
     return error.message;
+  }
+
+  if (error instanceof Error) {
+    if (isLikelyNetworkErrorMessage(error.message)) {
+      return 'No se pudo conectar con el servidor. Intenta de nuevo.';
+    }
+
+    return error.message || 'No se pudo completar la solicitud.';
   }
 
   return 'No se pudo conectar con el servidor. Intenta de nuevo.';
