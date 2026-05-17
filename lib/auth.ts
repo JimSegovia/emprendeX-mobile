@@ -13,6 +13,15 @@ export type AuthUser = {
   status: 'Inactive' | 'Active' | 'Blocked';
   onboardingCompleted: boolean;
   enabledModuleIds: ModuleId[];
+  activeSubscription: {
+    id: string;
+    planName: string;
+    period: 'Monthly' | 'Yearly';
+    price: string;
+    endsAt: string;
+    isActive: boolean;
+    isPremium: boolean;
+  } | null;
   businessProfile: {
     id: string | null;
     name: string | null;
@@ -89,6 +98,24 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
 }
 
+function isSubscriptionSummary(
+  value: unknown,
+): value is NonNullable<AuthUser['activeSubscription']> {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.planName === 'string' &&
+    ['Monthly', 'Yearly'].includes(String(value.period)) &&
+    typeof value.price === 'string' &&
+    typeof value.endsAt === 'string' &&
+    typeof value.isActive === 'boolean' &&
+    typeof value.isPremium === 'boolean'
+  );
+}
+
 function isAuthUser(value: unknown): value is AuthUser {
   if (!isJsonObject(value) || !isJsonObject(value.businessProfile)) {
     return false;
@@ -103,6 +130,8 @@ function isAuthUser(value: unknown): value is AuthUser {
     ['Inactive', 'Active', 'Blocked'].includes(String(value.status)) &&
     typeof value.onboardingCompleted === 'boolean' &&
     isStringArray(value.enabledModuleIds) &&
+    (value.activeSubscription === null ||
+      isSubscriptionSummary(value.activeSubscription)) &&
     isNullableString(value.businessProfile.id) &&
     isNullableString(value.businessProfile.name) &&
     isNullableString(value.businessProfile.category)

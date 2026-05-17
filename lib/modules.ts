@@ -34,6 +34,8 @@ export type ModuleDefinition = {
   detail?: string;
 };
 
+export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = ['index', 'configuracion'];
+
 export const DEFAULT_MODULES: ModuleDefinition[] = [
   { id: 'index', label: 'Inicio', icon: Home, tab: 'index', match: ['/'] },
   {
@@ -105,3 +107,57 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
 ];
 
 export const DEFAULT_MODULE_ORDER: ModuleId[] = DEFAULT_MODULES.map((m) => m.id);
+
+export function buildVisibleModuleOrder(
+  order: ModuleId[],
+  enabledModuleIds: ModuleId[],
+): ModuleId[] {
+  const allowedIds = new Set<ModuleId>([
+    ...ALWAYS_VISIBLE_MODULE_IDS,
+    ...enabledModuleIds,
+  ]);
+
+  return order.filter((moduleId) => allowedIds.has(moduleId));
+}
+
+export function isModuleAvailable(
+  moduleId: ModuleId,
+  enabledModuleIds: ModuleId[],
+): boolean {
+  return (
+    ALWAYS_VISIBLE_MODULE_IDS.includes(moduleId) ||
+    enabledModuleIds.includes(moduleId)
+  );
+}
+
+export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
+  if (pathname.startsWith('/operaciones')) {
+    return 'operaciones';
+  }
+
+  if (pathname.startsWith('/clientes')) {
+    return 'clientes';
+  }
+
+  if (pathname.startsWith('/productos')) {
+    return 'productos';
+  }
+
+  if (pathname.startsWith('/cotizaciones')) {
+    return 'cotizaciones';
+  }
+
+  if (pathname.startsWith('/pagos')) {
+    return 'pagos';
+  }
+
+  if (pathname.startsWith('/reportes')) {
+    return 'reportes';
+  }
+
+  if (pathname.startsWith('/calendario')) {
+    return 'calendario';
+  }
+
+  return null;
+}

@@ -1,6 +1,6 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { BlurView } from 'expo-blur';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import {
   CreditCard,
   FilePlus,
@@ -12,19 +12,39 @@ import {
   Users,
   X,
 } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { resolveModuleIdFromPathname } from '@/lib/modules';
+import { useModulePreferences } from '@/lib/module-preferences-context';
 
 export default function TabLayout() {
+  const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
-  const [fabOpen, setFabOpen] = React.useState(false);
-  const tabBarHeight = 76 + bottomInset;
-  const fabAnim = React.useRef(new Animated.Value(0)).current;
+  const { isModuleEnabled } = useModulePreferences();
 
-  React.useEffect(() => {
+  const isOperationsEnabled = isModuleEnabled('operaciones');
+  const isClientsEnabled = isModuleEnabled('clientes');
+
+  const [fabOpen, setFabOpen] = useState(false);
+  const tabBarHeight = 76 + bottomInset;
+  const fabAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const protectedModuleId = resolveModuleIdFromPathname(pathname);
+
+    if (!protectedModuleId) {
+      return;
+    }
+
+    if (!isModuleEnabled(protectedModuleId)) {
+      router.replace('/(drawer)/(tabs)');
+    }
+  }, [isModuleEnabled, pathname, router]);
+
+  useEffect(() => {
     Animated.spring(fabAnim, {
       toValue: fabOpen ? 1 : 0,
       useNativeDriver: true,
@@ -103,6 +123,7 @@ export default function TabLayout() {
           name="operaciones"
           options={{
             title: 'Operaciones',
+            href: isOperationsEnabled ? undefined : null,
             tabBarIcon: ({ color }) => <FileText size={22} color={color} />,
           }}
           listeners={{
@@ -113,6 +134,7 @@ export default function TabLayout() {
           name="fab"
           options={{
             title: '',
+            href: isOperationsEnabled ? undefined : null,
             tabBarIcon: () => (
               <View
                 className="h-14 w-14 items-center justify-center rounded-full bg-violet-600 -mt-4 border-4 border-white shadow-sm shadow-violet-200"
@@ -121,14 +143,16 @@ export default function TabLayout() {
                 {fabOpen ? <X size={22} color="white" /> : <Plus size={26} color="white" />}
               </View>
             ),
-            tabBarButton: (props: any) => (
-              <TouchableOpacity
-                {...props}
-                activeOpacity={0.8}
-                style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
-                onPress={() => setFabOpen((prev) => !prev)}
-              />
-            ),
+            tabBarButton: isOperationsEnabled
+              ? (props: any) => (
+                  <TouchableOpacity
+                    {...props}
+                    activeOpacity={0.8}
+                    style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
+                    onPress={() => setFabOpen((prev) => !prev)}
+                  />
+                )
+              : () => null,
           }}
           listeners={{
             tabPress: (event) => {
@@ -137,58 +161,19 @@ export default function TabLayout() {
             },
           }}
         />
-        <Tabs.Screen
-          name="productos"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="productos/[id]"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="productos/nuevo"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="calendario"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="cotizaciones"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="pagos"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="pagos/nuevo"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="reportes"
-          options={{
-            href: null,
-          }}
-        />
+        <Tabs.Screen name="productos" options={{ href: null }} />
+        <Tabs.Screen name="productos/[id]" options={{ href: null }} />
+        <Tabs.Screen name="productos/nuevo" options={{ href: null }} />
+        <Tabs.Screen name="calendario" options={{ href: null }} />
+        <Tabs.Screen name="cotizaciones" options={{ href: null }} />
+        <Tabs.Screen name="pagos" options={{ href: null }} />
+        <Tabs.Screen name="pagos/nuevo" options={{ href: null }} />
+        <Tabs.Screen name="reportes" options={{ href: null }} />
         <Tabs.Screen
           name="clientes"
           options={{
             title: 'Clientes',
+            href: isClientsEnabled ? undefined : null,
             tabBarIcon: ({ color }) => <Users size={22} color={color} />,
           }}
           listeners={{
@@ -205,12 +190,7 @@ export default function TabLayout() {
             tabPress: () => setFabOpen(false),
           }}
         />
-        <Tabs.Screen
-          name="plan-pro"
-          options={{
-            href: null,
-          }}
-        />
+        <Tabs.Screen name="plan-pro" options={{ href: null }} />
       </Tabs>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <Animated.View

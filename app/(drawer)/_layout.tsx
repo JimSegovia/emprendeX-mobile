@@ -20,6 +20,7 @@ function CustomDrawerContent(props: any) {
     : 'EmprendeX';
   const avatarLetter = displayName.trim().charAt(0).toUpperCase() || 'E';
   const accountLabel = authState?.user?.businessProfile?.name ?? authState?.user?.email ?? 'Sin sesión activa';
+  const planName = authState?.user.activeSubscription?.planName ?? 'Sin plan';
 
   const navigateFromDrawer = (item: (typeof DRAWER_ITEMS)[number]) => {
     navigation.closeDrawer();
@@ -113,7 +114,7 @@ function CustomDrawerContent(props: any) {
 
             <View className="flex-1">
               <Text className="text-sm font-bold text-slate-800">
-                Tu plan: <Text className="text-violet-600">Gratis</Text>
+                Tu plan: <Text className="text-violet-600">{planName}</Text>
               </Text>
               <Text className="mt-1 text-xs text-slate-500">Explora funciones premium</Text>
             </View>

@@ -28,10 +28,10 @@ export default function ConfiguracionScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const { authState, signOut } = useAuthSession();
-  const { isHydrated, order, setOrder, reset } = useModulePreferences();
+  const { isHydrated, visibleOrder, setOrder, reset } = useModulePreferences();
 
-  const [localOrder, setLocalOrder] = useState<ModuleId[]>(order);
-  useEffect(() => setLocalOrder(order), [order]);
+  const [localOrder, setLocalOrder] = useState<ModuleId[]>(visibleOrder);
+  useEffect(() => setLocalOrder(visibleOrder), [visibleOrder]);
 
   const modulesById = useMemo(() => {
     return new Map<ModuleId, ModuleDefinition>(
@@ -53,6 +53,7 @@ export default function ConfiguracionScreen() {
   const ownerName = authState
     ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
     : 'Pendiente';
+  const planName = authState?.user.activeSubscription?.planName ?? 'Sin plan';
 
   const persistLocalOrder = (nextOrder: ModuleId[]) => {
     setLocalOrder(nextOrder);
@@ -135,6 +136,10 @@ export default function ConfiguracionScreen() {
               <Text className="font-semibold text-slate-800">
                 {authState?.user.phone ?? 'Pendiente'}
               </Text>
+            </View>
+            <View className="mt-3 flex-row justify-between">
+              <Text className="text-sm text-slate-500">Plan</Text>
+              <Text className="font-semibold text-slate-800">{planName}</Text>
             </View>
           </View>
         </Animated.View>
