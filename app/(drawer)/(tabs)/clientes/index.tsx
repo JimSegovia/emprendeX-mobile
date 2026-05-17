@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, Search, Plus } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ const clientesData = [
 ];
 
 export default function ClientesScreen() {
+  const [query, setQuery] = useState("");
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -23,6 +24,15 @@ export default function ClientesScreen() {
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
+
+  const filteredClientes = useMemo(() => {
+    if (!query) return clientesData;
+    const q = query.trim().toLowerCase();
+    return clientesData.filter(item => {
+      const matchText = `${item.name} ${item.phone}`.toLowerCase();
+      return matchText.includes(q);
+    });
+  }, [query]);
 
   const renderItem = ({ item, index }: { item: typeof clientesData[0]; index: number }) => (
     <AnimatedTouchableOpacity
@@ -57,12 +67,9 @@ export default function ClientesScreen() {
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Clientes</Text>
+          <Text className="text-white text-2xl font-bold">Clientes</Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity className="mr-4">
-            <Search color="white" size={24} />
-          </TouchableOpacity>
           <TouchableOpacity
             className="flex-row items-center rounded-2xl bg-white/15 px-4 py-2.5"
             onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
@@ -75,11 +82,33 @@ export default function ClientesScreen() {
 
       {/* List */}
       <FlatList
-        data={clientesData}
+        data={filteredClientes}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Animated.View className="mb-6" entering={sectionEntering(1)}>
+            <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+              <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
+                <Search size={18} color="#64748b" />
+                <TextInput
+                  className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
+                  placeholder="Buscar por nombre o teléfono..."
+                  placeholderTextColor="#94a3b8"
+                  value={query}
+                  onChangeText={setQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                />
+              </View>
+              <Text className="mt-3 text-xs text-slate-500">
+                {filteredClientes.length} resultado(s)
+              </Text>
+            </View>
+          </Animated.View>
+        }
       />
     </Animated.View>
   );
