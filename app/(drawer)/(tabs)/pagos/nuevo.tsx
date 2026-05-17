@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar as CalendarIcon, CreditCard, Receipt } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import DropDownPicker from 'react-native-dropdown-picker';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import { ArrowLeft, Calendar as CalendarIcon, CreditCard, Receipt } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const pendingQuotes = [
   {
@@ -65,10 +65,10 @@ export default function NuevoPagoScreen() {
   const parsedAmount = Number.parseFloat(sanitizedAmount);
   const remainingBalance = selectedQuote
     ? Math.max(
-        0,
-        Number.parseFloat(selectedQuote.balance.replace('S/ ', '')) -
-          (Number.isNaN(parsedAmount) ? 0 : parsedAmount),
-      )
+      0,
+      Number.parseFloat(selectedQuote.balance.replace('S/ ', '')) -
+      (Number.isNaN(parsedAmount) ? 0 : parsedAmount),
+    )
     : 0;
 
   const isFormValid = Boolean(quote && amount.trim().length > 0 && method);
@@ -80,7 +80,7 @@ export default function NuevoPagoScreen() {
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/pagos')} className="mr-4">
           <ArrowLeft color="white" size={24} />
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">Agregar pago</Text>
@@ -92,7 +92,7 @@ export default function NuevoPagoScreen() {
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
         entering={sectionEntering(1)}
       >
-        <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+        <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" style={{ zIndex: quoteOpen ? 50 : 1 }}>
           <View className="mb-4 flex-row items-center justify-between">
             <View>
               <Text className="text-lg font-extrabold text-slate-800">Cotizacion pendiente</Text>
@@ -125,7 +125,7 @@ export default function NuevoPagoScreen() {
               setShowDate(false);
             }}
           />
-          <View style={{ height: quoteOpen ? dropdownSpacing : 0 }} />
+
 
           {selectedQuote ? (
             <View className="mt-4 rounded-2xl bg-slate-50 p-4">
@@ -145,7 +145,7 @@ export default function NuevoPagoScreen() {
           ) : null}
         </View>
 
-        <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+        <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" style={{ zIndex: methodOpen ? 50 : 1 }}>
           <Text className="text-lg font-extrabold text-slate-800">Detalle del pago</Text>
           <Text className="mt-1 text-sm text-slate-500">
             Registra adelanto o cancelacion total.
@@ -239,7 +239,7 @@ export default function NuevoPagoScreen() {
                 setShowDate(false);
               }}
             />
-            <View style={{ height: methodOpen ? dropdownSpacing : 0 }} />
+
           </View>
 
           <View className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">

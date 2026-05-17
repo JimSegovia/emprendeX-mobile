@@ -126,7 +126,7 @@ export default function CatalogoNuevoScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/productos')} className="mr-4">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
           <Text className="text-white text-xl font-bold">Nuevo item</Text>
@@ -143,7 +143,7 @@ export default function CatalogoNuevoScreen() {
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
           entering={sectionEntering(1)}
         >
-          <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+          <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" style={{ zIndex: kindOpen ? 50 : 1 }}>
             <Text className="text-lg font-extrabold text-slate-800">Tipo de item</Text>
             <Text className="mt-1 text-sm text-slate-500">
               Selecciona si es producto o servicio.
@@ -169,7 +169,7 @@ export default function CatalogoNuevoScreen() {
                   setUnitOpen(false);
                 }}
               />
-              <View style={{ height: kindOpen ? dropdownSpacing : 0 }} />
+
             </View>
 
             <View className="mt-4 flex-row items-center rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
@@ -192,7 +192,7 @@ export default function CatalogoNuevoScreen() {
             </View>
           </View>
 
-          <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+          <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" style={{ zIndex: 1 }}>
             <Text className="text-lg font-extrabold text-slate-800">Información general</Text>
             <Text className="mt-1 text-sm text-slate-500">Completa los datos principales.</Text>
 
@@ -268,7 +268,7 @@ export default function CatalogoNuevoScreen() {
             </View>
           </View>
 
-          <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+          <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100" style={{ zIndex: (unitOpen || categoryOpen) ? 50 : 1 }}>
             <Text className="text-lg font-extrabold text-slate-800">Precio y unidad</Text>
 
             <View className="mt-4">
@@ -315,7 +315,6 @@ export default function CatalogoNuevoScreen() {
                         setUnit(val);
                       }}
                     />
-                    <View style={{ height: unitOpen ? dropdownSpacing : 0 }} />
                   </>
                 ) : (
                   <View className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -507,7 +506,6 @@ export default function CatalogoNuevoScreen() {
                         setCategory(val);
                       }}
                     />
-                    <View style={{ height: categoryOpen ? dropdownSpacing : 0 }} />
                   </>
                 ) : (
                   <View className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -736,7 +734,7 @@ export default function CatalogoNuevoScreen() {
               stock: kind === 'Producto' ? Number(quantity) : undefined,
             };
             console.log(dataToSave);
-            router.back();
+            router.replace('/(drawer)/(tabs)/productos');
           }}
         >
           <Text className={`font-semibold ${isFormValid ? 'text-white' : 'text-slate-400'}`}>

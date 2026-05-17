@@ -53,7 +53,7 @@ export default function NuevaOperacionScreen() {
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
         entering={sectionEntering(0)}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/cotizaciones')} className="mr-4">
           <ArrowLeft color="white" size={24} />
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">Nueva cotización</Text>
