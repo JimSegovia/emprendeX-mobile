@@ -23,6 +23,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function RegisterScreen() {
   const router = useRouter();
   const { authState, isHydrated, setAuthenticatedSession } = useAuthSession();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,6 +45,9 @@ export default function RegisterScreen() {
     router.replace(resolvePostAuthRoute(authState));
   }, [authState, isHydrated, router]);
 
+  const hasFirstNameError = attemptedSubmit && !firstName.trim();
+  const hasLastNameError = attemptedSubmit && !lastName.trim();
+  const hasPhoneError = attemptedSubmit && !phone.trim();
   const hasEmailError = attemptedSubmit && !EMAIL_REGEX.test(email.trim());
   const hasPasswordError = attemptedSubmit && password.trim().length < 8;
   const hasConfirmPasswordError =
@@ -53,6 +59,9 @@ export default function RegisterScreen() {
     setAttemptedSubmit(true);
 
     if (
+      hasFirstNameError ||
+      hasLastNameError ||
+      hasPhoneError ||
       hasEmailError ||
       hasPasswordError ||
       password !== confirmPassword ||
@@ -68,6 +77,9 @@ export default function RegisterScreen() {
 
     try {
       const session = await registerUser({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
         email: email.trim().toLowerCase(),
         password,
         businessName: businessName.trim(),
@@ -125,6 +137,61 @@ export default function RegisterScreen() {
             <Text className="mb-4 text-sm font-bold uppercase tracking-wide text-violet-600">
               Tu cuenta
             </Text>
+
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-semibold text-slate-700">
+                Nombres *
+              </Text>
+              <TextInput
+                className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasFirstNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
+                placeholder="Ej. Juan"
+                placeholderTextColor="#94a3b8"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+              {hasFirstNameError ? (
+                <Text className="mt-2 text-sm text-rose-500">
+                  Ingresa tus nombres.
+                </Text>
+              ) : null}
+            </View>
+
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-semibold text-slate-700">
+                Apellidos *
+              </Text>
+              <TextInput
+                className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasLastNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
+                placeholder="Ej. Perez"
+                placeholderTextColor="#94a3b8"
+                value={lastName}
+                onChangeText={setLastName}
+              />
+              {hasLastNameError ? (
+                <Text className="mt-2 text-sm text-rose-500">
+                  Ingresa tus apellidos.
+                </Text>
+              ) : null}
+            </View>
+
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-semibold text-slate-700">
+                Celular *
+              </Text>
+              <TextInput
+                className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasPhoneError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
+                placeholder="Ej. 999888777"
+                placeholderTextColor="#94a3b8"
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+              />
+              {hasPhoneError ? (
+                <Text className="mt-2 text-sm text-rose-500">
+                  Ingresa tu numero de celular.
+                </Text>
+              ) : null}
+            </View>
 
             <View className="mb-5">
               <Text className="mb-2 text-sm font-semibold text-slate-700">
@@ -259,20 +326,6 @@ export default function RegisterScreen() {
                   Ingresa el rubro principal.
                 </Text>
               ) : null}
-            </View>
-
-            <View>
-              <Text className="mb-3 text-sm font-semibold text-slate-700">
-                Moneda base
-              </Text>
-              <View className="rounded-2xl border border-violet-100 bg-violet-50 px-4 py-4">
-                <View className="flex-row items-center">
-                  <CreditCard size={16} color="#7c3aed" />
-                  <Text className="ml-2 font-semibold text-violet-700">
-                    Soles peruanos (S/)
-                  </Text>
-                </View>
-              </View>
             </View>
           </Animated.View>
 

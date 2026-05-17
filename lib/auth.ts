@@ -38,6 +38,9 @@ type LoginPayload = {
 };
 
 type RegisterPayload = {
+  firstName: string;
+  lastName: string;
+  phone: string;
   email: string;
   password: string;
   businessName: string;
