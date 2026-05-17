@@ -1,4 +1,5 @@
 import { HapticTab } from '@/components/haptic-tab';
+import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
 import {
   CreditCard,
@@ -38,19 +39,19 @@ export default function TabLayout() {
       label: 'Cotiza',
       icon: <FilePlus size={20} color="#0f172a" />,
       onPress: () => router.push('/(drawer)/(tabs)/operaciones/nueva'),
-      offset: { x: -60, y: -54 }, // Menos arriba y más cerca del FAB
+      offset: { x: -58, y: -42 }, // Más bajo y armónico en arco
     },
     {
       label: 'Pago',
       icon: <CreditCard size={20} color="#0f172a" />,
       onPress: () => router.push('/(drawer)/(tabs)/pagos/nuevo'),
-      offset: { x: 0, y: -75 },   // Directamente arriba pero más bajo que antes
+      offset: { x: 0, y: -62 },   // Más bajo
     },
     {
       label: 'Gasto',
       icon: <PackagePlus size={20} color="#0f172a" />,
       onPress: () => { },
-      offset: { x: 60, y: -54 },  // Menos arriba y más cerca del FAB
+      offset: { x: 58, y: -42 },  // Más bajo y armónico en arco
     },
   ];
 
@@ -217,13 +218,21 @@ export default function TabLayout() {
           style={[
             styles.backdrop,
             {
+              bottom: tabBarHeight,
               opacity: fabAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }),
             },
           ]}
         >
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setFabOpen(false)} />
+          <BlurView
+            intensity={28}
+            tint="dark"
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setFabOpen(false)} />
+          </BlurView>
         </Animated.View>
-        <View pointerEvents="box-none" style={[styles.fabAnchor, { bottom: tabBarHeight + 16 }]}>
+        <View pointerEvents="box-none" style={[styles.fabAnchor, { bottom: tabBarHeight + 4 }]}>
           {fabActions.map((action) => {
             const translateX = fabAnim.interpolate({
               inputRange: [0, 1],
@@ -274,8 +283,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.08)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   fabActive: {
     transform: [{ rotate: '45deg' }],
