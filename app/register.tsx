@@ -80,7 +80,6 @@ export default function RegisterScreen() {
         password,
         businessName: businessName.trim(),
         businessCategory: businessCategory.trim(),
-        currencyCode: 'PEN',
       });
 
       await setAuthenticatedSession(session);

@@ -28,8 +28,6 @@ const CATEGORIES = [
   'Otro',
 ];
 
-const DEFAULT_CURRENCY = 'PEN';
-
 export default function SetupScreen() {
   const { accessToken, authState, isHydrated, updateAuthState } = useAuthSession();
   const [businessName, setBusinessName] = useState('');
@@ -69,7 +67,6 @@ export default function SetupScreen() {
       const nextAuthState = await updateOnboardingSetup(accessToken, {
         businessName: businessName.trim(),
         businessCategory: category,
-        currencyCode: DEFAULT_CURRENCY,
       });
 
       updateAuthState(nextAuthState);
