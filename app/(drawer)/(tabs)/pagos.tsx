@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CreditCard, Menu, Plus } from 'lucide-react-native';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering, itemEntering } from '@/components/ui/motion';
 
@@ -31,20 +31,20 @@ const payments = [
     client: 'Lucía Fernández',
     paid: 'S/ 150.00',
     balance: 'S/ 330.00',
-    type: 'Parcial',
-    accent: 'violet',
+    type: 'Adelanto',
+    accent: 'amber',
   },
 ];
 
 const paymentStyles = {
   amber: { bg: 'bg-amber-50', text: 'text-amber-700' },
   emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  violet: { bg: 'bg-violet-50', text: 'text-violet-700' },
 };
 
 export default function PagosScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const router = useRouter();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -64,7 +64,10 @@ export default function PagosScreen() {
             </TouchableOpacity>
             <Text className="text-white text-xl font-bold">Pagos</Text>
           </View>
-          <TouchableOpacity className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3">
+          <TouchableOpacity
+            className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3"
+            onPress={() => router.push('/(drawer)/(tabs)/pagos/nuevo')}
+          >
             <Plus size={16} color="white" />
             <Text className="ml-2 font-semibold text-white">Nuevo</Text>
           </TouchableOpacity>
