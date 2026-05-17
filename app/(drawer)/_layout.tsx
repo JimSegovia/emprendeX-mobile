@@ -15,10 +15,11 @@ function CustomDrawerContent(props: any) {
   const { authState } = useAuthSession();
   const { modules: DRAWER_ITEMS } = useModulePreferences();
 
-  const displayName =
-    authState?.user?.businessProfile?.name ?? authState?.user?.email ?? 'EmprendeX';
+  const displayName = authState
+    ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
+    : 'EmprendeX';
   const avatarLetter = displayName.trim().charAt(0).toUpperCase() || 'E';
-  const accountLabel = authState?.user?.email ?? 'Sin sesión activa';
+  const accountLabel = authState?.user?.businessProfile?.name ?? authState?.user?.email ?? 'Sin sesión activa';
 
   const navigateFromDrawer = (item: (typeof DRAWER_ITEMS)[number]) => {
     navigation.closeDrawer();

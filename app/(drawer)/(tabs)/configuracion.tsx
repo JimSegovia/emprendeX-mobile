@@ -23,10 +23,6 @@ const premiumModules = [
   },
 ];
 
-const CURRENCY_LABELS: Record<string, string> = {
-  PEN: 'Soles (PEN)',
-};
-
 export default function ConfiguracionScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -54,6 +50,9 @@ export default function ConfiguracionScreen() {
   }, [authState, modulesById]);
 
   const businessProfile = authState?.user.businessProfile;
+  const ownerName = authState
+    ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
+    : 'Pendiente';
 
   const persistLocalOrder = (nextOrder: ModuleId[]) => {
     setLocalOrder(nextOrder);
@@ -126,11 +125,15 @@ export default function ConfiguracionScreen() {
               </Text>
             </View>
             <View className="mt-3 flex-row justify-between">
-              <Text className="text-sm text-slate-500">Moneda</Text>
+              <Text className="text-sm text-slate-500">Responsable</Text>
               <Text className="font-semibold text-slate-800">
-                {businessProfile?.currencyCode
-                  ? (CURRENCY_LABELS[businessProfile.currencyCode] ?? businessProfile.currencyCode)
-                  : 'Pendiente'}
+                {ownerName}
+              </Text>
+            </View>
+            <View className="mt-3 flex-row justify-between">
+              <Text className="text-sm text-slate-500">Celular</Text>
+              <Text className="font-semibold text-slate-800">
+                {authState?.user.phone ?? 'Pendiente'}
               </Text>
             </View>
           </View>
