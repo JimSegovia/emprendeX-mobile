@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
+  buildVisibleModuleOrder,
   DEFAULT_MODULE_ORDER,
   DEFAULT_MODULES,
+  isModuleAvailable,
   type ModuleDefinition,
   type ModuleId,
 } from '@/lib/modules';
+import { useAuthSession } from '@/lib/auth-session-context';
 import {
   loadModulePreferences,
   resetModulePreferences,
@@ -15,6 +18,9 @@ type ModulePreferencesContextValue = {
   isHydrated: boolean;
   order: ModuleId[];
   modules: ModuleDefinition[];
+  visibleOrder: ModuleId[];
+  enabledModuleIds: ModuleId[];
+  isModuleEnabled: (moduleId: ModuleId) => boolean;
   setOrder: (nextOrder: ModuleId[]) => void;
   reset: () => void;
 };
@@ -22,8 +28,13 @@ type ModulePreferencesContextValue = {
 const ModulePreferencesContext = createContext<ModulePreferencesContextValue | null>(null);
 
 export function ModulePreferencesProvider({ children }: { children: React.ReactNode }) {
+  const { authState } = useAuthSession();
   const [isHydrated, setIsHydrated] = useState(false);
   const [order, setOrderState] = useState<ModuleId[]>(DEFAULT_MODULE_ORDER);
+
+  const enabledModuleIds = useMemo(() => {
+    return (authState?.user.enabledModuleIds ?? []) as ModuleId[];
+  }, [authState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,27 +48,41 @@ export function ModulePreferencesProvider({ children }: { children: React.ReactN
     };
   }, []);
 
+  const visibleOrder = useMemo(() => {
+    if (!authState) {
+      return order;
+    }
+
+    return buildVisibleModuleOrder(order, enabledModuleIds);
+  }, [authState, enabledModuleIds, order]);
+
   const modules = useMemo(() => {
     const byId = new Map<ModuleId, ModuleDefinition>(DEFAULT_MODULES.map((m) => [m.id, m]));
-    return order.map((id) => byId.get(id)).filter(Boolean) as ModuleDefinition[];
-  }, [order]);
+    return visibleOrder.map((id) => byId.get(id)).filter(Boolean) as ModuleDefinition[];
+  }, [visibleOrder]);
 
   const value = useMemo<ModulePreferencesContextValue>(() => {
     return {
-      isHydrated,
-      order,
-      modules,
+        isHydrated,
+        order,
+        modules,
+      visibleOrder,
+      enabledModuleIds,
+      isModuleEnabled: (moduleId) => isModuleAvailable(moduleId, enabledModuleIds),
       setOrder: (nextOrder) => {
-        setOrderState(nextOrder);
+        const hiddenModuleIds = order.filter((moduleId) => !nextOrder.includes(moduleId));
+        const mergedOrder = [...nextOrder, ...hiddenModuleIds];
+
+        setOrderState(mergedOrder);
         // Best-effort persistence.
-        saveModuleOrder(nextOrder).catch(() => {});
+        saveModuleOrder(mergedOrder).catch(() => {});
       },
       reset: () => {
         setOrderState(DEFAULT_MODULE_ORDER);
         resetModulePreferences().catch(() => {});
       },
     };
-  }, [isHydrated, modules, order]);
+  }, [enabledModuleIds, isHydrated, modules, order, visibleOrder]);
 
   return (
     <ModulePreferencesContext.Provider value={value}>{children}</ModulePreferencesContext.Provider>
