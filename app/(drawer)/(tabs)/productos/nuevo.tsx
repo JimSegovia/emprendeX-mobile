@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -21,10 +20,6 @@ const kindOptions = [
   { label: 'Servicio', value: 'Servicio' },
 ];
 
-const currencyOptions = [
-  { label: 'S/', value: 'S/' },
-  { label: '$', value: '$' },
-];
 
 const productUnitOptions = [
   { label: 'Unidad', value: 'Unidad' },
@@ -52,9 +47,7 @@ export default function CatalogoNuevoScreen() {
   const [price, setPrice] = useState('');
   const [sku, setSku] = useState('');
 
-  const [currency, setCurrency] = useState('S/');
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-  const [currencyItems, setCurrencyItems] = useState(currencyOptions);
+  const currency = 'S/';
 
   const [unit, setUnit] = useState<string | null>(null);
   const [unitOpen, setUnitOpen] = useState(false);
@@ -128,7 +121,6 @@ export default function CatalogoNuevoScreen() {
                 dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
                 textStyle={{ color: kind ? '#0f172a' : '#94a3b8' }}
                 onOpen={() => {
-                  setCurrencyOpen(false);
                   setUnitOpen(false);
                 }}
               />
@@ -215,31 +207,6 @@ export default function CatalogoNuevoScreen() {
             <Text className="text-lg font-extrabold text-slate-800">Precio y unidad</Text>
 
             <View className="mt-4">
-              <Text className="text-sm font-bold text-slate-800 mb-2">Moneda</Text>
-              <DropDownPicker
-                open={currencyOpen}
-                value={currency}
-                items={currencyItems}
-                setOpen={setCurrencyOpen}
-                setValue={setCurrency}
-                setItems={setCurrencyItems}
-                placeholder="Seleccionar moneda"
-                listMode="SCROLLVIEW"
-                maxHeight={dropdownSpacing}
-                zIndex={2500}
-                zIndexInverse={1500}
-                style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}
-                dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
-                textStyle={{ color: currency ? '#0f172a' : '#94a3b8' }}
-                onOpen={() => {
-                  setKindOpen(false);
-                  setUnitOpen(false);
-                }}
-              />
-              <View style={{ height: currencyOpen ? dropdownSpacing : 0 }} />
-            </View>
-
-            <View className="mt-4">
               <Text className="text-sm font-bold text-slate-800 mb-2">Precio base</Text>
               <View className="flex-row items-center rounded-xl border border-slate-200 bg-white px-4 py-3.5">
                 <Text className="text-base font-semibold text-slate-500">{currency}</Text>
@@ -273,7 +240,6 @@ export default function CatalogoNuevoScreen() {
                 textStyle={{ color: unit ? '#0f172a' : '#94a3b8' }}
                 onOpen={() => {
                   setKindOpen(false);
-                  setCurrencyOpen(false);
                 }}
               />
               <View style={{ height: unitOpen ? dropdownSpacing : 0 }} />

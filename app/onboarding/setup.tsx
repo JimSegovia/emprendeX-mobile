@@ -32,22 +32,13 @@ const CATEGORIES = [
   'Otro',
 ];
 
-const CURRENCIES = [
-  { label: 'Soles (PEN)', value: 'PEN' },
-  { label: 'Dólares (USD)', value: 'USD' },
-  { label: 'Pesos Mexicanos (MXN)', value: 'MXN' },
-  { label: 'Euros (EUR)', value: 'EUR' },
-] as const;
+const DEFAULT_CURRENCY = 'PEN';
 
 export default function SetupScreen() {
   const { accessToken, authState, isHydrated, updateAuthState } = useAuthSession();
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
-  const [currency, setCurrency] = useState<(typeof CURRENCIES)[number]['value'] | ''>(
-    '',
-  );
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -58,11 +49,7 @@ export default function SetupScreen() {
 
     setBusinessName(authState.user.businessProfile.name ?? '');
     setCategory(authState.user.businessProfile.category ?? '');
-    setCurrency(
-      (authState.user.businessProfile.currencyCode as
-        | (typeof CURRENCIES)[number]['value']
-        | null) ?? '',
-    );
+    
   }, [authState]);
 
   useEffect(() => {
@@ -73,8 +60,7 @@ export default function SetupScreen() {
     router.replace('/');
   }, [accessToken, isHydrated]);
 
-  const isFormValid =
-    businessName.trim().length > 0 && category !== '' && currency !== '';
+  const isFormValid = businessName.trim().length > 0 && category !== '';
 
   const handleContinue = async () => {
     if (!isFormValid || !accessToken) {
@@ -88,7 +74,7 @@ export default function SetupScreen() {
       const nextAuthState = await updateOnboardingSetup(accessToken, {
         businessName: businessName.trim(),
         businessCategory: category,
-        currencyCode: currency,
+        currencyCode: DEFAULT_CURRENCY,
       });
 
       updateAuthState(nextAuthState);
@@ -178,22 +164,6 @@ export default function SetupScreen() {
               </Text>
             </View>
 
-            <View>
-              <Text className="text-sm font-bold text-slate-700 mb-2">Moneda</Text>
-              <TouchableOpacity
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 flex-row items-center justify-between"
-                onPress={() => setCurrencyModalVisible(true)}
-              >
-                <Text className={`text-base ${currency ? 'text-slate-800' : 'text-slate-400'}`}>
-                  {CURRENCIES.find((item) => item.value === currency)?.label ||
-                    'Selecciona la moneda'}
-                </Text>
-                <ChevronDown size={20} color="#94a3b8" />
-              </TouchableOpacity>
-              <Text className="text-xs text-slate-400 mt-1.5">
-                Podrás cambiarla más adelante en configuración.
-              </Text>
-            </View>
 
             <View className="bg-violet-50 rounded-2xl p-4 flex-row items-start border border-violet-100 mt-4">
               <View className="mt-0.5 mr-3">
@@ -299,49 +269,6 @@ export default function SetupScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={isCurrencyModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setCurrencyModalVisible(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="bg-white rounded-t-3xl pt-6 pb-8 px-6 max-h-[80%]">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-slate-800">
-                Selecciona la moneda
-              </Text>
-              <TouchableOpacity
-                onPress={() => setCurrencyModalVisible(false)}
-                className="p-2 bg-slate-100 rounded-full"
-              >
-                <ChevronDown size={20} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={CURRENCIES}
-              keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="flex-row items-center justify-between py-4 border-b border-slate-100"
-                  onPress={() => {
-                    setCurrency(item.value);
-                    setCurrencyModalVisible(false);
-                  }}
-                >
-                  <Text
-                    className={`text-base ${currency === item.value ? 'text-violet-600 font-bold' : 'text-slate-700'}`}
-                  >
-                    {item.label}
-                  </Text>
-                  {currency === item.value ? <Check size={20} color="#7c3aed" /> : null}
-                </TouchableOpacity>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

@@ -45,13 +45,13 @@ type RegisterPayload = {
   password: string;
   businessName: string;
   businessCategory: string;
-  currencyCode: 'PEN' | 'USD' | 'MXN' | 'EUR';
+  currencyCode: 'PEN';
 };
 
 type OnboardingSetupPayload = {
   businessName: string;
   businessCategory: string;
-  currencyCode: 'PEN' | 'USD' | 'MXN' | 'EUR';
+  currencyCode: 'PEN';
 };
 
 type OnboardingModulesPayload = {

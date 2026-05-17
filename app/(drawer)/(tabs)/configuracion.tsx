@@ -4,12 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
-import Animated, {
-  AnimatedTouchableOpacity,
-  screenEntering,
-  sectionEntering,
-  smoothLayout,
-} from '@/components/ui/motion';
+import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import DraggableFlatList, {
   type RenderItemParams,
 } from 'react-native-draggable-flatlist';
@@ -32,9 +27,6 @@ const premiumModules = [
 
 const CURRENCY_LABELS: Record<string, string> = {
   PEN: 'Soles (PEN)',
-  USD: 'Dólares (USD)',
-  MXN: 'Pesos Mexicanos (MXN)',
-  EUR: 'Euros (EUR)',
 };
 
 export default function ConfiguracionScreen() {
