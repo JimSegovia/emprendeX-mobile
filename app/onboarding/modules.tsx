@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   BarChart2,
   Briefcase,
-  Check,
-  CreditCard,
   Calculator,
   Crown,
   FileText,
@@ -16,9 +14,6 @@ import {
 } from 'lucide-react-native';
 import type { ModuleId } from '@/lib/modules';
 import Animated, {
-  AnimatedTouchableOpacity,
-  quickCheckEntering,
-  quickCheckExiting,
   screenEntering,
   sectionEntering,
   smoothLayout,
@@ -36,7 +31,6 @@ type ModuleItem = {
   title: string;
   desc: string;
   icon: LucideIcon;
-  defaultChecked: boolean;
   premium?: boolean;
 };
 
@@ -46,42 +40,36 @@ const MODULES: ModuleItem[] = [
     title: 'Operaciones',
     desc: 'Gestiona pedidos, registros y seguimiento.',
     icon: FileText,
-    defaultChecked: true,
   },
   {
     id: 'clientes',
     title: 'Clientes',
     desc: 'Administra tus clientes.',
     icon: Users,
-    defaultChecked: true,
   },
   {
     id: 'productos',
     title: 'Productos / Servicios',
     desc: 'Gestiona tu catálogo.',
     icon: Briefcase,
-    defaultChecked: true,
   },
   {
     id: 'cotizaciones',
     title: 'Cotizaciones',
     desc: 'Crea y envía cotizaciones.',
     icon: FileText,
-    defaultChecked: true,
   },
   {
     id: 'pagos',
     title: 'Contabilidad',
     desc: 'Controla pagos y gastos.',
     icon: Calculator,
-    defaultChecked: true,
   },
   {
     id: 'reportes',
     title: 'Reportes avanzados',
     desc: 'Comparativos, evolución y resúmenes premium.',
     icon: BarChart2,
-    defaultChecked: false,
     premium: true,
   },
   {
@@ -89,7 +77,6 @@ const MODULES: ModuleItem[] = [
     title: 'Alertas inteligentes',
     desc: 'Recordatorios automáticos y foco en pendientes clave.',
     icon: Crown,
-    defaultChecked: false,
     premium: true,
   },
 ];
@@ -102,31 +89,10 @@ const DEFAULT_SELECTED_MODULE_IDS: SelectableModuleId[] = [
   'pagos',
 ];
 
-function buildSelectedModulesState(
-  enabledModuleIds: ModuleId[] | undefined,
-): Record<string, boolean> {
-  const enabledIds =
-    enabledModuleIds && enabledModuleIds.length > 0
-      ? enabledModuleIds
-      : DEFAULT_SELECTED_MODULE_IDS;
-
-  return MODULES.reduce<Record<string, boolean>>((accumulator, module) => {
-    accumulator[module.id] = enabledIds.includes(module.id as ModuleId);
-    return accumulator;
-  }, {});
-}
-
 export default function ModulesScreen() {
-  const { accessToken, authState, isHydrated, updateAuthState } = useAuthSession();
-  const [selectedModules, setSelectedModules] = useState<Record<string, boolean>>(
-    buildSelectedModulesState(authState?.user.enabledModuleIds),
-  );
+  const { accessToken, isHydrated, updateAuthState } = useAuthSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSelectedModules(buildSelectedModulesState(authState?.user.enabledModuleIds));
-  }, [authState]);
 
   useEffect(() => {
     if (!isHydrated || accessToken) {
@@ -136,32 +102,12 @@ export default function ModulesScreen() {
     router.replace('/');
   }, [accessToken, isHydrated]);
 
-  const toggleModule = (id: SelectableModuleId) => {
-    setSelectedModules((previous) => ({ ...previous, [id]: !previous[id] }));
-  };
-
-  const handleModulePress = (module: ModuleItem) => {
-    if (module.premium) {
-      router.push('/(drawer)/(tabs)/plan-pro');
-      return;
-    }
-
-    toggleModule(module.id as SelectableModuleId);
-  };
-
   const handleSave = async () => {
     if (!accessToken) {
       return;
     }
 
-    const selectedModuleIds = MODULES.filter(
-      (module) => !module.premium && selectedModules[module.id],
-    ).map((module) => module.id as SelectableModuleId);
-
-    if (selectedModuleIds.length === 0) {
-      setSubmitError('Selecciona al menos un módulo para continuar.');
-      return;
-    }
+    const selectedModuleIds = DEFAULT_SELECTED_MODULE_IDS;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -198,10 +144,10 @@ export default function ModulesScreen() {
 
       <Animated.View className="items-center px-6 mb-6" entering={sectionEntering(1)}>
         <Text className="text-3xl font-bold text-slate-800 text-center mb-2">
-          Elige tus módulos
+          Conoce tus módulos
         </Text>
         <Text className="text-slate-500 text-center text-base">
-          Activa los módulos que necesitas. Puedes cambiarlos después.
+          Explora los espacios clave que tendrás disponibles desde el inicio.
         </Text>
         <Text className="mt-2 text-center text-sm text-violet-600">
           Los módulos Pro aparecen bloqueados para la demo freemium.
@@ -214,17 +160,14 @@ export default function ModulesScreen() {
           entering={sectionEntering(2)}
         >
           {MODULES.map((module, index) => {
-            const isSelected = selectedModules[module.id];
             const isLast = index === MODULES.length - 1;
             const Icon = module.icon;
             const isPremium = Boolean(module.premium);
 
             return (
-              <AnimatedTouchableOpacity
+              <Animated.View
                 key={module.id}
                 className={`flex-row items-center p-4 ${isPremium ? 'bg-amber-50' : 'bg-white'} ${!isLast ? 'border-b border-slate-100' : ''}`}
-                activeOpacity={0.7}
-                onPress={() => handleModulePress(module)}
                 entering={sectionEntering(index)}
                 layout={smoothLayout}
               >
@@ -253,18 +196,8 @@ export default function ModulesScreen() {
                   <View className="rounded-full border border-amber-200 bg-white px-3 py-1.5">
                     <Text className="text-xs font-semibold text-amber-700">Ver plan</Text>
                   </View>
-                ) : (
-                  <View
-                    className={`w-6 h-6 rounded flex items-center justify-center border ${isSelected ? 'bg-violet-600 border-violet-600' : 'bg-transparent border-slate-300'}`}
-                  >
-                    {isSelected ? (
-                      <Animated.View entering={quickCheckEntering} exiting={quickCheckExiting}>
-                        <Check size={16} color="white" strokeWidth={3} />
-                      </Animated.View>
-                    ) : null}
-                  </View>
-                )}
-              </AnimatedTouchableOpacity>
+                ) : null}
+              </Animated.View>
             );
           })}
         </Animated.View>

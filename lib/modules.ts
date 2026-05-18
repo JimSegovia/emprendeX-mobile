@@ -57,7 +57,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
   },
   {
     id: 'productos',
-    label: 'Productos / Servicios',
+    label: 'Productos-Servicios',
     icon: Package,
     tab: 'productos',
     match: ['/productos'],

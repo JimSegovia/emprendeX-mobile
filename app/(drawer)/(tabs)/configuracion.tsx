@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Briefcase, Crown, GripVertical, Menu, X, Plus } from 'lucide-react-native';
+import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
@@ -9,7 +9,6 @@ import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable
 import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
-import { completeOnboardingModules } from '@/lib/auth';
 
 const premiumModules = [
   {
@@ -28,10 +27,8 @@ export default function ConfiguracionScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
-  const { authState, signOut, accessToken, updateAuthState } = useAuthSession();
+  const { authState, signOut } = useAuthSession();
   const { isHydrated, visibleOrder, setOrder, reset } = useModulePreferences();
-  
-  const [isUpdatingModules, setIsUpdatingModules] = useState(false);
 
   const [localOrder, setLocalOrder] = useState<ModuleId[]>(visibleOrder);
   useEffect(() => setLocalOrder(visibleOrder), [visibleOrder]);
@@ -46,11 +43,6 @@ export default function ConfiguracionScreen() {
     return localOrder.map((id) => modulesById.get(id)).filter(Boolean) as ModuleDefinition[];
   }, [localOrder, modulesById]);
 
-  const selectedModules = useMemo(() => {
-    const enabledModuleIds = authState?.user.enabledModuleIds ?? [];
-
-    return enabledModuleIds.map((id) => modulesById.get(id)).filter(Boolean) as ModuleDefinition[];
-  }, [authState, modulesById]);
 
   const businessProfile = authState?.user.businessProfile;
   const ownerName = authState
@@ -63,24 +55,6 @@ export default function ConfiguracionScreen() {
     setOrder(nextOrder);
   };
 
-  const removeModule = async (moduleIdToRemove: ModuleId) => {
-    if (!accessToken || !authState) return;
-
-    const currentModuleIds = authState.user.enabledModuleIds ?? [];
-    const nextModuleIds = currentModuleIds.filter(id => id !== moduleIdToRemove);
-
-    setIsUpdatingModules(true);
-    try {
-      const nextAuthState = await completeOnboardingModules(accessToken, {
-        selectedModuleIds: nextModuleIds,
-      });
-      updateAuthState(nextAuthState);
-    } catch {
-      Alert.alert('Error', 'No se pudo actualizar los módulos.');
-    } finally {
-      setIsUpdatingModules(false);
-    }
-  };
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -167,58 +141,8 @@ export default function ConfiguracionScreen() {
         </Animated.View>
 
         <Animated.View
-          className="mb-6 rounded-[28px] border border-slate-100 bg-slate-50 p-5"
-          entering={sectionEntering(2)}
-        >
-          <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-slate-800">Módulos elegidos</Text>
-            {isUpdatingModules && <ActivityIndicator color="#7c3aed" size="small" />}
-          </View>
-
-          {selectedModules.length > 0 ? (
-            <View className="mt-4 flex-row flex-wrap">
-              {selectedModules.map((module, index) => {
-                const Icon = module.icon;
-
-                return (
-                  <View
-                    key={module.id}
-                    className={`mr-3 mb-3 flex-row items-center rounded-full border border-violet-100 bg-white pl-4 pr-2 py-2`}
-                  >
-                    <Icon size={16} color="#7c3aed" />
-                    <Text className="ml-2 mr-2 text-sm font-semibold text-violet-700">
-                      {module.label}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => removeModule(module.id)}
-                      disabled={isUpdatingModules}
-                      className="rounded-full bg-slate-100 p-1.5"
-                    >
-                      <X size={14} color="#64748b" />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <Text className="mt-4 mb-2 text-sm leading-6 text-slate-500">
-              Aún no has guardado una selección de módulos.
-            </Text>
-          )}
-
-          <TouchableOpacity
-            className="mt-2 flex-row items-center justify-center rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50 py-3"
-            onPress={() => router.push('/onboarding/modules')}
-            disabled={isUpdatingModules}
-          >
-            <Plus size={20} color="#7c3aed" />
-            <Text className="ml-2 font-bold text-violet-700">Agregar módulos</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        <Animated.View
           className="mb-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
-          entering={sectionEntering(3)}
+          entering={sectionEntering(2)}
         >
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-bold text-slate-800">Orden del sidebar</Text>
@@ -301,7 +225,7 @@ export default function ConfiguracionScreen() {
 
         <Animated.View
           className="rounded-[28px] border border-amber-100 bg-amber-50 p-5"
-          entering={sectionEntering(4)}
+          entering={sectionEntering(3)}
         >
           <View className="mb-4 flex-row items-center">
             <View className="mr-3 h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
@@ -339,7 +263,7 @@ export default function ConfiguracionScreen() {
 
         <Animated.View
           className="mt-6 rounded-[28px] border border-rose-100 bg-white p-5 shadow-sm shadow-slate-100"
-          entering={sectionEntering(5)}
+          entering={sectionEntering(4)}
         >
           <Text className="text-lg font-bold text-slate-800">Sesión</Text>
           <Text className="mt-2 text-sm leading-6 text-slate-500">
