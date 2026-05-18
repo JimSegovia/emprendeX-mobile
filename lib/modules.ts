@@ -7,6 +7,7 @@ import {
   Calendar,
   FileSignature,
   CreditCard,
+  Calculator,
   BarChart2,
   Settings,
 } from 'lucide-react-native';
@@ -72,11 +73,11 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
   },
   {
     id: 'pagos',
-    label: 'Pagos',
-    icon: CreditCard,
-    tab: 'pagos',
-    match: ['/pagos'],
-    detail: 'Control de adelantos y saldos.',
+    label: 'Contabilidad',
+    icon: Calculator,
+    tab: 'contabilidad',
+    match: ['/contabilidad'],
+    detail: 'Control de pagos y gastos.',
   },
   {
     id: 'calendario',
@@ -147,7 +148,7 @@ export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
     return 'cotizaciones';
   }
 
-  if (pathname.startsWith('/pagos')) {
+  if (pathname.startsWith('/contabilidad')) {
     return 'pagos';
   }
 

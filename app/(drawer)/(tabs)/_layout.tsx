@@ -64,13 +64,13 @@ export default function TabLayout() {
     {
       label: 'Pago',
       icon: <CreditCard size={20} color="#7c3aed" />,
-      onPress: () => router.push('/(drawer)/(tabs)/pagos/nuevo'),
+      onPress: () => router.push('/(drawer)/(tabs)/contabilidad/nuevo?tipo=pago'),
       offset: { x: 0, y: -62 },   // Más bajo
     },
     {
       label: 'Gasto',
       icon: <PackagePlus size={20} color="#7c3aed" />,
-      onPress: () => { },
+      onPress: () => router.push('/(drawer)/(tabs)/contabilidad/nuevo?tipo=gasto'),
       offset: { x: 58, y: -42 },  // Más bajo y armónico en arco
     },
   ];
@@ -166,8 +166,7 @@ export default function TabLayout() {
         <Tabs.Screen name="productos/nuevo" options={{ href: null }} />
         <Tabs.Screen name="calendario" options={{ href: null }} />
         <Tabs.Screen name="cotizaciones" options={{ href: null }} />
-        <Tabs.Screen name="pagos" options={{ href: null }} />
-        <Tabs.Screen name="pagos/nuevo" options={{ href: null }} />
+        <Tabs.Screen name="contabilidad" options={{ href: null }} />
         <Tabs.Screen name="reportes" options={{ href: null }} />
         <Tabs.Screen
           name="clientes"

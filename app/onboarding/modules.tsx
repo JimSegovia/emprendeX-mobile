@@ -8,6 +8,7 @@ import {
   Briefcase,
   Check,
   CreditCard,
+  Calculator,
   Crown,
   FileText,
   type LucideIcon,
@@ -70,9 +71,9 @@ const MODULES: ModuleItem[] = [
   },
   {
     id: 'pagos',
-    title: 'Pagos',
-    desc: 'Controla pagos y deudas.',
-    icon: CreditCard,
+    title: 'Contabilidad',
+    desc: 'Controla pagos y gastos.',
+    icon: Calculator,
     defaultChecked: true,
   },
   {
