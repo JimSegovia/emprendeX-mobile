@@ -9,6 +9,8 @@ import Animated, { screenEntering, sectionEntering } from '@/components/ui/motio
 import {
   fetchProductosServiciosItems,
   getReadableProductosServiciosError,
+  type ProductosServiciosItem,
+  type ProductosServiciosItemKind,
 } from '@/lib/productos-servicios';
 import { useAuthSession } from '@/lib/auth-session-context';
 
@@ -30,6 +32,7 @@ export default function NuevaOperacionScreen() {
   const [client, setClient] = useState<string | null>(null);
   const [clientOpen, setClientOpen] = useState(false);
   const [clientItems, setClientItems] = useState(clientOptions);
+  const [itemKind, setItemKind] = useState<ProductosServiciosItemKind>('Producto');
   const [product, setProduct] = useState<string[]>([]);
   const [productOpen, setProductOpen] = useState(false);
   const [productItems, setProductItems] = useState<{ label: string; value: string }[]>([]);
@@ -40,7 +43,8 @@ export default function NuevaOperacionScreen() {
   const [showDate, setShowDate] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
-  const [catalogItemsById, setCatalogItemsById] = useState<Record<string, { name: string; price: number }>>({});
+  const [catalogItems, setCatalogItems] = useState<ProductosServiciosItem[]>([]);
+  const [catalogItemsById, setCatalogItemsById] = useState<Record<string, { name: string; price: number; kind: ProductosServiciosItemKind }>>({});
   const dropdownSpacing = 220;
 
   useEffect(() => {
@@ -54,15 +58,10 @@ export default function NuevaOperacionScreen() {
 
       try {
         const items = await fetchProductosServiciosItems(accessToken);
-        setProductItems(
-          items.map((item) => ({
-            label: `${item.name} - S/ ${item.price.toFixed(2)}`,
-            value: item.id,
-          })),
-        );
+        setCatalogItems(items);
         setCatalogItemsById(
           Object.fromEntries(
-            items.map((item) => [item.id, { name: item.name, price: item.price }]),
+            items.map((item) => [item.id, { name: item.name, price: item.price, kind: item.kind }]),
           ),
         );
       } catch (productosServiciosError) {
@@ -75,15 +74,36 @@ export default function NuevaOperacionScreen() {
     void loadItems();
   }, [accessToken]);
 
+  useEffect(() => {
+    const filteredItems = catalogItems.filter((item) => item.kind === itemKind);
+    setProductItems(
+      filteredItems.map((item) => ({
+        label: `${item.name} - S/ ${item.price.toFixed(2)}`,
+        value: item.id,
+      })),
+    );
+  }, [catalogItems, itemKind]);
+
   const selectedProducts = useMemo(() => {
     return product
       .map((productId) => catalogItemsById[productId])
-      .filter(Boolean) as { name: string; price: number }[];
-  }, [catalogItemsById, product]);
+      .filter(Boolean)
+      .filter((item) => item.kind === itemKind) as { name: string; price: number; kind: ProductosServiciosItemKind }[];
+  }, [catalogItemsById, itemKind, product]);
 
   const totalQuote = useMemo(() => {
     return selectedProducts.reduce((sum, item) => sum + item.price, 0);
   }, [selectedProducts]);
+
+  const handleItemKindChange = (nextKind: ProductosServiciosItemKind) => {
+    if (nextKind === itemKind) {
+      return;
+    }
+
+    setItemKind(nextKind);
+    setProduct([]);
+    setProductOpen(false);
+  };
 
   function handleDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
     setShowDate(false);
@@ -163,7 +183,31 @@ export default function NuevaOperacionScreen() {
         </Animated.View>
 
         <Animated.View className="mb-6" entering={sectionEntering(4)}>
-          <Text className="font-bold text-slate-800 mb-2">Productos / Servicios</Text>
+          <Text className="font-bold text-slate-800 mb-3">Items de la cotización</Text>
+          <Text className="text-sm font-semibold text-slate-700 mb-2">Tipo de items</Text>
+          <View className="flex-row">
+            <TouchableOpacity
+              className={`mr-3 flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Producto' ? 'border-violet-200 bg-violet-50' : 'border-slate-200 bg-white'}`}
+              activeOpacity={0.85}
+              onPress={() => handleItemKindChange('Producto')}
+            >
+              <Text className={`font-semibold ${itemKind === 'Producto' ? 'text-violet-700' : 'text-slate-600'}`}>Productos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Servicio' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}
+              activeOpacity={0.85}
+              onPress={() => handleItemKindChange('Servicio')}
+            >
+              <Text className={`font-semibold ${itemKind === 'Servicio' ? 'text-emerald-700' : 'text-slate-600'}`}>Servicios</Text>
+            </TouchableOpacity>
+          </View>
+          <Text className="mt-2 text-xs text-slate-500">
+            Solo puedes elegir productos o servicios por cotización.
+          </Text>
+
+          <Text className="font-bold text-slate-800 mb-2 mt-4">
+            {itemKind === 'Producto' ? 'Productos' : 'Servicios'}
+          </Text>
           <DropDownPicker
             open={productOpen}
             value={product}
@@ -174,7 +218,7 @@ export default function NuevaOperacionScreen() {
             multiple={true}
             min={0}
             max={10}
-            placeholder="Seleccionar productos/servicios"
+            placeholder={`Seleccionar ${itemKind === 'Producto' ? 'productos' : 'servicios'}`}
             listMode="SCROLLVIEW"
             maxHeight={dropdownSpacing}
             zIndex={2500}
@@ -190,23 +234,23 @@ export default function NuevaOperacionScreen() {
           />
           <View style={{ height: productOpen ? dropdownSpacing : 0 }} />
 
-          {isLoadingProducts ? (
-            <View className="mt-2 flex-row items-center">
-              <ActivityIndicator color="#7c3aed" />
-              <Text className="ml-3 text-sm text-slate-500">Cargando items...</Text>
-            </View>
-          ) : null}
+            {isLoadingProducts ? (
+              <View className="mt-2 flex-row items-center">
+                <ActivityIndicator color="#7c3aed" />
+                <Text className="ml-3 text-sm text-slate-500">Cargando items...</Text>
+              </View>
+            ) : null}
 
           {productsError ? (
             <Text className="mt-2 text-sm font-medium text-rose-600">{productsError}</Text>
           ) : null}
 
-          <TouchableOpacity
-            className="items-end mt-2"
-            onPress={() => router.push('/(drawer)/(tabs)/productos')}
-          >
-            <Text className="text-violet-600 font-medium">+ Agregar item</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              className="items-end mt-2"
+              onPress={() => router.push('/(drawer)/(tabs)/productos')}
+            >
+              <Text className="text-violet-600 font-medium">+ Agregar item</Text>
+            </TouchableOpacity>
         </Animated.View>
 
         {selectedProducts.length > 0 ? (
@@ -214,7 +258,9 @@ export default function NuevaOperacionScreen() {
             className="mb-6 rounded-2xl border border-slate-100 bg-slate-50 p-4"
             entering={sectionEntering(5)}
           >
-            <Text className="text-sm font-semibold text-slate-800">Items seleccionados</Text>
+            <Text className="text-sm font-semibold text-slate-800">
+              {itemKind === 'Producto' ? 'Productos seleccionados' : 'Servicios seleccionados'}
+            </Text>
             {selectedProducts.map((selectedItem, index) => (
               <View key={`${selectedItem.name}-${index}`} className="mt-3 flex-row justify-between">
                 <Text className="text-sm text-slate-600">{selectedItem.name}</Text>

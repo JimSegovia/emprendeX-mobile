@@ -14,12 +14,36 @@ import Animated, {
 
 const operacionesData = [
   {
-    id: '1023',
+    id: '1028',
     tipo: 'Pedido',
-    cliente: 'María López',
-    monto: '150.00',
+    cliente: 'Lucía Fernández',
+    monto: '210.00',
+    estado: 'No activo',
+    color: 'amber',
+  },
+  {
+    id: '1027',
+    tipo: 'Pedido',
+    cliente: 'Juan Pérez',
+    monto: '180.00',
+    estado: 'Activo',
+    color: 'violet',
+  },
+  {
+    id: '1026',
+    tipo: 'Pedido',
+    cliente: 'Ana Torres',
+    monto: '260.00',
     estado: 'En camino',
     color: 'orange',
+  },
+  {
+    id: '1025',
+    tipo: 'Pedido',
+    cliente: 'María López',
+    monto: '340.00',
+    estado: 'Entregado',
+    color: 'emerald',
   },
   {
     id: '1022',
@@ -28,14 +52,6 @@ const operacionesData = [
     monto: '320.00',
     estado: 'Pendiente',
     color: 'amber',
-  },
-  {
-    id: '1019',
-    tipo: 'Pedido',
-    cliente: 'Ana Torres',
-    monto: '120.00',
-    estado: 'Entregado',
-    color: 'emerald',
   },
 ];
 
@@ -60,6 +76,8 @@ export default function OperacionesScreen() {
         return 'bg-amber-100 text-amber-600';
       case 'emerald':
         return 'bg-emerald-100 text-emerald-600';
+      case 'violet':
+        return 'bg-violet-100 text-violet-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
