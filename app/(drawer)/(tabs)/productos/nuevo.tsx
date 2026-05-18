@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -11,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { ArrowLeft, Briefcase, Package } from 'lucide-react-native';
+import { ArrowLeft, Briefcase, Check, Package, PencilLine, Trash2, X } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
   createProductoServicio,
@@ -47,9 +48,17 @@ export default function ProductosServiciosNuevoScreen() {
   const [unit, setUnit] = useState<string | null>(null);
   const [unitOpen, setUnitOpen] = useState(false);
   const [unitItems, setUnitItems] = useState<{ label: string; value: string }[]>([]);
+  const [showUnitManager, setShowUnitManager] = useState(false);
+  const [newUnit, setNewUnit] = useState('');
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
+  const [editingUnitName, setEditingUnitName] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categoryItems, setCategoryItems] = useState<{ label: string; value: string }[]>([]);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -132,6 +141,15 @@ export default function ProductosServiciosNuevoScreen() {
   }, [kind]);
 
   const isProduct = kind === 'Producto';
+
+  const normalize = (value: string) => value.trim();
+
+  const confirmDelete = (title: string, message: string, onConfirm: () => void) => {
+    Alert.alert(title, message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: onConfirm },
+    ]);
+  };
 
   const isFormValid =
     name.trim().length > 0 &&
@@ -346,6 +364,183 @@ export default function ProductosServiciosNuevoScreen() {
                   />
                 </View>
 
+                <TouchableOpacity
+                  className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Administrar unidades"
+                  onPress={() => setShowUnitManager((v) => !v)}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm font-semibold text-slate-700">Administrar unidades</Text>
+                    <Text className="text-xs font-semibold text-slate-400">
+                      {showUnitManager ? 'Ocultar' : 'Ver'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {showUnitManager && (
+                  <View className="mt-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">Unidades</Text>
+
+                    {unitItems.length > 0 ? (
+                      <View className="mt-3">
+                        {unitItems.map((option) => {
+                          const isEditing = editingUnitId === option.value;
+                          return (
+                            <View
+                              key={option.value}
+                              className="mb-2 flex-row items-center justify-between rounded-2xl bg-white px-3 py-2 border border-slate-100"
+                            >
+                              <View className="flex-1 pr-2">
+                                {isEditing ? (
+                                  <TextInput
+                                    className="text-base font-semibold text-slate-800"
+                                    value={editingUnitName}
+                                    onChangeText={setEditingUnitName}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <Text className="text-base font-semibold text-slate-800">
+                                    {option.label}
+                                  </Text>
+                                )}
+                              </View>
+
+                              {isEditing ? (
+                                <View className="flex-row items-center">
+                                  <TouchableOpacity
+                                    className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Guardar unidad ${option.label}`}
+                                    onPress={() => {
+                                      const next = normalize(editingUnitName);
+                                      if (!next) {
+                                        Alert.alert('Nombre inválido', 'La unidad no puede estar vacía.');
+                                        return;
+                                      }
+                                      if (
+                                        unitItems.some(
+                                          (item) =>
+                                            item.value !== option.value &&
+                                            item.label.trim().toLowerCase() === next.toLowerCase(),
+                                        )
+                                      ) {
+                                        Alert.alert('Duplicado', 'Ya existe una unidad con ese nombre.');
+                                        return;
+                                      }
+                                      setUnitItems((prev) =>
+                                        prev.map((item) =>
+                                          item.value === option.value
+                                            ? { ...item, label: next }
+                                            : item,
+                                        ),
+                                      );
+                                      setEditingUnitId(null);
+                                      setEditingUnitName('');
+                                      Alert.alert('Unidad actualizada', `Ahora es: ${next}`);
+                                    }}
+                                  >
+                                    <Check size={18} color="#059669" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    className="h-9 w-9 items-center justify-center rounded-xl bg-slate-100"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Cancelar edición de ${option.label}`}
+                                    onPress={() => {
+                                      setEditingUnitId(null);
+                                      setEditingUnitName('');
+                                    }}
+                                  >
+                                    <X size={18} color="#334155" />
+                                  </TouchableOpacity>
+                                </View>
+                              ) : (
+                                <View className="flex-row items-center">
+                                  <TouchableOpacity
+                                    className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-violet-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Editar unidad ${option.label}`}
+                                    onPress={() => {
+                                      setEditingUnitId(option.value);
+                                      setEditingUnitName(option.label);
+                                    }}
+                                  >
+                                    <PencilLine size={18} color="#7c3aed" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Eliminar unidad ${option.label}`}
+                                    onPress={() => {
+                                      confirmDelete('Eliminar unidad', `¿Eliminar "${option.label}"?`, () => {
+                                        setUnitItems((prev) =>
+                                          prev.filter((item) => item.value !== option.value),
+                                        );
+                                        if (unit === option.value) setUnit(null);
+                                        Alert.alert('Unidad eliminada', `Se eliminó: ${option.label}`);
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 size={18} color="#e11d48" />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <Text className="mt-2 text-sm text-slate-500">Aún no hay unidades.</Text>
+                    )}
+
+                    <View className="mt-3 flex-row items-center">
+                      <TextInput
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-slate-800"
+                        placeholder="Añadir nueva unidad"
+                        placeholderTextColor="#94a3b8"
+                        value={newUnit}
+                        onChangeText={setNewUnit}
+                      />
+                      <TouchableOpacity
+                        className="ml-2 rounded-xl bg-violet-600 px-4 py-3"
+                        activeOpacity={0.85}
+                        accessibilityRole="button"
+                        accessibilityLabel="Agregar unidad"
+                        onPress={() => {
+                          const next = normalize(newUnit);
+                          if (!next) {
+                            Alert.alert('Nombre inválido', 'Escribe el nombre de la unidad.');
+                            return;
+                          }
+                          if (
+                            unitItems.some(
+                              (item) => item.label.trim().toLowerCase() === next.toLowerCase(),
+                            )
+                          ) {
+                            Alert.alert('Duplicado', 'Esa unidad ya existe.');
+                            return;
+                          }
+                          const newOption = {
+                            label: next,
+                            value: `custom-${Date.now()}`,
+                          };
+                          setUnitItems((prev) => [...prev, newOption]);
+                          setNewUnit('');
+                          if (!unit) setUnit(newOption.value);
+                          Alert.alert('Unidad agregada', `Se agregó: ${next}`);
+                        }}
+                      >
+                        <Text className="font-semibold text-white">Agregar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
                 <View className="mt-4">
                   <Text className="text-sm font-bold text-slate-800 mb-2">Stock inicial</Text>
                   <TextInput
@@ -381,6 +576,190 @@ export default function ProductosServiciosNuevoScreen() {
                     setUnitOpen(false);
                   }}
                 />
+
+                <TouchableOpacity
+                  className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Administrar categorías"
+                  onPress={() => setShowCategoryManager((v) => !v)}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm font-semibold text-slate-700">Administrar categorías</Text>
+                    <Text className="text-xs font-semibold text-slate-400">
+                      {showCategoryManager ? 'Ocultar' : 'Ver'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {showCategoryManager && (
+                  <View className="mt-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">Categorías</Text>
+
+                    {categoryItems.length > 0 ? (
+                      <View className="mt-3">
+                        {categoryItems.map((option) => {
+                          const isEditing = editingCategoryId === option.value;
+                          return (
+                            <View
+                              key={option.value}
+                              className="mb-2 flex-row items-center justify-between rounded-2xl bg-white px-3 py-2 border border-slate-100"
+                            >
+                              <View className="flex-1 pr-2">
+                                {isEditing ? (
+                                  <TextInput
+                                    className="text-base font-semibold text-slate-800"
+                                    value={editingCategoryName}
+                                    onChangeText={setEditingCategoryName}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <Text className="text-base font-semibold text-slate-800">
+                                    {option.label}
+                                  </Text>
+                                )}
+                              </View>
+
+                              {isEditing ? (
+                                <View className="flex-row items-center">
+                                  <TouchableOpacity
+                                    className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Guardar categoría ${option.label}`}
+                                    onPress={() => {
+                                      const next = normalize(editingCategoryName);
+                                      if (!next) {
+                                        Alert.alert('Nombre inválido', 'La categoría no puede estar vacía.');
+                                        return;
+                                      }
+                                      if (
+                                        categoryItems.some(
+                                          (item) =>
+                                            item.value !== option.value &&
+                                            item.label.trim().toLowerCase() === next.toLowerCase(),
+                                        )
+                                      ) {
+                                        Alert.alert('Duplicado', 'Ya existe una categoría con ese nombre.');
+                                        return;
+                                      }
+                                      setCategoryItems((prev) =>
+                                        prev.map((item) =>
+                                          item.value === option.value
+                                            ? { ...item, label: next }
+                                            : item,
+                                        ),
+                                      );
+                                      setEditingCategoryId(null);
+                                      setEditingCategoryName('');
+                                      Alert.alert('Categoría actualizada', `Ahora es: ${next}`);
+                                    }}
+                                  >
+                                    <Check size={18} color="#059669" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    className="h-9 w-9 items-center justify-center rounded-xl bg-slate-100"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Cancelar edición de ${option.label}`}
+                                    onPress={() => {
+                                      setEditingCategoryId(null);
+                                      setEditingCategoryName('');
+                                    }}
+                                  >
+                                    <X size={18} color="#334155" />
+                                  </TouchableOpacity>
+                                </View>
+                              ) : (
+                                <View className="flex-row items-center">
+                                  <TouchableOpacity
+                                    className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-violet-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Editar categoría ${option.label}`}
+                                    onPress={() => {
+                                      setEditingCategoryId(option.value);
+                                      setEditingCategoryName(option.label);
+                                    }}
+                                  >
+                                    <PencilLine size={18} color="#7c3aed" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Eliminar categoría ${option.label}`}
+                                    onPress={() => {
+                                      confirmDelete(
+                                        'Eliminar categoría',
+                                        `¿Eliminar "${option.label}"?`,
+                                        () => {
+                                          setCategoryItems((prev) =>
+                                            prev.filter((item) => item.value !== option.value),
+                                          );
+                                          if (category === option.value) setCategory(null);
+                                          Alert.alert(
+                                            'Categoría eliminada',
+                                            `Se eliminó: ${option.label}`,
+                                          );
+                                        },
+                                      );
+                                    }}
+                                  >
+                                    <Trash2 size={18} color="#e11d48" />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <Text className="mt-2 text-sm text-slate-500">Aún no hay categorías.</Text>
+                    )}
+
+                    <View className="mt-3 flex-row items-center">
+                      <TextInput
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-slate-800"
+                        placeholder="Añadir nueva categoría"
+                        placeholderTextColor="#94a3b8"
+                        value={newCategory}
+                        onChangeText={setNewCategory}
+                      />
+                      <TouchableOpacity
+                        className="ml-2 rounded-xl bg-violet-600 px-4 py-3"
+                        activeOpacity={0.85}
+                        accessibilityRole="button"
+                        accessibilityLabel="Agregar categoría"
+                        onPress={() => {
+                          const next = normalize(newCategory);
+                          if (!next) {
+                            Alert.alert('Nombre inválido', 'Escribe el nombre de la categoría.');
+                            return;
+                          }
+                          if (
+                            categoryItems.some(
+                              (item) => item.label.trim().toLowerCase() === next.toLowerCase(),
+                            )
+                          ) {
+                            Alert.alert('Duplicado', 'Esa categoría ya existe.');
+                            return;
+                          }
+                          const newOption = {
+                            label: next,
+                            value: `custom-${Date.now()}`,
+                          };
+                          setCategoryItems((prev) => [...prev, newOption]);
+                          setNewCategory('');
+                          if (!category) setCategory(newOption.value);
+                          Alert.alert('Categoría agregada', `Se agregó: ${next}`);
+                        }}
+                      >
+                        <Text className="font-semibold text-white">Agregar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
             )}
 
