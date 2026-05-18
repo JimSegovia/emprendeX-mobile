@@ -10,6 +10,7 @@ import {
   Calculator,
   BarChart2,
   Settings,
+  Bell,
 } from 'lucide-react-native';
 
 export type ModuleId =
@@ -19,8 +20,9 @@ export type ModuleId =
   | 'productos'
   | 'calendario'
   | 'cotizaciones'
-  | 'pagos'
+  | 'contabilidad'
   | 'reportes'
+  | 'notificaciones'
   | 'configuracion';
 
 export type ModuleDefinition = {
@@ -35,7 +37,7 @@ export type ModuleDefinition = {
   detail?: string;
 };
 
-export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = ['index', 'configuracion'];
+export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = ['index', 'calendario', 'reportes', 'configuracion'];
 
 export const DEFAULT_MODULES: ModuleDefinition[] = [
   { id: 'index', label: 'Inicio', icon: Home, tab: 'index', match: ['/'] },
@@ -61,7 +63,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     icon: Package,
     tab: 'productos',
     match: ['/productos'],
-    detail: 'Catálogo reutilizable para pedidos.',
+    detail: 'Catǭlogo reutilizable para pedidos.',
   },
   {
     id: 'cotizaciones',
@@ -72,7 +74,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     detail: 'Respuestas rapidas para leads.',
   },
   {
-    id: 'pagos',
+    id: 'contabilidad',
     label: 'Contabilidad',
     icon: Calculator,
     tab: 'contabilidad',
@@ -98,8 +100,17 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     detail: 'Indicadores y tendencias.',
   },
   {
+    id: 'notificaciones',
+    label: 'Notificaciones avanzadas',
+    icon: Bell,
+    tab: 'notificaciones',
+    match: ['/notificaciones'],
+    premium: true,
+    detail: 'Avisos y alertas inteligentes.',
+  },
+  {
     id: 'configuracion',
-    label: 'Configuración',
+    label: 'Configuracin',
     icon: Settings,
     tab: 'configuracion',
     match: ['/configuracion'],
@@ -149,7 +160,7 @@ export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
   }
 
   if (pathname.startsWith('/contabilidad')) {
-    return 'pagos';
+    return 'contabilidad';
   }
 
   if (pathname.startsWith('/reportes')) {
@@ -158,6 +169,10 @@ export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
 
   if (pathname.startsWith('/calendario')) {
     return 'calendario';
+  }
+
+  if (pathname.startsWith('/notificaciones')) {
+    return 'notificaciones';
   }
 
   return null;

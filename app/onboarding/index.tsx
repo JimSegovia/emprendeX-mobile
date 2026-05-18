@@ -84,7 +84,7 @@ export default function OnboardingStep1() {
               Todo lo que tu <Text className="text-violet-600">negocio</Text> necesita
             </Text>
             <Text className="text-slate-500 text-center text-base px-2 leading-relaxed">
-              Gestiona pedidos, clientes, productos, pagos y más. Desde cualquier lugar.
+              Gestiona pedidos, clientes, productos, contabilidad y más. Desde cualquier lugar.
             </Text>
           </Animated.View>
         </View>

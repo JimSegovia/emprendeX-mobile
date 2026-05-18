@@ -1,18 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import {
-  ArrowLeft,
-  BarChart2,
-  Briefcase,
-  Calculator,
-  Crown,
-  FileText,
-  type LucideIcon,
-  Users,
-} from 'lucide-react-native';
-import type { ModuleId } from '@/lib/modules';
 import Animated, {
   screenEntering,
   sectionEntering,
@@ -20,14 +5,30 @@ import Animated, {
 } from '@/components/ui/motion';
 import { completeOnboardingModules, getReadableAuthError, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
+import type { ModuleId } from '@/lib/modules';
+import { router } from 'expo-router';
+import {
+  ArrowLeft,
+  BarChart2,
+  Bell,
+  Briefcase,
+  Calculator,
+  Calendar,
+  FileText,
+  type LucideIcon,
+  Users
+} from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type SelectableModuleId = Extract<
   ModuleId,
-  'operaciones' | 'clientes' | 'productos' | 'cotizaciones' | 'pagos'
+  'operaciones' | 'clientes' | 'productos' | 'cotizaciones' | 'contabilidad'
 >;
 
 type ModuleItem = {
-  id: SelectableModuleId | 'reportes' | 'alertas-pro';
+  id: SelectableModuleId | 'reportes' | 'notificaciones' | 'calendario';
   title: string;
   desc: string;
   icon: LucideIcon;
@@ -60,23 +61,30 @@ const MODULES: ModuleItem[] = [
     icon: FileText,
   },
   {
-    id: 'pagos',
+    id: 'contabilidad',
     title: 'Contabilidad',
     desc: 'Controla pagos y gastos.',
     icon: Calculator,
   },
   {
+    id: 'calendario',
+    title: 'Calendario',
+    desc: 'Agenda y recordatorios.',
+    icon: Calendar,
+    premium: true,
+  },
+  {
     id: 'reportes',
-    title: 'Reportes avanzados',
-    desc: 'Comparativos, evolución y resúmenes premium.',
+    title: 'Reportes',
+    desc: 'Comparativos, evolucin y resǧmenes premium.',
     icon: BarChart2,
     premium: true,
   },
   {
-    id: 'alertas-pro',
-    title: 'Alertas inteligentes',
-    desc: 'Recordatorios automáticos y foco en pendientes clave.',
-    icon: Crown,
+    id: 'notificaciones',
+    title: 'Notificaciones avanzadas',
+    desc: 'Recordatorios automǭticos y foco en pendientes clave.',
+    icon: Bell,
     premium: true,
   },
 ];
@@ -86,7 +94,7 @@ const DEFAULT_SELECTED_MODULE_IDS: SelectableModuleId[] = [
   'clientes',
   'productos',
   'cotizaciones',
-  'pagos',
+  'contabilidad',
 ];
 
 export default function ModulesScreen() {

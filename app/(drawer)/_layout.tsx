@@ -2,7 +2,7 @@ import { Drawer } from 'expo-router/drawer';
 import { usePathname, useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Crown } from 'lucide-react-native';
+import { Crown, Lock } from 'lucide-react-native';
 import Animated, { itemEntering, smoothLayout } from '@/components/ui/motion';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
@@ -13,7 +13,7 @@ function CustomDrawerContent(props: any) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { authState } = useAuthSession();
-  const { modules: DRAWER_ITEMS } = useModulePreferences();
+  const { modules: DRAWER_ITEMS, isModuleEnabled } = useModulePreferences();
 
   const displayName = authState
     ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
@@ -56,6 +56,7 @@ function CustomDrawerContent(props: any) {
             ? pathname === '/'
             : item.match.some((match) => pathname.startsWith(match));
           const isPremium = Boolean(item.premium);
+          const isLocked = isPremium && !isModuleEnabled(item.id);
           const iconColor = isActive ? '#7c3aed' : isPremium ? '#d97706' : '#475569';
           const textColor = isActive
             ? 'text-violet-600'
@@ -79,13 +80,28 @@ function CustomDrawerContent(props: any) {
               <TouchableOpacity
                 className={`flex-row items-center py-3.5 px-4 ${isActive ? 'bg-violet-50' : 'bg-transparent'}`}
                 activeOpacity={0.75}
-                onPress={() => navigateFromDrawer(item)}
+                onPress={() => {
+                  if (isLocked) {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => router.push('/(drawer)/(tabs)/plan-pro'));
+                  } else {
+                    navigateFromDrawer(item);
+                  }
+                }}
               >
                 <Icon size={19} color={iconColor} />
                 <Text className={`ml-4 flex-1 text-[15px] font-semibold ${textColor}`}>
                   {item.label}
                 </Text>
-                {isPremium && !isActive && (
+                {isLocked && !isActive && (
+                  <View className="flex-row items-center rounded-full bg-amber-100 px-2 py-1">
+                    <Lock size={12} color="#b45309" className="mr-1" />
+                    <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      Pro
+                    </Text>
+                  </View>
+                )}
+                {isPremium && !isLocked && !isActive && (
                   <View className="rounded-full bg-amber-100 px-2.5 py-1">
                     <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
                       Pro

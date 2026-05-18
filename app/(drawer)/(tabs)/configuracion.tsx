@@ -13,13 +13,18 @@ import { useModulePreferences } from '@/lib/module-preferences-context';
 const premiumModules = [
   {
     id: 'calendario',
-    label: 'Calendario inteligente',
+    label: 'Calendario',
     detail: 'Agenda visual, recordatorios y estados.',
   },
   {
     id: 'reportes',
-    label: 'Reportes avanzados',
+    label: 'Reportes',
     detail: 'Comparativos, periodos y tendencias.',
+  },
+  {
+    id: 'notificaciones',
+    label: 'Notificaciones avanzadas',
+    detail: 'Recordatorios automǭticos y foco en pendientes clave.',
   },
 ];
 

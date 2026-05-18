@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, Crown, Menu, Sparkles } from 'lucide-react-native';
+import { Bell, Crown, Menu, Sparkles } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 
-export default function CalendarioScreen() {
+export default function NotificacionesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function CalendarioScreen() {
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Calendario</Text>
+          <Text className="text-white text-xl font-bold">Notificaciones</Text>
         </View>
       </Animated.View>
 
@@ -46,11 +46,11 @@ export default function CalendarioScreen() {
             </View>
           </View>
           <Text className="text-center text-2xl font-extrabold text-amber-950">
-            Calendario
+            Notificaciones avanzadas
           </Text>
           <Text className="mt-3 text-center text-sm leading-6 text-amber-900">
-            Organiza pedidos, reuniones y entregas en un solo lugar. Esta vista muestra como se
-            veria el calendario premium, pero esta bloqueado en el plan gratis.
+            Esta seccin muestra claramente una funcionalidad premium disponible en el catǭlogo,
+            pero bloqueada para el plan gratis del MVP.
           </Text>
         </Animated.View>
 
@@ -62,29 +62,29 @@ export default function CalendarioScreen() {
             <View>
               <Text className="text-lg font-bold text-slate-800">Lo que desbloquea</Text>
               <Text className="mt-1 text-sm text-slate-500">
-                Tu agenda con recordatorios y estados visuales.
+                Avisos automǭticos para un control inteligente.
               </Text>
             </View>
             <View className="h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
-              <Calendar size={22} color="#7c3aed" />
+              <Bell size={22} color="#7c3aed" />
             </View>
           </View>
 
           <View className="mb-3 rounded-2xl bg-slate-50 p-4">
-            <Text className="text-sm font-semibold text-slate-700">Resumen semanal</Text>
-            <View className="mt-4 h-24 rounded-2xl bg-slate-200" />
+            <Text className="text-sm font-semibold text-slate-700">Alertas de cobros pendientes</Text>
+            <View className="mt-4 h-12 rounded-2xl bg-slate-200" />
           </View>
 
           <View className="mb-3 rounded-2xl bg-slate-50 p-4">
-            <Text className="text-sm font-semibold text-slate-700">Eventos por estado</Text>
-            <View className="mt-4 h-20 rounded-2xl bg-slate-200" />
+            <Text className="text-sm font-semibold text-slate-700">Avisos de inventario bajo</Text>
+            <View className="mt-4 h-12 rounded-2xl bg-slate-200" />
           </View>
 
           <View className="rounded-2xl bg-slate-50 p-4">
             <Text className="text-sm font-semibold text-slate-700">
-              Clientes con entregas pendientes
+              Recordatorios de reuniones
             </Text>
-            <View className="mt-4 h-20 rounded-2xl bg-slate-200" />
+            <View className="mt-4 h-12 rounded-2xl bg-slate-200" />
           </View>
         </Animated.View>
 
@@ -92,7 +92,7 @@ export default function CalendarioScreen() {
           className="mt-6 items-center rounded-2xl bg-violet-600 py-4"
           onPress={() => router.push('/(drawer)/(tabs)/plan-pro')}
         >
-          <Text className="text-lg font-bold text-white">Hacer premium</Text>
+          <Text className="text-lg font-bold text-white">Ver planes premium</Text>
         </TouchableOpacity>
       </ScrollView>
     </Animated.View>

@@ -46,7 +46,7 @@ export default function ReportesScreen() {
             </View>
           </View>
           <Text className="text-center text-2xl font-extrabold text-amber-950">
-            Reportes avanzados
+            Reportes
           </Text>
           <Text className="mt-3 text-center text-sm leading-6 text-amber-900">
             Esta sección muestra claramente una funcionalidad premium disponible en el catálogo,
