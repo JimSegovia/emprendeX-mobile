@@ -5,58 +5,108 @@ import Animated, {
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
-import { CATALOG_ITEMS, formatMoney, type CatalogItem } from '@/lib/catalog';
-import { DrawerActions } from '@react-navigation/native';
+import {
+  fetchCatalogItems,
+  formatMoney,
+  getReadableCatalogError,
+  type CatalogItem,
+} from '@/lib/catalog';
+import { useAuthSession } from '@/lib/auth-session-context';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import { useNavigation, useRouter } from 'expo-router';
-import { Briefcase, Menu, Package, Plus, Search, SlidersHorizontal } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
-import { FlatList, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Briefcase,
+  Menu,
+  Package,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProductosScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const { accessToken } = useAuthSession();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'Producto' | 'Servicio'>('all');
-  const [onlyActive, setOnlyActive] = useState(false);
+  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCatalog = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const catalogItems = await fetchCatalogItems(accessToken);
+      setItems(catalogItems);
+    } catch (catalogError) {
+      setError(getReadableCatalogError(catalogError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadCatalog();
+    }, [loadCatalog]),
+  );
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
   const filteredItems = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return CATALOG_ITEMS.filter((item) => {
-      if (filter !== 'all' && item.kind !== filter) return false;
-      if (onlyActive && !item.isActive) return false;
-      if (!q) return true;
-      const hay = `${item.name} ${item.description} ${item.id} ${item.sku ?? ''}`.toLowerCase();
-      return hay.includes(q);
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return items.filter((item) => {
+      if (filter !== 'all' && item.kind !== filter) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      const haystack = `${item.name} ${item.description} ${item.id} ${item.sku ?? ''}`.toLowerCase();
+      return haystack.includes(normalizedQuery);
     });
-  }, [filter, onlyActive, query]);
+  }, [filter, items, query]);
 
   const stats = useMemo(() => {
-    const all = CATALOG_ITEMS;
-    const activeCount = all.filter((i) => i.isActive).length;
-    const simpleCount = all.filter((i) => i.type === 'Simple').length;
-    const customCount = all.filter((i) => i.type === 'Personalizado').length;
-    const servicesCount = all.filter((i) => i.kind === 'Servicio').length;
+    const productsCount = items.filter((item) => item.kind === 'Producto').length;
+    const servicesCount = items.filter((item) => item.kind === 'Servicio').length;
+
     return {
-      total: all.length,
-      active: activeCount,
-      simple: simpleCount,
-      custom: customCount,
+      total: items.length,
+      products: productsCount,
       services: servicesCount,
     };
-  }, []);
+  }, [items]);
 
   const renderItem = ({ item, index }: { item: CatalogItem; index: number }) => {
     const isService = item.kind === 'Servicio';
-    const isCustom = item.type === 'Personalizado';
+
     return (
       <AnimatedTouchableOpacity
-        className={`mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100 ${!item.isActive ? 'opacity-60' : ''}`}
+        className="mb-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
         entering={itemEntering(index + 1)}
         layout={smoothLayout}
         activeOpacity={0.9}
@@ -81,25 +131,16 @@ export default function ProductosScreen() {
                   {item.kind}
                 </Text>
               </View>
-              <View
-                className={`rounded-full px-3 py-1.5 ${isCustom ? 'bg-amber-50' : 'bg-slate-100'}`}
-              >
-                <Text
-                  className={`text-xs font-semibold ${isCustom ? 'text-amber-700' : 'text-slate-600'}`}
-                >
-                  {item.type}
-                </Text>
-              </View>
-              {!item.isActive ? (
-                <View className="ml-2 rounded-full bg-slate-100 px-2.5 py-1">
-                  <Text className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                    Inactivo
-                  </Text>
-                </View>
-              ) : null}
             </View>
             <Text className="text-lg font-bold text-slate-800">{item.name}</Text>
-            <Text className="mt-2 text-sm leading-6 text-slate-500">{item.description}</Text>
+            <Text className="mt-2 text-sm leading-6 text-slate-500">
+              {item.description || 'Sin descripción'}
+            </Text>
+            <Text className="mt-3 text-xs font-medium text-slate-400">
+              {isService
+                ? `Categoría: ${item.category ?? 'Sin categoría'}`
+                : `Unidad: ${item.unit ?? 'Sin unidad'}`}
+            </Text>
           </View>
           <View
             className={`h-12 w-12 items-center justify-center rounded-2xl ${isService ? 'bg-emerald-50' : 'bg-violet-50'}`}
@@ -163,7 +204,6 @@ export default function ProductosScreen() {
         }}
         ListHeaderComponent={
           <View>
-            {/* Barra de acciones (botones) reubicada aquí */}
             <Animated.View className="mb-4" entering={sectionEntering(1)}>
               <ScrollView
                 horizontal
@@ -174,8 +214,12 @@ export default function ProductosScreen() {
                   <TouchableOpacity
                     className="mr-3 flex-row items-center rounded-2xl bg-violet-100 px-3.5 py-3"
                     onPress={() => {
-                      setFilter((prev) =>
-                        prev === 'all' ? 'Producto' : prev === 'Producto' ? 'Servicio' : 'all',
+                      setFilter((previousFilter) =>
+                        previousFilter === 'all'
+                          ? 'Producto'
+                          : previousFilter === 'Producto'
+                            ? 'Servicio'
+                            : 'all',
                       );
                     }}
                     activeOpacity={0.85}
@@ -185,15 +229,6 @@ export default function ProductosScreen() {
                     <SlidersHorizontal size={16} color="#7c3aed" />
                     <Text className="ml-2 font-semibold text-violet-800">
                       {filter === 'all' ? 'Todo' : filter}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="mr-3 flex-row items-center rounded-2xl bg-violet-100 px-3.5 py-3"
-                    onPress={() => setOnlyActive((v) => !v)}
-                    activeOpacity={0.85}
-                  >
-                    <Text className="font-semibold text-violet-800">
-                      {onlyActive ? 'Activos' : 'Todos'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -209,7 +244,7 @@ export default function ProductosScreen() {
                 </View>
               </ScrollView>
             </Animated.View>
-            {/* Buscador */}
+
             <Animated.View className="mb-4" entering={sectionEntering(2)}>
               <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
                 <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
@@ -238,15 +273,15 @@ export default function ProductosScreen() {
             >
               <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
                 <Text className="text-xs font-medium text-slate-500">Items registrados</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">{stats.total}</Text>
+                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                  {stats.total}
+                </Text>
               </View>
               <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Activos</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">{stats.active}</Text>
-              </View>
-              <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Personalizados</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">{stats.custom}</Text>
+                <Text className="text-xs font-medium text-slate-500">Productos</Text>
+                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                  {stats.products}
+                </Text>
               </View>
               <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
                 <Text className="text-xs font-medium text-slate-500">Servicios</Text>
@@ -254,26 +289,56 @@ export default function ProductosScreen() {
                   {stats.services}
                 </Text>
               </View>
+              <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                <Text className="text-xs font-medium text-slate-500">Filtro actual</Text>
+                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                  {filter === 'all' ? 'Todo' : filter}
+                </Text>
+              </View>
             </Animated.View>
+
+            {isLoading ? (
+              <View className="mb-6 items-center justify-center rounded-[28px] border border-slate-100 bg-slate-50 p-6">
+                <ActivityIndicator color="#7c3aed" />
+                <Text className="mt-3 text-sm font-medium text-slate-500">
+                  Cargando catálogo...
+                </Text>
+              </View>
+            ) : null}
+
+            {error ? (
+              <View className="mb-6 rounded-[28px] border border-rose-100 bg-rose-50 p-5">
+                <Text className="text-sm font-semibold text-rose-600">{error}</Text>
+                <TouchableOpacity
+                  className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
+                  onPress={() => {
+                    void loadCatalog();
+                  }}
+                >
+                  <Text className="font-semibold text-white">Reintentar</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
-          <View className="rounded-[28px] border border-slate-100 bg-slate-50 p-6">
-            <Text className="text-base font-bold text-slate-800">Sin resultados</Text>
-            <Text className="mt-2 text-sm leading-6 text-slate-500">
-              Prueba con otro nombre, código o cambia el filtro.
-            </Text>
-            <TouchableOpacity
-              className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
-              onPress={() => {
-                setQuery('');
-                setFilter('all');
-                setOnlyActive(false);
-              }}
-            >
-              <Text className="font-semibold text-white">Limpiar filtros</Text>
-            </TouchableOpacity>
-          </View>
+          !isLoading && !error ? (
+            <View className="rounded-[28px] border border-slate-100 bg-slate-50 p-6">
+              <Text className="text-base font-bold text-slate-800">Sin resultados</Text>
+              <Text className="mt-2 text-sm leading-6 text-slate-500">
+                Prueba con otro nombre, código o cambia el filtro.
+              </Text>
+              <TouchableOpacity
+                className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
+                onPress={() => {
+                  setQuery('');
+                  setFilter('all');
+                }}
+              >
+                <Text className="font-semibold text-white">Limpiar filtros</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
       />
     </Animated.View>

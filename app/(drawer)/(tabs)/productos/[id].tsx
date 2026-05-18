@@ -1,19 +1,94 @@
-import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Briefcase, Package } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
-import { CATALOG_ITEMS, formatMoney } from '@/lib/catalog';
+import {
+  fetchCatalogItemById,
+  formatMoney,
+  getReadableCatalogError,
+  type CatalogItem,
+} from '@/lib/catalog';
+import { useAuthSession } from '@/lib/auth-session-context';
 
 export default function ProductoDetalleScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { accessToken } = useAuthSession();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const [item, setItem] = useState<CatalogItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const item = useMemo(() => {
-    return CATALOG_ITEMS.find((x) => x.id === id) ?? CATALOG_ITEMS[0];
-  }, [id]);
+  useEffect(() => {
+    const loadItem = async () => {
+      if (!accessToken || !id) {
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const nextItem = await fetchCatalogItemById(accessToken, id);
+        setItem(nextItem);
+      } catch (catalogError) {
+        setError(getReadableCatalogError(catalogError));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadItem();
+  }, [accessToken, id]);
+
+  if (isLoading) {
+    return (
+      <Animated.View
+        className="flex-1 items-center justify-center bg-white"
+        entering={screenEntering}
+      >
+        <ActivityIndicator color="#7c3aed" />
+      </Animated.View>
+    );
+  }
+
+  if (!item || error) {
+    return (
+      <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+        <Animated.View
+          className="bg-violet-600 px-4 pb-4"
+          style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
+          entering={sectionEntering(0)}
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1 pr-4">
+              <TouchableOpacity
+                onPress={() => router.navigate('/(drawer)/(tabs)/productos')}
+                className="mr-4"
+              >
+                <ArrowLeft color="white" size={24} />
+              </TouchableOpacity>
+              <Text className="text-white text-xl font-bold">Detalle</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-base font-semibold text-rose-600 text-center">
+            {error ?? 'No se encontró el item solicitado.'}
+          </Text>
+        </View>
+      </Animated.View>
+    );
+  }
 
   const isService = item.kind === 'Servicio';
   const Icon = isService ? Briefcase : Package;
@@ -64,25 +139,11 @@ export default function ProductoDetalleScreen() {
                     {item.kind}
                   </Text>
                 </View>
-                <View
-                  className={`rounded-full px-3 py-1.5 ${item.type === 'Personalizado' ? 'bg-amber-50' : 'bg-slate-100'}`}
-                >
-                  <Text
-                    className={`text-xs font-semibold ${item.type === 'Personalizado' ? 'text-amber-700' : 'text-slate-600'}`}
-                  >
-                    {item.type}
-                  </Text>
-                </View>
-                {!item.isActive ? (
-                  <View className="ml-2 rounded-full bg-slate-100 px-2.5 py-1">
-                    <Text className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                      Inactivo
-                    </Text>
-                  </View>
-                ) : null}
               </View>
               <Text className="text-2xl font-extrabold text-slate-800">{item.name}</Text>
-              <Text className="mt-2 text-sm leading-6 text-slate-500">{item.description}</Text>
+              <Text className="mt-2 text-sm leading-6 text-slate-500">
+                {item.description || 'Sin descripción'}
+              </Text>
             </View>
           </View>
 
@@ -103,41 +164,24 @@ export default function ProductoDetalleScreen() {
                 <Text className="text-sm font-bold text-slate-800">{item.unit}</Text>
               </View>
             ) : null}
-
-            {item.kind === 'Servicio' && item.category ? (
+            {typeof item.stock === 'number' ? (
+              <View className="mt-3 flex-row items-center justify-between">
+                <Text className="text-sm text-slate-500">Stock</Text>
+                <Text className="text-sm font-bold text-slate-800">{item.stock}</Text>
+              </View>
+            ) : null}
+            {item.category ? (
               <View className="mt-3 flex-row items-center justify-between">
                 <Text className="text-sm text-slate-500">Categoría</Text>
                 <Text className="text-sm font-bold text-slate-800">{item.category}</Text>
               </View>
             ) : null}
-            {/* Stock sólo para productos */}
-            {item.kind === 'Producto' && (
-              <View className="mt-3 flex-row items-center justify-between">
-                <Text className="text-sm text-slate-500">Stock</Text>
-                <Text className={`text-sm font-semibold ${item.stock && item.stock > 0 ? 'text-violet-800' : 'text-slate-400'}`}>{typeof item.stock === 'number' ? (item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock') : 'Sin stock'}</Text>
-              </View>
-            )}
             <View className="mt-3 flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Precio base</Text>
               <Text className="text-xl font-extrabold text-slate-800">
                 {formatMoney(item.currencySymbol, item.price)}
               </Text>
             </View>
-          </View>
-
-          <View className="mt-6 flex-row">
-            <TouchableOpacity
-              className="mr-3 rounded-2xl bg-violet-600 px-4 py-3"
-              activeOpacity={0.85}
-            >
-              <Text className="font-semibold text-white">Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3"
-              activeOpacity={0.85}
-            >
-              <Text className="font-semibold text-rose-600">Eliminar</Text>
-            </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>
