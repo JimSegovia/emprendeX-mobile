@@ -3,7 +3,7 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar as CalendarIcon, CreditCard, Receipt, PackageMinus, HandCoins } from 'lucide-react-native';
 import React, { useState, useMemo, useEffect } from 'react';
-import { Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,8 +34,6 @@ const categoryOptions = [
   { label: 'Otros', value: 'otros' },
 ];
 
-type PaymentType = 'Adelanto' | 'Cancelado';
-
 export default function NuevoRegistroScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -59,7 +57,6 @@ export default function NuevoRegistroScreen() {
   const [quoteItems, setQuoteItems] = useState(
     pendingQuotes.map((item) => ({ label: `${item.id} · ${item.client}`, value: item.id }))
   );
-  const [paymentType, setPaymentType] = useState<PaymentType>('Adelanto');
 
   // Gasto Fields
   const [category, setCategory] = useState<string | null>(null);
@@ -228,25 +225,6 @@ export default function NuevoRegistroScreen() {
                   </View>
                 )}
 
-                <View className="mt-5">
-                  <Text className="text-sm font-bold text-slate-800 mb-2">Tipo de pago</Text>
-                  <View className="flex-row">
-                    <TouchableOpacity
-                      className={`mr-3 flex-1 items-center rounded-2xl border px-4 py-3 ${paymentType === 'Adelanto' ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}
-                      activeOpacity={0.85}
-                      onPress={() => setPaymentType('Adelanto')}
-                    >
-                      <Text className={`font-semibold ${paymentType === 'Adelanto' ? 'text-amber-700' : 'text-slate-600'}`}>Adelanto</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className={`flex-1 items-center rounded-2xl border px-4 py-3 ${paymentType === 'Cancelado' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}
-                      activeOpacity={0.85}
-                      onPress={() => setPaymentType('Cancelado')}
-                    >
-                      <Text className={`font-semibold ${paymentType === 'Cancelado' ? 'text-emerald-700' : 'text-slate-600'}`}>Cancelado</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
               </>
             ) : (
               <>
@@ -347,7 +325,7 @@ export default function NuevoRegistroScreen() {
           <View className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
             <View className="flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Operación</Text>
-              <Text className="text-sm font-semibold text-slate-800">{isPago ? paymentType : 'Gasto'}</Text>
+              <Text className="text-sm font-semibold text-slate-800">{isPago ? 'Pago' : 'Gasto'}</Text>
             </View>
             <View className="mt-2 flex-row items-center justify-between">
               <Text className="text-sm text-slate-500">Monto</Text>

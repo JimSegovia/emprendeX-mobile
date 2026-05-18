@@ -14,6 +14,16 @@ import Animated, {
 
 const contabilidadData = [
   {
+    id: 'PAG-303',
+    refId: 'PED-1026',
+    entidad: 'Lucía Fernández',
+    monto: '95.00',
+    estado: 'No cancelado',
+    color: 'rose',
+    tipo: 'Pago',
+    fecha: '20/05/2026',
+  },
+  {
     id: 'PAG-302',
     refId: 'PED-1024',
     entidad: 'Juan Pérez',
@@ -38,7 +48,7 @@ const contabilidadData = [
     refId: 'Suministros',
     entidad: 'Mercado Local',
     monto: '50.00',
-    estado: 'Completado',
+    estado: 'Registrado',
     color: 'rose',
     tipo: 'Gasto',
     fecha: '19/05/2026',
@@ -48,7 +58,7 @@ const contabilidadData = [
     refId: 'Logística',
     entidad: 'Delivery Express',
     monto: '15.00',
-    estado: 'Completado',
+    estado: 'Registrado',
     color: 'rose',
     tipo: 'Gasto',
     fecha: '18/05/2026',
