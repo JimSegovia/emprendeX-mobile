@@ -75,7 +75,7 @@ export default function ConfiguracionScreen() {
         selectedModuleIds: nextModuleIds,
       });
       updateAuthState(nextAuthState);
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'No se pudo actualizar los módulos.');
     } finally {
       setIsUpdatingModules(false);
