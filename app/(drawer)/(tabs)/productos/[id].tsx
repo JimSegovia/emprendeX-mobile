@@ -11,11 +11,12 @@ import { ArrowLeft, Briefcase, Package } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
-  fetchCatalogItemById,
+  deleteProductoServicio,
+  fetchProductosServiciosItemById,
   formatMoney,
-  getReadableCatalogError,
-  type CatalogItem,
-} from '@/lib/catalog';
+  getReadableProductosServiciosError,
+  type ProductosServiciosItem,
+} from '@/lib/productos-servicios';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 export default function ProductoDetalleScreen() {
@@ -23,9 +24,10 @@ export default function ProductoDetalleScreen() {
   const router = useRouter();
   const { accessToken } = useAuthSession();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const [item, setItem] = useState<CatalogItem | null>(null);
+  const [item, setItem] = useState<ProductosServiciosItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadItem = async () => {
@@ -37,10 +39,10 @@ export default function ProductoDetalleScreen() {
       setError(null);
 
       try {
-        const nextItem = await fetchCatalogItemById(accessToken, id);
+        const nextItem = await fetchProductosServiciosItemById(accessToken, id);
         setItem(nextItem);
-      } catch (catalogError) {
-        setError(getReadableCatalogError(catalogError));
+      } catch (productosServiciosError) {
+        setError(getReadableProductosServiciosError(productosServiciosError));
       } finally {
         setIsLoading(false);
       }
@@ -92,6 +94,23 @@ export default function ProductoDetalleScreen() {
 
   const isService = item.kind === 'Servicio';
   const Icon = isService ? Briefcase : Package;
+
+  const handleDelete = async () => {
+    if (!accessToken || !item || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      await deleteProductoServicio(accessToken, item.id);
+      router.replace('/(drawer)/(tabs)/productos');
+    } catch (productosServiciosError) {
+      setError(getReadableProductosServiciosError(productosServiciosError));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
@@ -182,6 +201,39 @@ export default function ProductoDetalleScreen() {
                 {formatMoney(item.currencySymbol, item.price)}
               </Text>
             </View>
+          </View>
+
+          {error ? (
+            <View className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 p-4">
+              <Text className="text-sm font-semibold text-rose-600">{error}</Text>
+            </View>
+          ) : null}
+
+          <View className="mt-6 flex-row">
+            <TouchableOpacity
+              className="mr-3 rounded-2xl bg-violet-600 px-4 py-3"
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push({
+                  pathname: '/(drawer)/(tabs)/productos/nuevo',
+                  params: { id: item.id },
+                })
+              }
+            >
+              <Text className="font-semibold text-white">Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3"
+              activeOpacity={0.85}
+              onPress={() => {
+                void handleDelete();
+              }}
+              disabled={isDeleting}
+            >
+              <Text className="font-semibold text-rose-600">
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>

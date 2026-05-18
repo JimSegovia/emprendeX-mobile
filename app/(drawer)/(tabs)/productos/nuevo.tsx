@@ -9,16 +9,18 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { ArrowLeft, Briefcase, Package } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
-  createCatalogItem,
-  fetchCatalogCategories,
-  fetchCatalogUnits,
-  getReadableCatalogError,
-} from '@/lib/catalog';
+  createProductoServicio,
+  fetchProductosServiciosCategories,
+  fetchProductosServiciosItemById,
+  fetchProductosServiciosUnits,
+  getReadableProductosServiciosError,
+  updateProductoServicio,
+} from '@/lib/productos-servicios';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 type ItemKind = 'Producto' | 'Servicio';
@@ -28,8 +30,9 @@ const kindOptions = [
   { label: 'Servicio', value: 'Servicio' },
 ];
 
-export default function CatalogoNuevoScreen() {
+export default function ProductosServiciosNuevoScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   const { accessToken } = useAuthSession();
   const [kind, setKind] = useState<ItemKind>('Producto');
@@ -65,8 +68,8 @@ export default function CatalogoNuevoScreen() {
 
       try {
         const [units, categories] = await Promise.all([
-          fetchCatalogUnits(accessToken),
-          fetchCatalogCategories(accessToken),
+          fetchProductosServiciosUnits(accessToken),
+          fetchProductosServiciosCategories(accessToken),
         ]);
 
         setUnitItems(
@@ -81,15 +84,36 @@ export default function CatalogoNuevoScreen() {
             value: categoryOption.categoryId,
           })),
         );
-      } catch (catalogError) {
-        setSubmitError(getReadableCatalogError(catalogError));
+        if (id) {
+          const item = await fetchProductosServiciosItemById(accessToken, id);
+          setKind(item.kind);
+          setName(item.name);
+          setDescription(item.description);
+          setPrice(item.price.toFixed(2));
+          setSku(item.sku ?? '');
+          setStock(item.stock?.toString() ?? '1');
+
+          if (item.kind === 'Producto') {
+            const matchingUnit = units.find(
+              (unitOption) => unitOption.unitName === item.unit,
+            );
+            setUnit(matchingUnit?.unitId ?? null);
+          } else {
+            const matchingCategory = categories.find(
+              (categoryOption) => categoryOption.categoryName === item.category,
+            );
+            setCategory(matchingCategory?.categoryId ?? null);
+          }
+        }
+      } catch (productosServiciosError) {
+        setSubmitError(getReadableProductosServiciosError(productosServiciosError));
       } finally {
         setIsLoadingOptions(false);
       }
     };
 
     void loadOptions();
-  }, [accessToken]);
+  }, [accessToken, id]);
 
   const selectedKindMeta = useMemo(() => {
     const isService = kind === 'Servicio';
@@ -124,8 +148,8 @@ export default function CatalogoNuevoScreen() {
     setSubmitError(null);
 
     try {
-      const createdItem = await createCatalogItem(accessToken, {
-        itemClass: isProduct ? 'Product' : 'Service',
+      const payload = {
+        itemClass: isProduct ? ('Product' as const) : ('Service' as const),
         name: name.trim(),
         description: description.trim(),
         sku: sku.trim() || undefined,
@@ -133,14 +157,18 @@ export default function CatalogoNuevoScreen() {
         unitId: isProduct ? (unit ?? undefined) : undefined,
         stock: isProduct ? Number(stock || '1') : undefined,
         categoryId: !isProduct ? (category ?? undefined) : undefined,
-      });
+      };
+
+      const createdItem = id
+        ? await updateProductoServicio(accessToken, id, payload)
+        : await createProductoServicio(accessToken, payload);
 
       router.replace({
         pathname: '/(drawer)/(tabs)/productos/[id]',
         params: { id: createdItem.id },
       });
-    } catch (catalogError) {
-      setSubmitError(getReadableCatalogError(catalogError));
+    } catch (productosServiciosError) {
+      setSubmitError(getReadableProductosServiciosError(productosServiciosError));
     } finally {
       setIsSubmitting(false);
     }
@@ -165,7 +193,9 @@ export default function CatalogoNuevoScreen() {
           <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/productos')} className="mr-4">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Nuevo item</Text>
+          <Text className="text-white text-xl font-bold">
+            {id ? 'Editar item' : 'Nuevo item'}
+          </Text>
         </View>
       </Animated.View>
 

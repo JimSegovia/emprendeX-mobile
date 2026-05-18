@@ -6,11 +6,11 @@ import Animated, {
   smoothLayout,
 } from '@/components/ui/motion';
 import {
-  fetchCatalogItems,
+  fetchProductosServiciosItems,
   formatMoney,
-  getReadableCatalogError,
-  type CatalogItem,
-} from '@/lib/catalog';
+  getReadableProductosServiciosError,
+  type ProductosServiciosItem,
+} from '@/lib/productos-servicios';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -41,11 +41,11 @@ export default function ProductosScreen() {
   const { accessToken } = useAuthSession();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'Producto' | 'Servicio'>('all');
-  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [items, setItems] = useState<ProductosServiciosItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadCatalog = useCallback(async () => {
+  const loadProductosServicios = useCallback(async () => {
     if (!accessToken) {
       return;
     }
@@ -54,10 +54,10 @@ export default function ProductosScreen() {
     setError(null);
 
     try {
-      const catalogItems = await fetchCatalogItems(accessToken);
-      setItems(catalogItems);
-    } catch (catalogError) {
-      setError(getReadableCatalogError(catalogError));
+      const productosServicios = await fetchProductosServiciosItems(accessToken);
+      setItems(productosServicios);
+    } catch (productosServiciosError) {
+      setError(getReadableProductosServiciosError(productosServiciosError));
     } finally {
       setIsLoading(false);
     }
@@ -65,8 +65,8 @@ export default function ProductosScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void loadCatalog();
-    }, [loadCatalog]),
+      void loadProductosServicios();
+    }, [loadProductosServicios]),
   );
 
   const openDrawer = () => {
@@ -101,7 +101,7 @@ export default function ProductosScreen() {
     };
   }, [items]);
 
-  const renderItem = ({ item, index }: { item: CatalogItem; index: number }) => {
+  const renderItem = ({ item, index }: { item: ProductosServiciosItem; index: number }) => {
     const isService = item.kind === 'Servicio';
 
     return (
@@ -262,7 +262,9 @@ export default function ProductosScreen() {
                 </View>
                 <Text className="mt-3 text-xs text-slate-500">
                   {filteredItems.length} resultado(s) en{' '}
-                  {filter === 'all' ? 'todo el catálogo' : filter.toLowerCase()}.
+                  {filter === 'all'
+                    ? 'todos los productos y servicios'
+                    : filter.toLowerCase()}.
                 </Text>
               </View>
             </Animated.View>
@@ -301,7 +303,7 @@ export default function ProductosScreen() {
               <View className="mb-6 items-center justify-center rounded-[28px] border border-slate-100 bg-slate-50 p-6">
                 <ActivityIndicator color="#7c3aed" />
                 <Text className="mt-3 text-sm font-medium text-slate-500">
-                  Cargando catálogo...
+                  Cargando productos y servicios...
                 </Text>
               </View>
             ) : null}
@@ -312,7 +314,7 @@ export default function ProductosScreen() {
                 <TouchableOpacity
                   className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
                   onPress={() => {
-                    void loadCatalog();
+                    void loadProductosServicios();
                   }}
                 >
                   <Text className="font-semibold text-white">Reintentar</Text>
