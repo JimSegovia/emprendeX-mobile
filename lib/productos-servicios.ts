@@ -1,9 +1,9 @@
-export type CatalogItemKind = 'Producto' | 'Servicio';
+export type ProductosServiciosItemKind = 'Producto' | 'Servicio';
 
-export type CatalogItem = {
+export type ProductosServiciosItem = {
   id: string;
   itemClass: 'Product' | 'Service';
-  kind: CatalogItemKind;
+  kind: ProductosServiciosItemKind;
   name: string;
   price: number;
   currencySymbol: string;
@@ -16,18 +16,18 @@ export type CatalogItem = {
   createdAt: string;
 };
 
-export type CatalogUnit = {
+export type UnidadProductoServicio = {
   unitId: string;
   unitName: string;
   abbreviation: string;
 };
 
-export type CatalogCategory = {
+export type CategoriaProductoServicio = {
   categoryId: string;
   categoryName: string;
 };
 
-export type CreateCatalogItemPayload = {
+export type CrearProductoServicioPayload = {
   itemClass: 'Product' | 'Service';
   name: string;
   description?: string;
@@ -38,7 +38,9 @@ export type CreateCatalogItemPayload = {
   categoryId?: string;
 };
 
-type ApiCatalogItem = {
+export type ActualizarProductoServicioPayload = Partial<CrearProductoServicioPayload>;
+
+type ApiItem = {
   id: string;
   itemClass: 'Product' | 'Service';
   name: string;
@@ -68,7 +70,7 @@ type ApiErrorBody = {
   message?: string | string[];
 };
 
-class CatalogApiError extends Error {
+class ProductosServiciosApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
@@ -86,7 +88,7 @@ function getApiBaseUrl(): string {
   return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
-function mapCatalogItem(item: ApiCatalogItem): CatalogItem {
+function mapProductoServicioItem(item: ApiItem): ProductosServiciosItem {
   const kind = item.itemClass === 'Product' ? 'Producto' : 'Servicio';
 
   return {
@@ -125,7 +127,7 @@ async function request<T>(
   const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
 
   if (!response.ok) {
-    throw new CatalogApiError(getErrorMessage(payload), response.status);
+    throw new ProductosServiciosApiError(getErrorMessage(payload), response.status);
   }
 
   return payload as T;
@@ -145,61 +147,95 @@ function getErrorMessage(payload: unknown): string {
   return message ?? 'No se pudo completar la solicitud.';
 }
 
-export async function fetchCatalogUnits(
+export async function fetchProductosServiciosUnits(
   accessToken: string,
-): Promise<CatalogUnit[]> {
-  return request<CatalogUnit[]>(accessToken, '/catalog/units', {
-    method: 'GET',
-  });
+): Promise<UnidadProductoServicio[]> {
+  return request<UnidadProductoServicio[]>(
+    accessToken,
+    '/productos-servicios/units',
+    {
+      method: 'GET',
+    },
+  );
 }
 
-export async function fetchCatalogCategories(
+export async function fetchProductosServiciosCategories(
   accessToken: string,
-): Promise<CatalogCategory[]> {
-  return request<CatalogCategory[]>(accessToken, '/catalog/categories', {
-    method: 'GET',
-  });
+): Promise<CategoriaProductoServicio[]> {
+  return request<CategoriaProductoServicio[]>(
+    accessToken,
+    '/productos-servicios/categories',
+    {
+      method: 'GET',
+    },
+  );
 }
 
-export async function fetchCatalogItems(
+export async function fetchProductosServiciosItems(
   accessToken: string,
-): Promise<CatalogItem[]> {
-  const items = await request<ApiCatalogItem[]>(accessToken, '/catalog/items', {
+): Promise<ProductosServiciosItem[]> {
+  const items = await request<ApiItem[]>(accessToken, '/productos-servicios/items', {
     method: 'GET',
   });
 
-  return items.map(mapCatalogItem);
+  return items.map(mapProductoServicioItem);
 }
 
-export async function fetchCatalogItemById(
+export async function fetchProductosServiciosItemById(
   accessToken: string,
   itemId: string,
-): Promise<CatalogItem> {
-  const item = await request<ApiCatalogItem>(
+): Promise<ProductosServiciosItem> {
+  const item = await request<ApiItem>(
     accessToken,
-    `/catalog/items/${itemId}`,
+    `/productos-servicios/items/${itemId}`,
     {
       method: 'GET',
     },
   );
 
-  return mapCatalogItem(item);
+  return mapProductoServicioItem(item);
 }
 
-export async function createCatalogItem(
+export async function createProductoServicio(
   accessToken: string,
-  payload: CreateCatalogItemPayload,
-): Promise<CatalogItem> {
-  const item = await request<ApiCatalogItem>(accessToken, '/catalog/items', {
+  payload: CrearProductoServicioPayload,
+): Promise<ProductosServiciosItem> {
+  const item = await request<ApiItem>(accessToken, '/productos-servicios/items', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 
-  return mapCatalogItem(item);
+  return mapProductoServicioItem(item);
 }
 
-export function getReadableCatalogError(error: unknown): string {
-  if (error instanceof CatalogApiError) {
+export async function updateProductoServicio(
+  accessToken: string,
+  itemId: string,
+  payload: ActualizarProductoServicioPayload,
+): Promise<ProductosServiciosItem> {
+  const item = await request<ApiItem>(
+    accessToken,
+    `/productos-servicios/items/${itemId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return mapProductoServicioItem(item);
+}
+
+export async function deleteProductoServicio(
+  accessToken: string,
+  itemId: string,
+): Promise<void> {
+  await request<null>(accessToken, `/productos-servicios/items/${itemId}`, {
+    method: 'DELETE',
+  });
+}
+
+export function getReadableProductosServiciosError(error: unknown): string {
+  if (error instanceof ProductosServiciosApiError) {
     return error.message;
   }
 
