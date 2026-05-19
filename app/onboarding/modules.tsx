@@ -208,10 +208,10 @@ export default function ModulesScreen() {
           {isSubmitting ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="white" />
-              <Text className="ml-3 text-white font-bold text-lg">Guardando...</Text>
+              <Text className="ml-3 text-white font-bold text-lg">Continuar...</Text>
             </View>
           ) : (
-            <Text className="text-white font-bold text-lg">Guardar y continuar</Text>
+            <Text className="text-white font-bold text-lg">Continuar</Text>
           )}
         </TouchableOpacity>
       </Animated.View>
