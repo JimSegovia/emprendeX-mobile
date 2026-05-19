@@ -3,5 +3,8 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "jest.rootPath": ".",
+  "jest.jestCommandLine": "npm test --",
+  "jest.disabledWorkspaceFolders": [".agents/skills/expo-cicd-workflows/scripts"]
 }
