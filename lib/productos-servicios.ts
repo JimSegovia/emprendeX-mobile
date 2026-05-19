@@ -2,8 +2,9 @@ export type ProductosServiciosItemKind = 'Producto' | 'Servicio';
 
 export type ProductosServiciosItem = {
   id: string;
-  itemClass: 'Product' | 'Service';
+  itemClass: 'Producto' | 'Servicio';
   kind: ProductosServiciosItemKind;
+  referenceCode: string;
   name: string;
   price: number;
   currencySymbol: string;
@@ -28,7 +29,7 @@ export type CategoriaProductoServicio = {
 };
 
 export type CrearProductoServicioPayload = {
-  itemClass: 'Product' | 'Service';
+  itemClass: 'Producto' | 'Servicio';
   name: string;
   description?: string;
   sku?: string;
@@ -42,7 +43,8 @@ export type ActualizarProductoServicioPayload = Partial<CrearProductoServicioPay
 
 type ApiItem = {
   id: string;
-  itemClass: 'Product' | 'Service';
+  itemClass: 'Producto' | 'Servicio';
+  referenceCode: string;
   name: string;
   description: string | null;
   sku: string | null;
@@ -89,12 +91,13 @@ function getApiBaseUrl(): string {
 }
 
 function mapProductoServicioItem(item: ApiItem): ProductosServiciosItem {
-  const kind = item.itemClass === 'Product' ? 'Producto' : 'Servicio';
+  const kind = item.itemClass === 'Producto' ? 'Producto' : 'Servicio';
 
   return {
     id: item.id,
     itemClass: item.itemClass,
     kind,
+    referenceCode: item.referenceCode,
     name: item.name,
     price: Number(item.price),
     currencySymbol: 'S/',

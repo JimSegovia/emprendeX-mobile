@@ -167,7 +167,7 @@ export default function ProductosServiciosNuevoScreen() {
 
     try {
       const payload = {
-        itemClass: isProduct ? ('Product' as const) : ('Service' as const),
+        itemClass: isProduct ? ('Producto' as const) : ('Servicio' as const),
         name: name.trim(),
         description: description.trim(),
         sku: sku.trim() || undefined,
