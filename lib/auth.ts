@@ -16,7 +16,7 @@ export type AuthUser = {
   activeSubscription: {
     id: string;
     planName: string;
-    period: 'Monthly' | 'Yearly';
+    period: string;
     price: string;
     endsAt: string;
     isActive: boolean;
@@ -59,10 +59,6 @@ type RegisterPayload = {
 type OnboardingSetupPayload = {
   businessName: string;
   businessCategory: string;
-};
-
-type OnboardingModulesPayload = {
-  selectedModuleIds: ModuleId[];
 };
 
 type ApiErrorBody = {
@@ -108,7 +104,7 @@ function isSubscriptionSummary(
   return (
     typeof value.id === 'string' &&
     typeof value.planName === 'string' &&
-    ['Monthly', 'Yearly'].includes(String(value.period)) &&
+    typeof value.period === 'string' &&
     typeof value.price === 'string' &&
     typeof value.endsAt === 'string' &&
     typeof value.isActive === 'boolean' &&
@@ -274,14 +270,12 @@ export async function updateOnboardingSetup(
 
 export async function completeOnboardingModules(
   accessToken: string,
-  payload: OnboardingModulesPayload,
 ): Promise<AuthStateResponse> {
   return request<AuthStateResponse>('/onboarding/modules', {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(payload),
   });
 }
 

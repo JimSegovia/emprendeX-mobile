@@ -1,3 +1,18 @@
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import {
+  ArrowLeft,
+  BarChart2,
+  Briefcase,
+  Calculator,
+  Crown,
+  FileText,
+  type LucideIcon,
+  Users,
+} from 'lucide-react-native';
+import type { ModuleId } from '@/lib/modules';
 import Animated, {
   screenEntering,
   sectionEntering,
@@ -5,22 +20,6 @@ import Animated, {
 } from '@/components/ui/motion';
 import { completeOnboardingModules, getReadableAuthError, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
-import type { ModuleId } from '@/lib/modules';
-import { router } from 'expo-router';
-import {
-  ArrowLeft,
-  BarChart2,
-  Bell,
-  Briefcase,
-  Calculator,
-  Calendar,
-  FileText,
-  type LucideIcon,
-  Users
-} from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type SelectableModuleId = Extract<
   ModuleId,
@@ -28,7 +27,7 @@ type SelectableModuleId = Extract<
 >;
 
 type ModuleItem = {
-  id: SelectableModuleId | 'reportes' | 'notificaciones' | 'calendario';
+  id: SelectableModuleId | 'reportes' | 'alertas-pro';
   title: string;
   desc: string;
   icon: LucideIcon;
@@ -67,34 +66,19 @@ const MODULES: ModuleItem[] = [
     icon: Calculator,
   },
   {
-    id: 'calendario',
-    title: 'Calendario',
-    desc: 'Agenda y recordatorios.',
-    icon: Calendar,
-    premium: true,
-  },
-  {
     id: 'reportes',
-    title: 'Reportes',
-    desc: 'Comparativos, evolucin y resǧmenes premium.',
+    title: 'Reportes avanzados',
+    desc: 'Comparativos, evolución y resúmenes premium.',
     icon: BarChart2,
     premium: true,
   },
   {
-    id: 'notificaciones',
-    title: 'Notificaciones avanzadas',
-    desc: 'Recordatorios automǭticos y foco en pendientes clave.',
-    icon: Bell,
+    id: 'alertas-pro',
+    title: 'Alertas inteligentes',
+    desc: 'Recordatorios automáticos y foco en pendientes clave.',
+    icon: Crown,
     premium: true,
   },
-];
-
-const DEFAULT_SELECTED_MODULE_IDS: SelectableModuleId[] = [
-  'operaciones',
-  'clientes',
-  'productos',
-  'cotizaciones',
-  'contabilidad',
 ];
 
 export default function ModulesScreen() {
@@ -115,15 +99,11 @@ export default function ModulesScreen() {
       return;
     }
 
-    const selectedModuleIds = DEFAULT_SELECTED_MODULE_IDS;
-
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const nextAuthState = await completeOnboardingModules(accessToken, {
-        selectedModuleIds,
-      });
+      const nextAuthState = await completeOnboardingModules(accessToken);
 
       updateAuthState(nextAuthState);
       router.replace(resolvePostAuthRoute(nextAuthState));
