@@ -143,6 +143,7 @@ export default function ProductosServiciosNuevoScreen() {
   const isProduct = kind === 'Producto';
 
   const normalize = (value: string) => value.trim();
+  const isCustomOption = (value: string | null) => Boolean(value?.startsWith('custom-'));
 
   const confirmDelete = (title: string, message: string, onConfirm: () => void) => {
     Alert.alert(title, message, [
@@ -166,15 +167,34 @@ export default function ProductosServiciosNuevoScreen() {
     setSubmitError(null);
 
     try {
+      const selectedUnit = isProduct
+        ? unitItems.find((option) => option.value === unit)
+        : null;
+      const selectedCategory = !isProduct
+        ? categoryItems.find((option) => option.value === category)
+        : null;
+
       const payload = {
         itemClass: isProduct ? ('Producto' as const) : ('Servicio' as const),
         name: name.trim(),
         description: description.trim(),
         sku: sku.trim() || undefined,
         price: price.trim(),
-        unitId: isProduct ? (unit ?? undefined) : undefined,
+        unitId:
+          isProduct && unit && !isCustomOption(unit) ? unit : undefined,
+        unitName:
+          isProduct && selectedUnit && isCustomOption(selectedUnit.value)
+            ? selectedUnit.label.split(' (')[0]?.trim() || selectedUnit.label.trim()
+            : undefined,
         stock: isProduct ? Number(stock || '1') : undefined,
-        categoryId: !isProduct ? (category ?? undefined) : undefined,
+        categoryId:
+          !isProduct && category && !isCustomOption(category)
+            ? category
+            : undefined,
+        categoryName:
+          !isProduct && selectedCategory && isCustomOption(selectedCategory.value)
+            ? selectedCategory.label.trim()
+            : undefined,
       };
 
       const createdItem = id

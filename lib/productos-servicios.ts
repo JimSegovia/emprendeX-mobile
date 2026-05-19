@@ -35,8 +35,10 @@ export type CrearProductoServicioPayload = {
   sku?: string;
   price: string;
   unitId?: string;
+  unitName?: string;
   stock?: number;
   categoryId?: string;
+  categoryName?: string;
 };
 
 export type ActualizarProductoServicioPayload = Partial<CrearProductoServicioPayload>;
