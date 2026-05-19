@@ -16,11 +16,17 @@ import { ArrowLeft, Briefcase, Check, Package, PencilLine, Trash2, X } from 'luc
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
   createProductoServicio,
+  createProductoServicioCategory,
+  createProductoServicioUnit,
+  deleteProductoServicioCategory,
+  deleteProductoServicioUnit,
   fetchProductosServiciosCategories,
   fetchProductosServiciosItemById,
   fetchProductosServiciosUnits,
   getReadableProductosServiciosError,
+  updateProductoServicioCategory,
   updateProductoServicio,
+  updateProductoServicioUnit,
 } from '@/lib/productos-servicios';
 import { useAuthSession } from '@/lib/auth-session-context';
 
@@ -60,11 +66,26 @@ export default function ProductosServiciosNuevoScreen() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+  const [isSavingOption, setIsSavingOption] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const currency = 'S/';
   const dropdownSpacing = 220;
+
+  const mapUnitItems = (units: Awaited<ReturnType<typeof fetchProductosServiciosUnits>>) =>
+    units.map((unitOption) => ({
+      label: `${unitOption.unitName} (${unitOption.abbreviation})`,
+      value: unitOption.unitId,
+    }));
+
+  const mapCategoryItems = (
+    categories: Awaited<ReturnType<typeof fetchProductosServiciosCategories>>,
+  ) =>
+    categories.map((categoryOption) => ({
+      label: categoryOption.categoryName,
+      value: categoryOption.categoryId,
+    }));
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -81,18 +102,9 @@ export default function ProductosServiciosNuevoScreen() {
           fetchProductosServiciosCategories(accessToken),
         ]);
 
-        setUnitItems(
-          units.map((unitOption) => ({
-            label: `${unitOption.unitName} (${unitOption.abbreviation})`,
-            value: unitOption.unitId,
-          })),
-        );
-        setCategoryItems(
-          categories.map((categoryOption) => ({
-            label: categoryOption.categoryName,
-            value: categoryOption.categoryId,
-          })),
-        );
+        setUnitItems(mapUnitItems(units));
+        setCategoryItems(mapCategoryItems(categories));
+
         if (id) {
           const item = await fetchProductosServiciosItemById(accessToken, id);
           setKind(item.kind);
@@ -143,13 +155,262 @@ export default function ProductosServiciosNuevoScreen() {
   const isProduct = kind === 'Producto';
 
   const normalize = (value: string) => value.trim();
-  const isCustomOption = (value: string | null) => Boolean(value?.startsWith('custom-'));
+  const getUnitNameFromLabel = (label: string) => label.split(' (')[0]?.trim() || label.trim();
 
   const confirmDelete = (title: string, message: string, onConfirm: () => void) => {
     Alert.alert(title, message, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Eliminar', style: 'destructive', onPress: onConfirm },
     ]);
+  };
+
+  const handleAddUnit = async () => {
+    const next = normalize(newUnit);
+
+    if (!accessToken) {
+      return;
+    }
+
+    if (!next) {
+      Alert.alert('Nombre inválido', 'Escribe el nombre de la unidad.');
+      return;
+    }
+
+    if (
+      unitItems.some(
+        (item) => getUnitNameFromLabel(item.label).toLowerCase() === next.toLowerCase(),
+      )
+    ) {
+      Alert.alert('Duplicado', 'Esa unidad ya existe.');
+      return;
+    }
+
+    setIsSavingOption(true);
+    setSubmitError(null);
+
+    try {
+      const createdUnit = await createProductoServicioUnit(accessToken, {
+        unitName: next,
+      });
+
+      setUnitItems((prev) => [
+        ...prev,
+        {
+          label: `${createdUnit.unitName} (${createdUnit.abbreviation})`,
+          value: createdUnit.unitId,
+        },
+      ]);
+      setNewUnit('');
+      setUnit(createdUnit.unitId);
+      Alert.alert('Unidad agregada', `Se agregó: ${createdUnit.unitName}`);
+    } catch (productosServiciosError) {
+      Alert.alert('No se pudo agregar la unidad', getReadableProductosServiciosError(productosServiciosError));
+    } finally {
+      setIsSavingOption(false);
+    }
+  };
+
+  const handleUpdateUnit = async (unitId: string) => {
+    const next = normalize(editingUnitName);
+
+    if (!accessToken) {
+      return;
+    }
+
+    if (!next) {
+      Alert.alert('Nombre inválido', 'La unidad no puede estar vacía.');
+      return;
+    }
+
+    if (
+      unitItems.some(
+        (item) =>
+          item.value !== unitId &&
+          getUnitNameFromLabel(item.label).toLowerCase() === next.toLowerCase(),
+      )
+    ) {
+      Alert.alert('Duplicado', 'Ya existe una unidad con ese nombre.');
+      return;
+    }
+
+    setIsSavingOption(true);
+    setSubmitError(null);
+
+    try {
+      const updatedUnit = await updateProductoServicioUnit(accessToken, unitId, {
+        unitName: next,
+      });
+
+      setUnitItems((prev) =>
+        prev.map((item) =>
+          item.value === unitId
+            ? {
+                label: `${updatedUnit.unitName} (${updatedUnit.abbreviation})`,
+                value: updatedUnit.unitId,
+              }
+            : item,
+        ),
+      );
+      setEditingUnitId(null);
+      setEditingUnitName('');
+      Alert.alert('Unidad actualizada', `Ahora es: ${updatedUnit.unitName}`);
+    } catch (productosServiciosError) {
+      Alert.alert('No se pudo actualizar la unidad', getReadableProductosServiciosError(productosServiciosError));
+    } finally {
+      setIsSavingOption(false);
+    }
+  };
+
+  const handleDeleteUnit = (unitId: string, label: string) => {
+    if (!accessToken) {
+      return;
+    }
+
+    confirmDelete('Eliminar unidad', `¿Eliminar "${label}"?`, () => {
+      void (async () => {
+        setIsSavingOption(true);
+        setSubmitError(null);
+
+        try {
+          await deleteProductoServicioUnit(accessToken, unitId);
+          setUnitItems((prev) => prev.filter((item) => item.value !== unitId));
+          if (unit === unitId) {
+            setUnit(null);
+          }
+          Alert.alert('Unidad eliminada', `Se eliminó: ${label}`);
+        } catch (productosServiciosError) {
+          Alert.alert('No se pudo eliminar la unidad', getReadableProductosServiciosError(productosServiciosError));
+        } finally {
+          setIsSavingOption(false);
+        }
+      })();
+    });
+  };
+
+  const handleAddCategory = async () => {
+    const next = normalize(newCategory);
+
+    if (!accessToken) {
+      return;
+    }
+
+    if (!next) {
+      Alert.alert('Nombre inválido', 'Escribe el nombre de la categoría.');
+      return;
+    }
+
+    if (categoryItems.some((item) => item.label.trim().toLowerCase() === next.toLowerCase())) {
+      Alert.alert('Duplicado', 'Esa categoría ya existe.');
+      return;
+    }
+
+    setIsSavingOption(true);
+    setSubmitError(null);
+
+    try {
+      const createdCategory = await createProductoServicioCategory(accessToken, {
+        categoryName: next,
+      });
+
+      setCategoryItems((prev) => [
+        ...prev,
+        {
+          label: createdCategory.categoryName,
+          value: createdCategory.categoryId,
+        },
+      ]);
+      setNewCategory('');
+      setCategory(createdCategory.categoryId);
+      Alert.alert('Categoría agregada', `Se agregó: ${createdCategory.categoryName}`);
+    } catch (productosServiciosError) {
+      Alert.alert(
+        'No se pudo agregar la categoría',
+        getReadableProductosServiciosError(productosServiciosError),
+      );
+    } finally {
+      setIsSavingOption(false);
+    }
+  };
+
+  const handleUpdateCategory = async (categoryId: string) => {
+    const next = normalize(editingCategoryName);
+
+    if (!accessToken) {
+      return;
+    }
+
+    if (!next) {
+      Alert.alert('Nombre inválido', 'La categoría no puede estar vacía.');
+      return;
+    }
+
+    if (
+      categoryItems.some(
+        (item) => item.value !== categoryId && item.label.trim().toLowerCase() === next.toLowerCase(),
+      )
+    ) {
+      Alert.alert('Duplicado', 'Ya existe una categoría con ese nombre.');
+      return;
+    }
+
+    setIsSavingOption(true);
+    setSubmitError(null);
+
+    try {
+      const updatedCategory = await updateProductoServicioCategory(accessToken, categoryId, {
+        categoryName: next,
+      });
+
+      setCategoryItems((prev) =>
+        prev.map((item) =>
+          item.value === categoryId
+            ? {
+                label: updatedCategory.categoryName,
+                value: updatedCategory.categoryId,
+              }
+            : item,
+        ),
+      );
+      setEditingCategoryId(null);
+      setEditingCategoryName('');
+      Alert.alert('Categoría actualizada', `Ahora es: ${updatedCategory.categoryName}`);
+    } catch (productosServiciosError) {
+      Alert.alert(
+        'No se pudo actualizar la categoría',
+        getReadableProductosServiciosError(productosServiciosError),
+      );
+    } finally {
+      setIsSavingOption(false);
+    }
+  };
+
+  const handleDeleteCategory = (categoryId: string, label: string) => {
+    if (!accessToken) {
+      return;
+    }
+
+    confirmDelete('Eliminar categoría', `¿Eliminar "${label}"?`, () => {
+      void (async () => {
+        setIsSavingOption(true);
+        setSubmitError(null);
+
+        try {
+          await deleteProductoServicioCategory(accessToken, categoryId);
+          setCategoryItems((prev) => prev.filter((item) => item.value !== categoryId));
+          if (category === categoryId) {
+            setCategory(null);
+          }
+          Alert.alert('Categoría eliminada', `Se eliminó: ${label}`);
+        } catch (productosServiciosError) {
+          Alert.alert(
+            'No se pudo eliminar la categoría',
+            getReadableProductosServiciosError(productosServiciosError),
+          );
+        } finally {
+          setIsSavingOption(false);
+        }
+      })();
+    });
   };
 
   const isFormValid =
@@ -167,34 +428,15 @@ export default function ProductosServiciosNuevoScreen() {
     setSubmitError(null);
 
     try {
-      const selectedUnit = isProduct
-        ? unitItems.find((option) => option.value === unit)
-        : null;
-      const selectedCategory = !isProduct
-        ? categoryItems.find((option) => option.value === category)
-        : null;
-
       const payload = {
         itemClass: isProduct ? ('Producto' as const) : ('Servicio' as const),
         name: name.trim(),
         description: description.trim(),
         sku: sku.trim() || undefined,
         price: price.trim(),
-        unitId:
-          isProduct && unit && !isCustomOption(unit) ? unit : undefined,
-        unitName:
-          isProduct && selectedUnit && isCustomOption(selectedUnit.value)
-            ? selectedUnit.label.split(' (')[0]?.trim() || selectedUnit.label.trim()
-            : undefined,
+        unitId: isProduct && unit ? unit : undefined,
         stock: isProduct ? Number(stock || '1') : undefined,
-        categoryId:
-          !isProduct && category && !isCustomOption(category)
-            ? category
-            : undefined,
-        categoryName:
-          !isProduct && selectedCategory && isCustomOption(selectedCategory.value)
-            ? selectedCategory.label.trim()
-            : undefined,
+        categoryId: !isProduct && category ? category : undefined,
       };
 
       const createdItem = id
@@ -432,36 +674,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
                                     activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Guardar unidad ${option.label}`}
-                                    onPress={() => {
-                                      const next = normalize(editingUnitName);
-                                      if (!next) {
-                                        Alert.alert('Nombre inválido', 'La unidad no puede estar vacía.');
-                                        return;
-                                      }
-                                      if (
-                                        unitItems.some(
-                                          (item) =>
-                                            item.value !== option.value &&
-                                            item.label.trim().toLowerCase() === next.toLowerCase(),
-                                        )
-                                      ) {
-                                        Alert.alert('Duplicado', 'Ya existe una unidad con ese nombre.');
-                                        return;
-                                      }
-                                      setUnitItems((prev) =>
-                                        prev.map((item) =>
-                                          item.value === option.value
-                                            ? { ...item, label: next }
-                                            : item,
-                                        ),
-                                      );
-                                      setEditingUnitId(null);
-                                      setEditingUnitName('');
-                                      Alert.alert('Unidad actualizada', `Ahora es: ${next}`);
-                                    }}
-                                  >
+                                     accessibilityRole="button"
+                                     accessibilityLabel={`Guardar unidad ${option.label}`}
+                                     onPress={() => {
+                                       void handleUpdateUnit(option.value);
+                                     }}
+                                   >
                                     <Check size={18} color="#059669" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
@@ -482,30 +700,24 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-violet-50"
                                     activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Editar unidad ${option.label}`}
-                                    onPress={() => {
-                                      setEditingUnitId(option.value);
-                                      setEditingUnitName(option.label);
-                                    }}
-                                  >
+                                     accessibilityRole="button"
+                                     accessibilityLabel={`Editar unidad ${option.label}`}
+                                     onPress={() => {
+                                       setEditingUnitId(option.value);
+                                       setEditingUnitName(getUnitNameFromLabel(option.label));
+                                     }}
+                                   >
                                     <PencilLine size={18} color="#7c3aed" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
                                     className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
                                     activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Eliminar unidad ${option.label}`}
-                                    onPress={() => {
-                                      confirmDelete('Eliminar unidad', `¿Eliminar "${option.label}"?`, () => {
-                                        setUnitItems((prev) =>
-                                          prev.filter((item) => item.value !== option.value),
-                                        );
-                                        if (unit === option.value) setUnit(null);
-                                        Alert.alert('Unidad eliminada', `Se eliminó: ${option.label}`);
-                                      });
-                                    }}
-                                  >
+                                     accessibilityRole="button"
+                                     accessibilityLabel={`Eliminar unidad ${option.label}`}
+                                     onPress={() => {
+                                       handleDeleteUnit(option.value, option.label);
+                                     }}
+                                   >
                                     <Trash2 size={18} color="#e11d48" />
                                   </TouchableOpacity>
                                 </View>
@@ -531,28 +743,9 @@ export default function ProductosServiciosNuevoScreen() {
                         activeOpacity={0.85}
                         accessibilityRole="button"
                         accessibilityLabel="Agregar unidad"
+                        disabled={isSavingOption}
                         onPress={() => {
-                          const next = normalize(newUnit);
-                          if (!next) {
-                            Alert.alert('Nombre inválido', 'Escribe el nombre de la unidad.');
-                            return;
-                          }
-                          if (
-                            unitItems.some(
-                              (item) => item.label.trim().toLowerCase() === next.toLowerCase(),
-                            )
-                          ) {
-                            Alert.alert('Duplicado', 'Esa unidad ya existe.');
-                            return;
-                          }
-                          const newOption = {
-                            label: next,
-                            value: `custom-${Date.now()}`,
-                          };
-                          setUnitItems((prev) => [...prev, newOption]);
-                          setNewUnit('');
-                          if (!unit) setUnit(newOption.value);
-                          Alert.alert('Unidad agregada', `Se agregó: ${next}`);
+                          void handleAddUnit();
                         }}
                       >
                         <Text className="font-semibold text-white">Agregar</Text>
@@ -645,36 +838,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
                                     activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Guardar categoría ${option.label}`}
-                                    onPress={() => {
-                                      const next = normalize(editingCategoryName);
-                                      if (!next) {
-                                        Alert.alert('Nombre inválido', 'La categoría no puede estar vacía.');
-                                        return;
-                                      }
-                                      if (
-                                        categoryItems.some(
-                                          (item) =>
-                                            item.value !== option.value &&
-                                            item.label.trim().toLowerCase() === next.toLowerCase(),
-                                        )
-                                      ) {
-                                        Alert.alert('Duplicado', 'Ya existe una categoría con ese nombre.');
-                                        return;
-                                      }
-                                      setCategoryItems((prev) =>
-                                        prev.map((item) =>
-                                          item.value === option.value
-                                            ? { ...item, label: next }
-                                            : item,
-                                        ),
-                                      );
-                                      setEditingCategoryId(null);
-                                      setEditingCategoryName('');
-                                      Alert.alert('Categoría actualizada', `Ahora es: ${next}`);
-                                    }}
-                                  >
+                                     accessibilityRole="button"
+                                     accessibilityLabel={`Guardar categoría ${option.label}`}
+                                     onPress={() => {
+                                       void handleUpdateCategory(option.value);
+                                     }}
+                                   >
                                     <Check size={18} color="#059669" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
@@ -707,25 +876,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
                                     activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Eliminar categoría ${option.label}`}
-                                    onPress={() => {
-                                      confirmDelete(
-                                        'Eliminar categoría',
-                                        `¿Eliminar "${option.label}"?`,
-                                        () => {
-                                          setCategoryItems((prev) =>
-                                            prev.filter((item) => item.value !== option.value),
-                                          );
-                                          if (category === option.value) setCategory(null);
-                                          Alert.alert(
-                                            'Categoría eliminada',
-                                            `Se eliminó: ${option.label}`,
-                                          );
-                                        },
-                                      );
-                                    }}
-                                  >
+                                     accessibilityRole="button"
+                                     accessibilityLabel={`Eliminar categoría ${option.label}`}
+                                     onPress={() => {
+                                       handleDeleteCategory(option.value, option.label);
+                                     }}
+                                   >
                                     <Trash2 size={18} color="#e11d48" />
                                   </TouchableOpacity>
                                 </View>
@@ -751,28 +907,9 @@ export default function ProductosServiciosNuevoScreen() {
                         activeOpacity={0.85}
                         accessibilityRole="button"
                         accessibilityLabel="Agregar categoría"
+                        disabled={isSavingOption}
                         onPress={() => {
-                          const next = normalize(newCategory);
-                          if (!next) {
-                            Alert.alert('Nombre inválido', 'Escribe el nombre de la categoría.');
-                            return;
-                          }
-                          if (
-                            categoryItems.some(
-                              (item) => item.label.trim().toLowerCase() === next.toLowerCase(),
-                            )
-                          ) {
-                            Alert.alert('Duplicado', 'Esa categoría ya existe.');
-                            return;
-                          }
-                          const newOption = {
-                            label: next,
-                            value: `custom-${Date.now()}`,
-                          };
-                          setCategoryItems((prev) => [...prev, newOption]);
-                          setNewCategory('');
-                          if (!category) setCategory(newOption.value);
-                          Alert.alert('Categoría agregada', `Se agregó: ${next}`);
+                          void handleAddCategory();
                         }}
                       >
                         <Text className="font-semibold text-white">Agregar</Text>

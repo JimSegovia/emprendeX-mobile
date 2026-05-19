@@ -19,14 +19,31 @@ export type ProductosServiciosItem = {
 
 export type UnidadProductoServicio = {
   unitId: string;
+  businessId: string;
   unitName: string;
   abbreviation: string;
+  createdAt: string;
 };
 
 export type CategoriaProductoServicio = {
   categoryId: string;
+  businessId: string;
+  categoryName: string;
+  createdAt: string;
+};
+
+export type CrearUnidadProductoServicioPayload = {
+  unitName: string;
+  abbreviation?: string;
+};
+
+export type ActualizarUnidadProductoServicioPayload = Partial<CrearUnidadProductoServicioPayload>;
+
+export type CrearCategoriaProductoServicioPayload = {
   categoryName: string;
 };
+
+export type ActualizarCategoriaProductoServicioPayload = Partial<CrearCategoriaProductoServicioPayload>;
 
 export type CrearProductoServicioPayload = {
   itemClass: 'Producto' | 'Servicio';
@@ -174,6 +191,70 @@ export async function fetchProductosServiciosCategories(
       method: 'GET',
     },
   );
+}
+
+export async function createProductoServicioUnit(
+  accessToken: string,
+  payload: CrearUnidadProductoServicioPayload,
+): Promise<UnidadProductoServicio> {
+  return request<UnidadProductoServicio>(accessToken, '/productos-servicios/units', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateProductoServicioUnit(
+  accessToken: string,
+  unitId: string,
+  payload: ActualizarUnidadProductoServicioPayload,
+): Promise<UnidadProductoServicio> {
+  return request<UnidadProductoServicio>(accessToken, `/productos-servicios/units/${unitId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteProductoServicioUnit(
+  accessToken: string,
+  unitId: string,
+): Promise<void> {
+  await request<null>(accessToken, `/productos-servicios/units/${unitId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createProductoServicioCategory(
+  accessToken: string,
+  payload: CrearCategoriaProductoServicioPayload,
+): Promise<CategoriaProductoServicio> {
+  return request<CategoriaProductoServicio>(accessToken, '/productos-servicios/categories', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateProductoServicioCategory(
+  accessToken: string,
+  categoryId: string,
+  payload: ActualizarCategoriaProductoServicioPayload,
+): Promise<CategoriaProductoServicio> {
+  return request<CategoriaProductoServicio>(
+    accessToken,
+    `/productos-servicios/categories/${categoryId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function deleteProductoServicioCategory(
+  accessToken: string,
+  categoryId: string,
+): Promise<void> {
+  await request<null>(accessToken, `/productos-servicios/categories/${categoryId}`, {
+    method: 'DELETE',
+  });
 }
 
 export async function fetchProductosServiciosItems(
