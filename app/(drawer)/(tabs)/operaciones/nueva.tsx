@@ -12,6 +12,8 @@ import {
   type ProductosServiciosItem,
   type ProductosServiciosItemKind,
 } from '@/lib/productos-servicios';
+import { fetchClientes, getReadableClientesError } from '@/lib/clientes';
+import { createCotizacion, getReadableVentasError } from '@/lib/ventas';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 export default function NuevaOperacionScreen() {
@@ -19,59 +21,68 @@ export default function NuevaOperacionScreen() {
   const insets = useSafeAreaInsets();
   const { accessToken } = useAuthSession();
 
-  const clientOptions = [
-    { label: 'Maria López', value: 'maria' },
-    { label: 'Lucía Fernández', value: 'lucia' },
-    { label: 'Ana Torres', value: 'ana' },
-  ];
   const methodOptions = [
-    { label: 'Delivery', value: 'delivery' },
-    { label: 'Recojo en tienda', value: 'recojo' },
-  ];
+    { label: 'Delivery', value: 'Delivery' },
+    { label: 'Recojo en tienda', value: 'Recojo en tienda' },
+  ] as const;
 
   const [client, setClient] = useState<string | null>(null);
   const [clientOpen, setClientOpen] = useState(false);
-  const [clientItems, setClientItems] = useState(clientOptions);
+  const [clientItems, setClientItems] = useState<{ label: string; value: string }[]>([]);
   const [itemKind, setItemKind] = useState<ProductosServiciosItemKind>('Producto');
   const [product, setProduct] = useState<string[]>([]);
   const [productOpen, setProductOpen] = useState(false);
   const [productItems, setProductItems] = useState<{ label: string; value: string }[]>([]);
-  const [method, setMethod] = useState<string | null>(null);
+  const [method, setMethod] = useState<'Delivery' | 'Recojo en tienda' | null>(null);
   const [methodOpen, setMethodOpen] = useState(false);
-  const [methodItems, setMethodItems] = useState(methodOptions);
+  const [methodItems, setMethodItems] = useState([...methodOptions]);
   const [date, setDate] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [clientsError, setClientsError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [catalogItems, setCatalogItems] = useState<ProductosServiciosItem[]>([]);
   const [catalogItemsById, setCatalogItemsById] = useState<Record<string, { name: string; price: number; kind: ProductosServiciosItemKind }>>({});
   const dropdownSpacing = 220;
 
   useEffect(() => {
-    const loadItems = async () => {
+    const loadDependencies = async () => {
       if (!accessToken) {
         return;
       }
 
       setIsLoadingProducts(true);
       setProductsError(null);
+      setClientsError(null);
 
       try {
-        const items = await fetchProductosServiciosItems(accessToken);
+        const [items, loadedClients] = await Promise.all([
+          fetchProductosServiciosItems(accessToken),
+          fetchClientes(accessToken),
+        ]);
+
         setCatalogItems(items);
         setCatalogItemsById(
           Object.fromEntries(
             items.map((item) => [item.id, { name: item.name, price: item.price, kind: item.kind }]),
           ),
         );
-      } catch (productosServiciosError) {
-        setProductsError(getReadableProductosServiciosError(productosServiciosError));
+        setClientItems(loadedClients.map((item) => ({ label: item.fullName, value: item.id })));
+      } catch (dependencyError) {
+        const message = dependencyError instanceof Error ? dependencyError.message : '';
+        if (message.toLowerCase().includes('cliente')) {
+          setClientsError(getReadableClientesError(dependencyError));
+        } else {
+          setProductsError(getReadableProductosServiciosError(dependencyError));
+        }
       } finally {
         setIsLoadingProducts(false);
       }
     };
 
-    void loadItems();
+    void loadDependencies();
   }, [accessToken]);
 
   useEffect(() => {
@@ -91,15 +102,10 @@ export default function NuevaOperacionScreen() {
       .filter((item) => item.kind === itemKind) as { name: string; price: number; kind: ProductosServiciosItemKind }[];
   }, [catalogItemsById, itemKind, product]);
 
-  const totalQuote = useMemo(() => {
-    return selectedProducts.reduce((sum, item) => sum + item.price, 0);
-  }, [selectedProducts]);
+  const totalQuote = useMemo(() => selectedProducts.reduce((sum, item) => sum + item.price, 0), [selectedProducts]);
 
   const handleItemKindChange = (nextKind: ProductosServiciosItemKind) => {
-    if (nextKind === itemKind) {
-      return;
-    }
-
+    if (nextKind === itemKind) return;
     setItemKind(nextKind);
     setProduct([]);
     setProductOpen(false);
@@ -107,10 +113,28 @@ export default function NuevaOperacionScreen() {
 
   function handleDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
     setShowDate(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
+    if (selectedDate) setDate(selectedDate);
   }
+
+  const handleSave = async () => {
+    if (!accessToken || !client || product.length === 0 || !method) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await createCotizacion(accessToken, {
+        customerId: client,
+        itemIds: product,
+        deliveryDate: date.toISOString(),
+        deliveryMethod: method,
+      });
+      router.replace('/(drawer)/(tabs)/cotizaciones');
+    } catch (saveError) {
+      setSubmitError(getReadableVentasError(saveError));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
@@ -123,25 +147,6 @@ export default function NuevaOperacionScreen() {
           <ArrowLeft color="white" size={24} />
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">Nueva cotización</Text>
-      </Animated.View>
-
-      <Animated.View
-        className="border-b border-slate-100 bg-violet-50/70 px-4 py-4"
-        entering={sectionEntering(1)}
-      >
-        <View className="flex-row items-center">
-          <View className="rounded-full bg-violet-600 px-4 py-2">
-            <Text className="text-xs font-bold uppercase tracking-wide text-white">1. Cotización</Text>
-          </View>
-          <View className="mx-3 h-[1px] flex-1 bg-violet-200" />
-          <View className="rounded-full border border-violet-200 bg-white px-4 py-2">
-            <Text className="text-xs font-bold uppercase tracking-wide text-violet-300">2. Pedido</Text>
-          </View>
-        </View>
-        <Text className="mt-3 text-sm leading-5 text-slate-600">
-          Primero registras cliente y productos/servicios en la cotización. Cuando sea aprobada,
-          recién pasa a pedido.
-        </Text>
       </Animated.View>
 
       <Animated.ScrollView
@@ -167,47 +172,25 @@ export default function NuevaOperacionScreen() {
             style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}
             dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
             textStyle={{ color: client ? '#0f172a' : '#94a3b8' }}
-            onOpen={() => {
-              setProductOpen(false);
-              setMethodOpen(false);
-              setShowDate(false);
-            }}
           />
           <View style={{ height: clientOpen ? dropdownSpacing : 0 }} />
-          <TouchableOpacity
-            className="items-end mt-2"
-            onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
-          >
+          <TouchableOpacity className="items-end mt-2" onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}>
             <Text className="text-violet-600 font-medium">+ Nuevo cliente</Text>
           </TouchableOpacity>
+          {clientsError ? <Text className="mt-2 text-sm font-medium text-rose-600">{clientsError}</Text> : null}
         </Animated.View>
 
         <Animated.View className="mb-6" entering={sectionEntering(4)}>
-          <Text className="font-bold text-slate-800 mb-3">Items de la cotización</Text>
           <Text className="text-sm font-semibold text-slate-700 mb-2">Tipo de items</Text>
           <View className="flex-row">
-            <TouchableOpacity
-              className={`mr-3 flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Producto' ? 'border-violet-200 bg-violet-50' : 'border-slate-200 bg-white'}`}
-              activeOpacity={0.85}
-              onPress={() => handleItemKindChange('Producto')}
-            >
+            <TouchableOpacity className={`mr-3 flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Producto' ? 'border-violet-200 bg-violet-50' : 'border-slate-200 bg-white'}`} onPress={() => handleItemKindChange('Producto')}>
               <Text className={`font-semibold ${itemKind === 'Producto' ? 'text-violet-700' : 'text-slate-600'}`}>Productos</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Servicio' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}
-              activeOpacity={0.85}
-              onPress={() => handleItemKindChange('Servicio')}
-            >
+            <TouchableOpacity className={`flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Servicio' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`} onPress={() => handleItemKindChange('Servicio')}>
               <Text className={`font-semibold ${itemKind === 'Servicio' ? 'text-emerald-700' : 'text-slate-600'}`}>Servicios</Text>
             </TouchableOpacity>
           </View>
-          <Text className="mt-2 text-xs text-slate-500">
-            Solo puedes elegir productos o servicios por cotización.
-          </Text>
-
-          <Text className="font-bold text-slate-800 mb-2 mt-4">
-            {itemKind === 'Producto' ? 'Productos' : 'Servicios'}
-          </Text>
+          <Text className="font-bold text-slate-800 mb-2 mt-4">{itemKind === 'Producto' ? 'Productos' : 'Servicios'}</Text>
           <DropDownPicker
             open={productOpen}
             value={product}
@@ -226,47 +209,27 @@ export default function NuevaOperacionScreen() {
             style={{ borderColor: '#e5e7eb', backgroundColor: 'white', marginBottom: 8 }}
             dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
             textStyle={{ color: product.length > 0 ? '#0f172a' : '#94a3b8' }}
-            onOpen={() => {
-              setClientOpen(false);
-              setMethodOpen(false);
-              setShowDate(false);
-            }}
           />
           <View style={{ height: productOpen ? dropdownSpacing : 0 }} />
-
-            {isLoadingProducts ? (
-              <View className="mt-2 flex-row items-center">
-                <ActivityIndicator color="#7c3aed" />
-                <Text className="ml-3 text-sm text-slate-500">Cargando items...</Text>
-              </View>
-            ) : null}
-
-          {productsError ? (
-            <Text className="mt-2 text-sm font-medium text-rose-600">{productsError}</Text>
+          {isLoadingProducts ? (
+            <View className="mt-2 flex-row items-center">
+              <ActivityIndicator color="#7c3aed" />
+              <Text className="ml-3 text-sm text-slate-500">Cargando items...</Text>
+            </View>
           ) : null}
-
-            <TouchableOpacity
-              className="items-end mt-2"
-              onPress={() => router.push('/(drawer)/(tabs)/productos')}
-            >
-              <Text className="text-violet-600 font-medium">+ Agregar item</Text>
-            </TouchableOpacity>
+          {productsError ? <Text className="mt-2 text-sm font-medium text-rose-600">{productsError}</Text> : null}
+          <TouchableOpacity className="items-end mt-2" onPress={() => router.push('/(drawer)/(tabs)/productos')}>
+            <Text className="text-violet-600 font-medium">+ Agregar item</Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {selectedProducts.length > 0 ? (
-          <Animated.View
-            className="mb-6 rounded-2xl border border-slate-100 bg-slate-50 p-4"
-            entering={sectionEntering(5)}
-          >
-            <Text className="text-sm font-semibold text-slate-800">
-              {itemKind === 'Producto' ? 'Productos seleccionados' : 'Servicios seleccionados'}
-            </Text>
+          <Animated.View className="mb-6 rounded-2xl border border-slate-100 bg-slate-50 p-4" entering={sectionEntering(5)}>
+            <Text className="text-sm font-semibold text-slate-800">Items seleccionados</Text>
             {selectedProducts.map((selectedItem, index) => (
               <View key={`${selectedItem.name}-${index}`} className="mt-3 flex-row justify-between">
                 <Text className="text-sm text-slate-600">{selectedItem.name}</Text>
-                <Text className="text-sm font-semibold text-slate-800">
-                  S/ {selectedItem.price.toFixed(2)}
-                </Text>
+                <Text className="text-sm font-semibold text-slate-800">S/ {selectedItem.price.toFixed(2)}</Text>
               </View>
             ))}
           </Animated.View>
@@ -274,26 +237,11 @@ export default function NuevaOperacionScreen() {
 
         <Animated.View className="mb-6" entering={sectionEntering(6)}>
           <Text className="font-bold text-slate-800 mb-2">Fecha de entrega estimada</Text>
-          <TouchableOpacity
-            className="flex-row items-center justify-between border border-slate-200 rounded-xl p-4 bg-white"
-            onPress={() => {
-              setClientOpen(false);
-              setProductOpen(false);
-              setMethodOpen(false);
-              setShowDate(true);
-            }}
-          >
+          <TouchableOpacity className="flex-row items-center justify-between border border-slate-200 rounded-xl p-4 bg-white" onPress={() => setShowDate(true)}>
             <Text className="text-slate-800">{date.toLocaleDateString()}</Text>
             <Calendar color="#94a3b8" size={20} />
           </TouchableOpacity>
-          {showDate ? (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-            />
-          ) : null}
+          {showDate ? <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} /> : null}
         </Animated.View>
 
         <Animated.View className="mb-6" entering={sectionEntering(7)}>
@@ -313,44 +261,28 @@ export default function NuevaOperacionScreen() {
             style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}
             dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
             textStyle={{ color: method ? '#0f172a' : '#94a3b8' }}
-            onOpen={() => {
-              setClientOpen(false);
-              setProductOpen(false);
-              setShowDate(false);
-            }}
           />
           <View style={{ height: methodOpen ? dropdownSpacing : 0 }} />
         </Animated.View>
 
-        <Animated.View
-          className="mb-8 rounded-2xl border border-violet-100 bg-violet-50 p-4"
-          entering={sectionEntering(8)}
-        >
-          <Text className="text-sm font-semibold text-violet-900">Siguiente paso</Text>
-          <Text className="mt-2 text-sm leading-6 text-violet-800">
-            Cuando la cotización esté aprobada, podrás convertirla en pedido sin volver a ingresar
-            cliente, items ni total.
-          </Text>
-        </Animated.View>
+        {submitError ? <Text className="mb-4 text-sm font-medium text-rose-600">{submitError}</Text> : null}
       </Animated.ScrollView>
 
-      <Animated.View
-        className="border-t border-slate-100 bg-white px-4 pt-4 flex-row items-center justify-between"
-        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-        entering={sectionEntering(9)}
-      >
+      <Animated.View className="border-t border-slate-100 bg-white px-4 pt-4 flex-row items-center justify-between" style={{ paddingBottom: Math.max(insets.bottom, 16) }} entering={sectionEntering(9)}>
         <View>
           <Text className="text-slate-500 font-medium">Total cotizado</Text>
           <Text className="text-lg font-bold text-slate-800">S/ {totalQuote.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
-          className="bg-violet-600 px-8 py-3 rounded-xl"
-          disabled={!client || product.length === 0 || !method}
+          className={`px-8 py-3 rounded-xl ${client && product.length > 0 && method && !isSubmitting ? 'bg-violet-600' : 'bg-slate-200'}`}
+          disabled={!client || product.length === 0 || !method || isSubmitting}
           onPress={() => {
-            router.replace('/(drawer)/(tabs)/cotizaciones');
+            void handleSave();
           }}
         >
-          <Text className="text-white font-bold">Guardar cotización</Text>
+          <Text className={`font-bold ${client && product.length > 0 && method ? 'text-white' : 'text-slate-400'}`}>
+            {isSubmitting ? 'Guardando...' : 'Guardar cotización'}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>

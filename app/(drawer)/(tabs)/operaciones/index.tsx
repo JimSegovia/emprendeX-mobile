@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import { Search, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import Animated, {
   AnimatedTouchableOpacity,
   itemEntering,
@@ -11,93 +11,79 @@ import Animated, {
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
-
-const operacionesData = [
-  {
-    id: '1028',
-    tipo: 'Pedido',
-    cliente: 'Lucía Fernández',
-    monto: '210.00',
-    estado: 'No activo',
-    color: 'amber',
-  },
-  {
-    id: '1027',
-    tipo: 'Pedido',
-    cliente: 'Juan Pérez',
-    monto: '180.00',
-    estado: 'Activo',
-    color: 'violet',
-  },
-  {
-    id: '1026',
-    tipo: 'Pedido',
-    cliente: 'Ana Torres',
-    monto: '260.00',
-    estado: 'En camino',
-    color: 'orange',
-  },
-  {
-    id: '1025',
-    tipo: 'Pedido',
-    cliente: 'María López',
-    monto: '340.00',
-    estado: 'Entregado',
-    color: 'emerald',
-  },
-  {
-    id: '1022',
-    tipo: 'Cotización',
-    fecha: '20/05/2024',
-    monto: '320.00',
-    estado: 'Pendiente',
-    color: 'amber',
-  },
-];
+import { fetchOperaciones, getReadableVentasError, type OperacionResumen } from '@/lib/ventas';
+import { useAuthSession } from '@/lib/auth-session-context';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
 export default function OperacionesScreen() {
   const [activeTab, setActiveTab] = useState('Todas');
   const [query, setQuery] = useState('');
+  const [operaciones, setOperaciones] = useState<OperacionResumen[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { accessToken } = useAuthSession();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const getStatusStyle = (color: string) => {
-    switch (color) {
-      case 'orange':
+  const loadOperations = useCallback(async () => {
+    if (!accessToken) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      setOperaciones(await fetchOperaciones(accessToken));
+    } catch (loadError) {
+      setError(getReadableVentasError(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadOperations();
+    }, [loadOperations]),
+  );
+
+  const filteredOperaciones = useMemo(() => {
+    return operaciones.filter((item) => {
+      if (activeTab !== 'Todas') {
+        if (activeTab === 'Pedidos' && item.type !== 'Pedido') return false;
+        if (activeTab === 'Cotizaciones' && item.type !== 'Cotización') return false;
+      }
+      if (query) {
+        const q = query.trim().toLowerCase();
+        const matchText = `${item.referenceCode} ${item.customerName} ${item.type}`.toLowerCase();
+        if (!matchText.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [activeTab, operaciones, query]);
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'En camino':
         return 'bg-orange-100 text-orange-600';
-      case 'amber':
+      case 'Pendiente':
+      case 'Reserva':
         return 'bg-amber-100 text-amber-600';
-      case 'emerald':
+      case 'Entregado':
+      case 'Aprobada':
         return 'bg-emerald-100 text-emerald-600';
-      case 'violet':
+      case 'Activo':
         return 'bg-violet-100 text-violet-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
   };
 
-  const filteredOperaciones = operacionesData.filter((item) => {
-    if (activeTab !== 'Todas') {
-      if (activeTab === 'Pedidos' && item.tipo !== 'Pedido') return false;
-      if (activeTab === 'Cotizaciones' && item.tipo !== 'Cotización') return false;
-    }
-    if (query) {
-      const q = query.trim().toLowerCase();
-      const matchText =
-        `${item.id} ${item.cliente || ''} ${item.fecha || ''} ${item.tipo}`.toLowerCase();
-      if (!matchText.includes(q)) return false;
-    }
-    return true;
-  });
-
-  const renderItem = ({ item, index }: { item: (typeof operacionesData)[0]; index: number }) => (
+  const renderItem = ({ item, index }: { item: OperacionResumen; index: number }) => (
     <AnimatedTouchableOpacity
       className="bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm"
       onPress={() =>
@@ -106,34 +92,30 @@ export default function OperacionesScreen() {
       entering={itemEntering(index)}
       layout={smoothLayout}
     >
-      {/* Top row */}
       <View className="flex-row justify-between items-center mb-1">
-        <Text className="font-bold text-slate-800">#{item.id}</Text>
-        <View className={`px-3 py-1 rounded-full ${getStatusStyle(item.color).split(' ')[0]}`}>
-          <Text className={`text-xs font-semibold ${getStatusStyle(item.color).split(' ')[1]}`}>
-            {item.estado}
+        <Text className="font-bold text-slate-800">{item.referenceCode}</Text>
+        <View className={`px-3 py-1 rounded-full ${getStatusStyle(item.status).split(' ')[0]}`}>
+          <Text className={`text-xs font-semibold ${getStatusStyle(item.status).split(' ')[1]}`}>
+            {item.status}
           </Text>
         </View>
       </View>
 
-      {/* Middle row */}
       <Text
-        className={`text-xs mb-2 ${item.tipo === 'Cotización' ? 'text-violet-500' : 'text-slate-500'}`}
+        className={`text-xs mb-2 ${item.type === 'Cotización' ? 'text-violet-500' : 'text-slate-500'}`}
       >
-        {item.tipo}
+        {item.type}
       </Text>
 
-      {/* Bottom row */}
       <View className="flex-row justify-between items-center">
-        <Text className="text-slate-500 text-sm">{item.cliente || item.fecha}</Text>
-        <Text className="font-semibold text-slate-800 text-sm">S/ {item.monto}</Text>
+        <Text className="text-slate-500 text-sm">{item.customerName}</Text>
+        <Text className="font-semibold text-slate-800 text-sm">S/ {item.total}</Text>
       </View>
     </AnimatedTouchableOpacity>
   );
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-      {/* Header */}
       <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
@@ -147,7 +129,6 @@ export default function OperacionesScreen() {
         </View>
       </Animated.View>
 
-      {/* Tabs */}
       <Animated.View className="border-b border-slate-200" entering={sectionEntering(1)}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
           {tabs.map((tab) => (
@@ -157,9 +138,7 @@ export default function OperacionesScreen() {
               className={`py-4 mr-6 border-b-2 ${activeTab === tab ? 'border-violet-600' : 'border-transparent'}`}
               layout={smoothLayout}
             >
-              <Text
-                className={`${activeTab === tab ? 'text-violet-600 font-semibold' : 'text-slate-500'}`}
-              >
+              <Text className={`${activeTab === tab ? 'text-violet-600 font-semibold' : 'text-slate-500'}`}>
                 {tab}
               </Text>
             </AnimatedTouchableOpacity>
@@ -167,7 +146,6 @@ export default function OperacionesScreen() {
         </ScrollView>
       </Animated.View>
 
-      {/* List */}
       <FlatList
         data={filteredOperaciones}
         keyExtractor={(item) => item.id}
@@ -185,7 +163,7 @@ export default function OperacionesScreen() {
                 <Search size={18} color="#64748b" />
                 <TextInput
                   className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
-                  placeholder="Buscar por ID, cliente, fecha..."
+                  placeholder="Buscar por código o cliente..."
                   placeholderTextColor="#94a3b8"
                   value={query}
                   onChangeText={setQuery}
@@ -194,11 +172,22 @@ export default function OperacionesScreen() {
                   returnKeyType="search"
                 />
               </View>
-              <Text className="mt-3 text-xs text-slate-500">
-                {filteredOperaciones.length} resultado(s)
-              </Text>
+              <Text className="mt-3 text-xs text-slate-500">{filteredOperaciones.length} resultado(s)</Text>
+              {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
             </View>
           </Animated.View>
+        }
+        ListEmptyComponent={
+          isLoading ? (
+            <View className="py-10 items-center">
+              <ActivityIndicator color="#7c3aed" />
+              <Text className="mt-3 text-slate-500">Cargando operaciones...</Text>
+            </View>
+          ) : (
+            <View className="py-10 items-center">
+              <Text className="text-slate-500">No hay operaciones registradas.</Text>
+            </View>
+          )
         }
       />
     </Animated.View>
