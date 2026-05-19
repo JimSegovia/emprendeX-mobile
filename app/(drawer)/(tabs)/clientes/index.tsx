@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, Search, Plus } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import Animated, {
   AnimatedTouchableOpacity,
   itemEntering,
@@ -11,72 +11,56 @@ import Animated, {
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
-
-const clientesData = [
-  {
-    id: '1',
-    name: 'Maria López',
-    phone: '987 654 321',
-    compras: 12,
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: '2',
-    name: 'Juan Pérez',
-    phone: '912 345 678',
-    compras: 8,
-    avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
-  },
-  {
-    id: '3',
-    name: 'Lucía Fernández',
-    phone: '946 678 901',
-    compras: 7,
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: '4',
-    name: 'Carlos Ramírez',
-    phone: '934 567 890',
-    compras: 10,
-    avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-  },
-  {
-    id: '5',
-    name: 'Ana Torres',
-    phone: '923 456 789',
-    compras: 5,
-    avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
-  },
-  {
-    id: '6',
-    name: 'Pedro Gómez',
-    phone: '956 789 123',
-    compras: 3,
-    avatar: 'https://randomuser.me/api/portraits/men/28.jpg',
-  },
-];
+import { fetchClientes, getReadableClientesError, type Cliente } from '@/lib/clientes';
+import { useAuthSession } from '@/lib/auth-session-context';
 
 export default function ClientesScreen() {
   const [query, setQuery] = useState('');
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const { accessToken } = useAuthSession();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
+  const loadClientes = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      setClientes(await fetchClientes(accessToken));
+    } catch (loadError) {
+      setError(getReadableClientesError(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadClientes();
+    }, [loadClientes]),
+  );
+
   const filteredClientes = useMemo(() => {
-    if (!query) return clientesData;
+    if (!query) return clientes;
     const q = query.trim().toLowerCase();
-    return clientesData.filter((item) => {
-      const matchText = `${item.name} ${item.phone}`.toLowerCase();
+    return clientes.filter((item) => {
+      const matchText = `${item.fullName} ${item.phone ?? ''} ${item.email ?? ''}`.toLowerCase();
       return matchText.includes(q);
     });
-  }, [query]);
+  }, [clientes, query]);
 
-  const renderItem = ({ item, index }: { item: (typeof clientesData)[0]; index: number }) => (
+  const renderItem = ({ item, index }: { item: Cliente; index: number }) => (
     <AnimatedTouchableOpacity
       className="flex-row items-center justify-between py-5 border-b border-slate-100 bg-white"
       onPress={() =>
@@ -85,20 +69,21 @@ export default function ClientesScreen() {
       entering={itemEntering(index)}
       layout={smoothLayout}
     >
-      <View className="flex-row items-center">
-        <Image source={{ uri: item.avatar }} className="w-14 h-14 rounded-full mr-4 bg-slate-100" />
-        <View>
-          <Text className="font-bold text-slate-800 text-[15px] mb-0.5">{item.name}</Text>
-          <Text className="text-slate-500 text-sm">{item.phone}</Text>
+      <View className="flex-row items-center flex-1 pr-4">
+        <View className="w-14 h-14 rounded-full mr-4 bg-violet-50 items-center justify-center">
+          <Text className="text-lg font-bold text-violet-700">{item.fullName.charAt(0)}</Text>
+        </View>
+        <View className="flex-1">
+          <Text className="font-bold text-slate-800 text-[15px] mb-0.5">{item.fullName}</Text>
+          <Text className="text-slate-500 text-sm">{item.phone ?? item.email ?? 'Sin contacto'}</Text>
         </View>
       </View>
-      <Text className="text-slate-400 text-[13px]">{item.compras} compras</Text>
+      <Text className="text-slate-400 text-[13px]">{item.operationsCount} operaciones</Text>
     </AnimatedTouchableOpacity>
   );
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-      {/* Header */}
       <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
@@ -110,18 +95,15 @@ export default function ClientesScreen() {
           </TouchableOpacity>
           <Text className="text-white text-xl font-bold">Clientes</Text>
         </View>
-        <View className="flex-row">
-          <TouchableOpacity
-            className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3"
-            onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
-          >
-            <Plus size={16} color="white" />
-            <Text className="ml-2 font-semibold text-white">Nuevo</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3"
+          onPress={() => router.push('/(drawer)/(tabs)/clientes/form')}
+        >
+          <Plus size={16} color="white" />
+          <Text className="ml-2 font-semibold text-white">Nuevo</Text>
+        </TouchableOpacity>
       </Animated.View>
 
-      {/* List */}
       <FlatList
         data={filteredClientes}
         keyExtractor={(item) => item.id}
@@ -135,7 +117,7 @@ export default function ClientesScreen() {
                 <Search size={18} color="#64748b" />
                 <TextInput
                   className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
-                  placeholder="Buscar por nombre o teléfono..."
+                  placeholder="Buscar por nombre, email o teléfono..."
                   placeholderTextColor="#94a3b8"
                   value={query}
                   onChangeText={setQuery}
@@ -147,8 +129,21 @@ export default function ClientesScreen() {
               <Text className="mt-3 text-xs text-slate-500">
                 {filteredClientes.length} resultado(s)
               </Text>
+              {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
             </View>
           </Animated.View>
+        }
+        ListEmptyComponent={
+          isLoading ? (
+            <View className="py-10 items-center">
+              <ActivityIndicator color="#7c3aed" />
+              <Text className="mt-3 text-slate-500">Cargando clientes...</Text>
+            </View>
+          ) : (
+            <View className="py-10 items-center">
+              <Text className="text-slate-500">No hay clientes registrados.</Text>
+            </View>
+          )
         }
       />
     </Animated.View>
