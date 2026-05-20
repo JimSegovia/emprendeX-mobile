@@ -134,11 +134,11 @@ export default function DashboardScreen() {
             entering={itemEntering(0)}
           >
             <Text className="text-slate-500 font-medium text-xs mb-2">Ventas del día</Text>
-            <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 1,250.00</Text>
+            <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 0.00</Text>
             <View className="flex-row items-center">
               <ArrowUpRight size={14} color="#10b981" />
               <Text className="text-emerald-500 font-semibold text-xs ml-1">
-                18% vs ayer
+                0% vs ayer
               </Text>
             </View>
           </Animated.View>
@@ -148,8 +148,8 @@ export default function DashboardScreen() {
             entering={itemEntering(1)}
           >
             <Text className="text-slate-500 font-medium text-xs mb-2">Pedidos</Text>
-            <Text className="text-2xl font-bold text-slate-800 mb-2">12</Text>
-            <Text className="text-violet-600 font-semibold text-xs">3 pendientes</Text>
+            <Text className="text-2xl font-bold text-slate-800 mb-2">0</Text>
+            <Text className="text-violet-600 font-semibold text-xs">0 pendientes</Text>
           </Animated.View>
 
           <Animated.View
@@ -159,7 +159,7 @@ export default function DashboardScreen() {
             <Text className="text-slate-500 font-medium text-xs mb-2">
               Cobros pendientes
             </Text>
-            <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 350.00</Text>
+            <Text className="text-2xl font-bold text-slate-800 mb-2">S/ 0.00</Text>
           </Animated.View>
 
           <Animated.View
@@ -167,10 +167,10 @@ export default function DashboardScreen() {
             entering={itemEntering(3)}
           >
             <Text className="text-slate-500 font-medium text-xs mb-2">Clientes nuevos</Text>
-            <Text className="text-2xl font-bold text-slate-800 mb-2">5</Text>
+            <Text className="text-2xl font-bold text-slate-800 mb-2">0</Text>
             <View className="flex-row items-center">
               <ArrowUpRight size={14} color="#10b981" />
-              <Text className="text-emerald-500 font-semibold text-xs ml-1">2 vs ayer</Text>
+              <Text className="text-emerald-500 font-semibold text-xs ml-1">0 vs ayer</Text>
             </View>
           </Animated.View>
         </Animated.View>
@@ -186,49 +186,8 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            <View className="bg-white rounded-2xl border border-slate-100 shadow-sm shadow-slate-100 overflow-hidden">
-              <View className="flex-row items-center justify-between p-4 border-b border-slate-50">
-                <View>
-                  <Text className="font-bold text-slate-800 mb-0.5">Pedido #1023</Text>
-                  <Text className="text-slate-500 text-xs">María López</Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-slate-400 text-xs mb-1.5">Hoy, 2:00 p.m.</Text>
-                  <View className="bg-orange-50 px-2.5 py-1 rounded-md">
-                    <Text className="text-orange-500 font-semibold text-xs">En camino</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View className="flex-row items-center justify-between p-4 border-b border-slate-50">
-                <View>
-                  <Text className="font-bold text-slate-800 mb-0.5">Pedido #1024</Text>
-                  <Text className="text-slate-500 text-xs">Juan Pérez</Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-slate-400 text-xs mb-1.5">Hoy, 4:00 p.m.</Text>
-                  <View className="bg-amber-50 px-2.5 py-1 rounded-md">
-                    <Text className="text-amber-500 font-semibold text-xs">Pendiente</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View className="flex-row items-center justify-between p-4">
-                <View>
-                  <Text className="font-bold text-slate-800 mb-0.5">Pedido #1025</Text>
-                  <Text className="text-slate-500 text-xs">Lucía Fernández</Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-slate-400 text-xs mb-1.5">
-                    Mañana, 10:00 a.m.
-                  </Text>
-                  <View className="bg-emerald-50 px-2.5 py-1 rounded-md">
-                    <Text className="text-emerald-500 font-semibold text-xs">
-                      Confirmado
-                    </Text>
-                  </View>
-                </View>
-              </View>
+            <View className="bg-white rounded-2xl border border-slate-100 shadow-sm shadow-slate-100 overflow-hidden p-4">
+              <Text className="text-sm text-slate-500">Aún no hay entregas para mostrar.</Text>
             </View>
           </Animated.View>
         ) : null}
