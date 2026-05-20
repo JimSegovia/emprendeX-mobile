@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from '@/lib/api-config';
+
 export type ProductosServiciosItemKind = 'Producto' | 'Servicio';
 
 export type ProductosServiciosItem = {
@@ -21,7 +23,6 @@ export type UnidadProductoServicio = {
   unitId: string;
   businessId: string;
   unitName: string;
-  abbreviation: string;
   createdAt: string;
 };
 
@@ -34,7 +35,6 @@ export type CategoriaProductoServicio = {
 
 export type CrearUnidadProductoServicioPayload = {
   unitName: string;
-  abbreviation?: string;
 };
 
 export type ActualizarUnidadProductoServicioPayload = Partial<CrearUnidadProductoServicioPayload>;
@@ -69,15 +69,14 @@ type ApiItem = {
   sku: string | null;
   price: string;
   createdAt: string;
-  product: {
-    productId: string;
-    stock: number;
-    unit: {
-      unitId: string;
-      unitName: string;
-      abbreviation: string;
-    };
-  } | null;
+    product: {
+      productId: string;
+      stock: number;
+      unit: {
+        unitId: string;
+        unitName: string;
+      };
+    } | null;
   service: {
     serviceId: string;
     category: {
@@ -98,15 +97,6 @@ class ProductosServiciosApiError extends Error {
   ) {
     super(message);
   }
-}
-
-const DEFAULT_API_BASE_URL =
-  'https://emprendex-backend-production.up.railway.app/api/v1';
-
-function getApiBaseUrl(): string {
-  const configuredUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-
-  return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
 function mapProductoServicioItem(item: ApiItem): ProductosServiciosItem {

@@ -75,7 +75,7 @@ export default function ProductosServiciosNuevoScreen() {
 
   const mapUnitItems = (units: Awaited<ReturnType<typeof fetchProductosServiciosUnits>>) =>
     units.map((unitOption) => ({
-      label: `${unitOption.unitName} (${unitOption.abbreviation})`,
+      label: unitOption.unitName,
       value: unitOption.unitId,
     }));
 
@@ -196,7 +196,7 @@ export default function ProductosServiciosNuevoScreen() {
       setUnitItems((prev) => [
         ...prev,
         {
-          label: `${createdUnit.unitName} (${createdUnit.abbreviation})`,
+          label: createdUnit.unitName,
           value: createdUnit.unitId,
         },
       ]);
@@ -245,7 +245,7 @@ export default function ProductosServiciosNuevoScreen() {
         prev.map((item) =>
           item.value === unitId
             ? {
-                label: `${updatedUnit.unitName} (${updatedUnit.abbreviation})`,
+                label: updatedUnit.unitName,
                 value: updatedUnit.unitId,
               }
             : item,
