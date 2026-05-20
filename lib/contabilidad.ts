@@ -28,6 +28,18 @@ export type CategoriaFinanciera = {
   createdAt: string;
 };
 
+export type CrearMetodoPagoPayload = {
+  name: string;
+};
+
+export type ActualizarMetodoPagoPayload = Partial<CrearMetodoPagoPayload>;
+
+export type CrearCategoriaFinancieraPayload = {
+  name: string;
+};
+
+export type ActualizarCategoriaFinancieraPayload = Partial<CrearCategoriaFinancieraPayload>;
+
 export type CrearPagoPayload = {
   orderId: string;
   paymentMethodId: string;
@@ -57,6 +69,65 @@ export async function fetchCategoriasFinancieras(accessToken: string) {
   return apiRequest<CategoriaFinanciera[]>(
     '/contabilidad/financial-categories',
     { method: 'GET' },
+    accessToken,
+  );
+}
+
+export async function createMetodoPago(accessToken: string, payload: CrearMetodoPagoPayload) {
+  return apiRequest<MetodoPago>(
+    '/contabilidad/payment-methods',
+    { method: 'POST', body: JSON.stringify(payload) },
+    accessToken,
+  );
+}
+
+export async function updateMetodoPago(
+  accessToken: string,
+  paymentMethodId: string,
+  payload: ActualizarMetodoPagoPayload,
+) {
+  return apiRequest<MetodoPago>(
+    `/contabilidad/payment-methods/${paymentMethodId}`,
+    { method: 'PATCH', body: JSON.stringify(payload) },
+    accessToken,
+  );
+}
+
+export async function deleteMetodoPago(accessToken: string, paymentMethodId: string) {
+  return apiRequest<void>(
+    `/contabilidad/payment-methods/${paymentMethodId}`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
+export async function createCategoriaFinanciera(
+  accessToken: string,
+  payload: CrearCategoriaFinancieraPayload,
+) {
+  return apiRequest<CategoriaFinanciera>(
+    '/contabilidad/financial-categories',
+    { method: 'POST', body: JSON.stringify(payload) },
+    accessToken,
+  );
+}
+
+export async function updateCategoriaFinanciera(
+  accessToken: string,
+  financialCategoryId: string,
+  payload: ActualizarCategoriaFinancieraPayload,
+) {
+  return apiRequest<CategoriaFinanciera>(
+    `/contabilidad/financial-categories/${financialCategoryId}`,
+    { method: 'PATCH', body: JSON.stringify(payload) },
+    accessToken,
+  );
+}
+
+export async function deleteCategoriaFinanciera(accessToken: string, financialCategoryId: string) {
+  return apiRequest<void>(
+    `/contabilidad/financial-categories/${financialCategoryId}`,
+    { method: 'DELETE' },
     accessToken,
   );
 }
