@@ -2,6 +2,8 @@ type ApiErrorBody = {
   message?: string | string[];
 };
 
+import { getApiBaseUrl } from '@/lib/api-config';
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -9,13 +11,6 @@ export class ApiClientError extends Error {
   ) {
     super(message);
   }
-}
-
-const DEFAULT_API_BASE_URL = 'https://emprendex-backend-production.up.railway.app/api/v1';
-
-export function getApiBaseUrl(): string {
-  const configuredUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
 export async function apiRequest<T>(

@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getApiBaseUrl } from '@/lib/api-config';
 import type { ModuleId } from '@/lib/modules';
 
 const AUTH_STORAGE_KEY = 'emprendex:auth:v1';
-const DEFAULT_API_BASE_URL = 'https://emprendex-backend-production.up.railway.app/api/v1';
 
 export type AuthUser = {
   id: string;
@@ -74,12 +74,6 @@ class ApiError extends Error {
   ) {
     super(message);
   }
-}
-
-function getApiBaseUrl(): string {
-  const configuredUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-
-  return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
 function isJsonObject(value: unknown): value is JsonObject {
