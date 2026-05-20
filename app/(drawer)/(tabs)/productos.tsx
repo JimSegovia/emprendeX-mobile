@@ -85,7 +85,7 @@ export default function ProductosScreen() {
         return true;
       }
 
-      const haystack = `${item.name} ${item.description} ${item.id} ${item.sku ?? ''}`.toLowerCase();
+      const haystack = `${item.name} ${item.description} ${item.referenceCode} ${item.sku ?? ''}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
   }, [filter, items, query]);
@@ -153,7 +153,7 @@ export default function ProductosScreen() {
           </View>
         </View>
           <View className="mt-5 flex-row items-center justify-between">
-            <Text className="text-sm text-slate-500">Código {item.id}</Text>
+            <Text className="text-sm text-slate-500">Código {item.referenceCode}</Text>
             <Text className="text-xl font-extrabold text-slate-800">
               {formatMoney(item.currencySymbol, item.price)}
             </Text>
@@ -167,7 +167,6 @@ export default function ProductosScreen() {
           {/* Stock/Inventario solo productos */}
           {item.kind === 'Producto' && (
             <View className="mt-2 flex-row items-center justify-between">
-              <Text className="text-sm text-slate-500">Stock</Text>
               <Text className={`text-sm font-bold ${item.stock && item.stock > 0 ? 'text-violet-800' : 'text-slate-400'}`}>{typeof item.stock === 'number' ? (item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock') : 'Sin stock'}</Text>
             </View>
           )}

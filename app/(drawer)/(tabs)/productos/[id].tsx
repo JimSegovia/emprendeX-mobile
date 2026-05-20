@@ -166,11 +166,11 @@ export default function ProductoDetalleScreen() {
             </View>
           </View>
 
-          <View className="mt-6 rounded-2xl bg-slate-50 p-4">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-slate-500">Código</Text>
-              <Text className="text-sm font-bold text-slate-800">{item.id}</Text>
-            </View>
+            <View className="mt-6 rounded-2xl bg-slate-50 p-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm text-slate-500">Código</Text>
+                <Text className="text-sm font-bold text-slate-800">{item.referenceCode}</Text>
+              </View>
             {item.sku ? (
               <View className="mt-3 flex-row items-center justify-between">
                 <Text className="text-sm text-slate-500">SKU</Text>

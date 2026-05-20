@@ -70,15 +70,54 @@ export default function NuevoRegistroScreen() {
       setError(null);
 
       try {
-        const [orders, methods, categories] = await Promise.all([
+        const [ordersResult, methodsResult, categoriesResult] = await Promise.allSettled([
           fetchPedidosPendientes(accessToken),
           fetchMetodosPago(accessToken),
           fetchCategoriasFinancieras(accessToken),
         ]);
-        setPendingQuotes(orders);
-        setQuoteItems(orders.map((item) => ({ label: `${item.referenceCode} · ${item.customerName}`, value: item.id })));
-        setMethodItems(methods.map((item) => ({ label: item.name, value: item.paymentMethodId })));
-        setCategoryItems(categories.map((item) => ({ label: item.name, value: item.financialCategoryId })));
+
+        if (ordersResult.status === 'fulfilled') {
+          setPendingQuotes(ordersResult.value);
+          setQuoteItems(
+            ordersResult.value.map((item) => ({
+              label: `${item.referenceCode} · ${item.customerName}`,
+              value: item.id,
+            })),
+          );
+        } else {
+          setPendingQuotes([]);
+          setQuoteItems([]);
+        }
+
+        if (methodsResult.status === 'fulfilled') {
+          setMethodItems(
+            methodsResult.value.map((item) => ({
+              label: item.name,
+              value: item.paymentMethodId,
+            })),
+          );
+        } else {
+          setMethodItems([]);
+        }
+
+        if (categoriesResult.status === 'fulfilled') {
+          setCategoryItems(
+            categoriesResult.value.map((item) => ({
+              label: item.name,
+              value: item.financialCategoryId,
+            })),
+          );
+        } else {
+          setCategoryItems([]);
+        }
+
+        const failedResult = [ordersResult, methodsResult, categoriesResult].find(
+          (result) => result.status === 'rejected',
+        );
+
+        if (failedResult?.status === 'rejected') {
+          setError(getReadableContabilidadError(failedResult.reason));
+        }
       } catch (loadError) {
         setError(getReadableContabilidadError(loadError));
       } finally {
