@@ -1,5 +1,8 @@
-const DEFAULT_API_BASE_URL = 'https://emprendex-backend-production.up.railway.app/api/v1';
+const DEFAULT_RAILWAY_API_BASE_URL =
+  'https://api-production-159f1.up.railway.app/api/v1';
 const DEFAULT_API_PATH = '/api/v1';
+
+type ApiTarget = 'auto' | 'local' | 'railway';
 
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
@@ -15,17 +18,25 @@ function normalizeApiPath(value: string): string {
   return trimmedValue.startsWith('/') ? trimmedValue : `/${trimmedValue}`;
 }
 
-export function getApiBaseUrl(): string {
-  const configuredBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+function normalizeApiTarget(value: string | undefined): ApiTarget {
+  const normalizedValue = value?.trim().toLowerCase();
 
-  if (configuredBaseUrl) {
-    return trimTrailingSlash(configuredBaseUrl);
+  if (
+    normalizedValue === 'local' ||
+    normalizedValue === 'railway' ||
+    normalizedValue === 'auto'
+  ) {
+    return normalizedValue;
   }
 
+  return 'auto';
+}
+
+function buildConfiguredLocalBaseUrl(): string | null {
   const configuredHost = process.env.EXPO_PUBLIC_API_HOST?.trim();
 
   if (!configuredHost) {
-    return DEFAULT_API_BASE_URL;
+    return null;
   }
 
   const protocol = process.env.EXPO_PUBLIC_API_SCHEME?.trim() || 'http';
@@ -34,4 +45,32 @@ export function getApiBaseUrl(): string {
   const hostWithPort = port ? `${configuredHost}:${port}` : configuredHost;
 
   return `${protocol}://${hostWithPort}${path}`;
+}
+
+function resolveRailwayBaseUrl(): string {
+  return (
+    process.env.EXPO_PUBLIC_API_RAILWAY_BASE_URL?.trim() ||
+    DEFAULT_RAILWAY_API_BASE_URL
+  ).replace(/\/+$/, '');
+}
+
+export function getApiBaseUrl(): string {
+  const configuredBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+  if (configuredBaseUrl) {
+    return trimTrailingSlash(configuredBaseUrl);
+  }
+
+  const configuredLocalBaseUrl = buildConfiguredLocalBaseUrl();
+  const apiTarget = normalizeApiTarget(process.env.EXPO_PUBLIC_API_TARGET);
+
+  if (apiTarget === 'railway') {
+    return resolveRailwayBaseUrl();
+  }
+
+  if (apiTarget === 'local') {
+    return configuredLocalBaseUrl ?? resolveRailwayBaseUrl();
+  }
+
+  return configuredLocalBaseUrl ?? resolveRailwayBaseUrl();
 }

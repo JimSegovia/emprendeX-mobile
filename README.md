@@ -1,50 +1,94 @@
-# Welcome to your Expo app 👋
+# emprendeX mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicacion mobile construida con Expo Router.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Requisitos
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuracion de API
 
-## Learn more
+La app resuelve la API desde variables `EXPO_PUBLIC_*` en `lib/api-config.ts`.
 
-To learn more about developing your project with Expo, look at the following resources:
+Prioridad de resolucion:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. `EXPO_PUBLIC_API_BASE_URL`
+2. `EXPO_PUBLIC_API_TARGET=railway`
+3. `EXPO_PUBLIC_API_TARGET=local`
+4. `EXPO_PUBLIC_API_TARGET=auto`
 
-## Join the community
+## Modo local
 
-Join our community of developers creating universal apps.
+Usa el backend local con Docker o con `pnpm run dev:api` en el repo backend.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Ejemplo de `.env`:
+
+```env
+EXPO_PUBLIC_API_TARGET=local
+EXPO_PUBLIC_API_SCHEME=http
+EXPO_PUBLIC_API_HOST=192.168.18.9
+EXPO_PUBLIC_API_PORT=3000
+EXPO_PUBLIC_API_PATH=/api/v1
+EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+```
+
+Notas:
+
+1. `EXPO_PUBLIC_API_HOST` debe ser la IP de tu maquina en la red local si pruebas desde celular.
+2. Si pruebas en emulador Android, normalmente puedes usar `10.0.2.2` en lugar de la IP LAN.
+
+## Modo Railway
+
+Usa la API desplegada en Railway.
+
+Ejemplo de `.env`:
+
+```env
+EXPO_PUBLIC_API_TARGET=railway
+EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+```
+
+Tambien puedes usar una URL explicita completa:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+```
+
+## Archivos de entorno
+
+Archivos incluidos en el repo:
+
+1. `.env.example`: plantilla para desarrollo local.
+2. `.env.railway.example`: plantilla para apuntar a Railway.
+
+Archivos no versionados:
+
+1. `.env`
+2. `.env*.local`
+
+`.env.railway.example` si debe ir al repositorio porque es solo una plantilla y no contiene secretos.
+
+## Ejecutar la app
+
+```bash
+npm run start
+```
+
+Tambien puedes usar:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## Verificacion rapida
+
+Si la app no conecta con el backend:
+
+1. confirma que la API responde en `/api/v1/health`
+2. revisa que `EXPO_PUBLIC_API_TARGET` sea el esperado
+3. revisa que `EXPO_PUBLIC_API_HOST` apunte a una IP accesible desde el dispositivo
+4. reinicia Expo despues de cambiar variables de entorno
