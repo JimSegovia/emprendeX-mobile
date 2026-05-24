@@ -1,16 +1,15 @@
 import type { LucideIcon } from 'lucide-react-native';
 import {
-  Home,
-  FileText,
-  Users,
-  Package,
+  BarChart2,
+  Bell,
+  Calculator,
   Calendar,
   FileSignature,
-  CreditCard,
-  Calculator,
-  BarChart2,
+  FileText,
+  Home,
+  Package,
   Settings,
-  Bell,
+  Users
 } from 'lucide-react-native';
 
 export type ModuleId =
@@ -37,7 +36,12 @@ export type ModuleDefinition = {
   detail?: string;
 };
 
-export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = ['index', 'calendario', 'reportes', 'configuracion'];
+export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = [
+  'index',
+  'calendario',
+  'reportes',
+  'configuracion',
+];
 
 export const DEFAULT_MODULES: ModuleDefinition[] = [
   { id: 'index', label: 'Inicio', icon: Home, tab: 'index', match: ['/'] },
@@ -110,7 +114,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
   },
   {
     id: 'configuracion',
-    label: 'Configuracin',
+    label: 'Configuración',
     icon: Settings,
     tab: 'configuracion',
     match: ['/configuracion'],
@@ -124,22 +128,13 @@ export function buildVisibleModuleOrder(
   order: ModuleId[],
   enabledModuleIds: ModuleId[],
 ): ModuleId[] {
-  const allowedIds = new Set<ModuleId>([
-    ...ALWAYS_VISIBLE_MODULE_IDS,
-    ...enabledModuleIds,
-  ]);
+  const allowedIds = new Set<ModuleId>([...ALWAYS_VISIBLE_MODULE_IDS, ...enabledModuleIds]);
 
   return order.filter((moduleId) => allowedIds.has(moduleId));
 }
 
-export function isModuleAvailable(
-  moduleId: ModuleId,
-  enabledModuleIds: ModuleId[],
-): boolean {
-  return (
-    ALWAYS_VISIBLE_MODULE_IDS.includes(moduleId) ||
-    enabledModuleIds.includes(moduleId)
-  );
+export function isModuleAvailable(moduleId: ModuleId, enabledModuleIds: ModuleId[]): boolean {
+  return ALWAYS_VISIBLE_MODULE_IDS.includes(moduleId) || enabledModuleIds.includes(moduleId);
 }
 
 export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
