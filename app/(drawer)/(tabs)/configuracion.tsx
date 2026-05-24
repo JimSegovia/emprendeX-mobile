@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
-import { useNavigation, useRouter } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
-import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
-import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
+import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
+import { DrawerActions } from '@react-navigation/native';
+import { useNavigation, useRouter } from 'expo-router';
+import { Briefcase, Crown, GripVertical, Menu } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const premiumModules = [
   {
@@ -48,7 +48,6 @@ export default function ConfiguracionScreen() {
     return localOrder.map((id) => modulesById.get(id)).filter(Boolean) as ModuleDefinition[];
   }, [localOrder, modulesById]);
 
-
   const businessProfile = authState?.user.businessProfile;
   const ownerName = authState
     ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
@@ -59,7 +58,6 @@ export default function ConfiguracionScreen() {
     setLocalOrder(nextOrder);
     setOrder(nextOrder);
   };
-
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -128,9 +126,7 @@ export default function ConfiguracionScreen() {
             </View>
             <View className="mt-3 flex-row justify-between">
               <Text className="text-sm text-slate-500">Responsable</Text>
-              <Text className="font-semibold text-slate-800">
-                {ownerName}
-              </Text>
+              <Text className="font-semibold text-slate-800">{ownerName}</Text>
             </View>
             <View className="mt-3 flex-row justify-between">
               <Text className="text-sm text-slate-500">Celular</Text>
@@ -163,9 +159,11 @@ export default function ConfiguracionScreen() {
           </View>
 
           <Text className="mt-2 text-sm leading-6 text-slate-500">
-            Mantén presionado el icono para arrastrar y cambiar el orden.
+            Aquí puedes personalizar el orden de los módulos en el sidebar según tu uso personal.
           </Text>
-
+          <Text className="mt-1 text-sm leading-6 text-slate-500">
+            Arrastra y suelta para organizar
+          </Text>
           <View className="mt-4">
             {!isHydrated ? (
               <View className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
