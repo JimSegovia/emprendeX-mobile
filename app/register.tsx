@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
@@ -102,11 +102,7 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 32 }}
-        >
+        <KeyboardAwareLayout contentContainerStyle={{ paddingBottom: 32 }}>
           <Animated.View className="px-6 pt-4" entering={sectionEntering(0)}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -322,7 +318,7 @@ export default function RegisterScreen() {
               <Text className="font-medium text-violet-600">Ya tengo cuenta, volver</Text>
             </TouchableOpacity>
           </Animated.View>
-        </ScrollView>
+        </KeyboardAwareLayout>
       </Animated.View>
     </SafeAreaView>
   );

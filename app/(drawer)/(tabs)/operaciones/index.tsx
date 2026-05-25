@@ -1,5 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Search, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -146,50 +156,52 @@ export default function OperacionesScreen() {
         </ScrollView>
       </Animated.View>
 
-      <FlatList
-        data={filteredOperaciones}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: Math.max(insets.bottom, 16) + 24,
-        }}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <Animated.View className="mb-4" entering={sectionEntering(2)}>
-            <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-              <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
-                <Search size={18} color="#64748b" />
-                <TextInput
-                  className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
-                  placeholder="Buscar por código o cliente..."
-                  placeholderTextColor="#94a3b8"
-                  value={query}
-                  onChangeText={setQuery}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="search"
-                />
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <FlatList
+          data={filteredOperaciones}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 12,
+            paddingBottom: Math.max(insets.bottom, 16) + 24,
+          }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <Animated.View className="mb-4" entering={sectionEntering(2)}>
+              <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
+                  <Search size={18} color="#64748b" />
+                  <TextInput
+                    className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
+                    placeholder="Buscar por código o cliente..."
+                    placeholderTextColor="#94a3b8"
+                    value={query}
+                    onChangeText={setQuery}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                  />
+                </View>
+                <Text className="mt-3 text-xs text-slate-500">{filteredOperaciones.length} resultado(s)</Text>
+                {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
               </View>
-              <Text className="mt-3 text-xs text-slate-500">{filteredOperaciones.length} resultado(s)</Text>
-              {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
-            </View>
-          </Animated.View>
-        }
-        ListEmptyComponent={
-          isLoading ? (
-            <View className="py-10 items-center">
-              <ActivityIndicator color="#7c3aed" />
-              <Text className="mt-3 text-slate-500">Cargando operaciones...</Text>
-            </View>
-          ) : (
-            <View className="py-10 items-center">
-              <Text className="text-slate-500">No hay operaciones registradas.</Text>
-            </View>
-          )
-        }
-      />
+            </Animated.View>
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <View className="py-10 items-center">
+                <ActivityIndicator color="#7c3aed" />
+                <Text className="mt-3 text-slate-500">Cargando operaciones...</Text>
+              </View>
+            ) : (
+              <View className="py-10 items-center">
+                <Text className="text-slate-500">No hay operaciones registradas.</Text>
+              </View>
+            )
+          }
+        />
+      </KeyboardAvoidingView>
     </Animated.View>
   );
 }

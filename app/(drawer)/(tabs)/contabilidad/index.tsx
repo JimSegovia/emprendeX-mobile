@@ -1,5 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Search, Menu, Plus } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -108,38 +118,40 @@ export default function ContabilidadScreen() {
         </ScrollView>
       </Animated.View>
 
-      <FlatList
-        data={filteredData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16) + 24 }}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <>
-            <Animated.View className="mb-4 flex-row flex-wrap justify-between" entering={sectionEntering(1)}>
-              <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Cobrado</Text>
-                <Text className="mt-2 text-xl font-extrabold text-emerald-600">S/ {summary?.totalPaid ?? '0.00'}</Text>
-              </View>
-              <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Gastos</Text>
-                <Text className="mt-2 text-xl font-extrabold text-rose-600">S/ {summary?.totalExpenses ?? '0.00'}</Text>
-              </View>
-            </Animated.View>
-            <Animated.View className="mb-4" entering={sectionEntering(2)}>
-              <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
-                  <Search size={18} color="#64748b" />
-                  <TextInput className="ml-3 flex-1 text-[15px] font-semibold text-slate-800" placeholder="Buscar registro..." placeholderTextColor="#94a3b8" value={query} onChangeText={setQuery} autoCapitalize="none" autoCorrect={false} returnKeyType="search" />
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <FlatList
+          data={filteredData}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <>
+              <Animated.View className="mb-4 flex-row flex-wrap justify-between" entering={sectionEntering(1)}>
+                <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Cobrado</Text>
+                  <Text className="mt-2 text-xl font-extrabold text-emerald-600">S/ {summary?.totalPaid ?? '0.00'}</Text>
                 </View>
-                <Text className="mt-3 text-xs text-slate-500">{filteredData.length} resultado(s)</Text>
-                {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
-              </View>
-            </Animated.View>
-          </>
-        }
-        ListEmptyComponent={isLoading ? <View className="py-10 items-center"><ActivityIndicator color="#7c3aed" /><Text className="mt-3 text-slate-500">Cargando registros...</Text></View> : <View className="py-10 items-center"><Text className="text-slate-500">No hay registros contables.</Text></View>}
-      />
+                <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Gastos</Text>
+                  <Text className="mt-2 text-xl font-extrabold text-rose-600">S/ {summary?.totalExpenses ?? '0.00'}</Text>
+                </View>
+              </Animated.View>
+              <Animated.View className="mb-4" entering={sectionEntering(2)}>
+                <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
+                    <Search size={18} color="#64748b" />
+                    <TextInput className="ml-3 flex-1 text-[15px] font-semibold text-slate-800" placeholder="Buscar registro..." placeholderTextColor="#94a3b8" value={query} onChangeText={setQuery} autoCapitalize="none" autoCorrect={false} returnKeyType="search" />
+                  </View>
+                  <Text className="mt-3 text-xs text-slate-500">{filteredData.length} resultado(s)</Text>
+                  {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
+                </View>
+              </Animated.View>
+            </>
+          }
+          ListEmptyComponent={isLoading ? <View className="py-10 items-center"><ActivityIndicator color="#7c3aed" /><Text className="mt-3 text-slate-500">Cargando registros...</Text></View> : <View className="py-10 items-center"><Text className="text-slate-500">No hay registros contables.</Text></View>}
+        />
+      </KeyboardAvoidingView>
     </Animated.View>
   );
 }

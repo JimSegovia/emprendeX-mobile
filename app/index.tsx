@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
@@ -74,15 +72,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          className="bg-white"
-          showsVerticalScrollIndicator={false}
-        >
+      <KeyboardAwareLayout>
           <Animated.View className="flex-1 px-8 py-10 justify-between" entering={screenEntering}>
             <Animated.View className="items-center mt-4" entering={sectionEntering(0)}>
 <View className="flex-row items-center justify-center">
@@ -198,8 +188,7 @@ export default function LoginScreen() {
               </View>
             </Animated.View>
           </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareLayout>
     </SafeAreaView>
   );
 }

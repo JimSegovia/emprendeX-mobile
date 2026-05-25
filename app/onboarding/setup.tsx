@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronLeft, Info } from 'lucide-react-native';
@@ -92,10 +90,7 @@ export default function SetupScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View className="flex-1">
         <Animated.View
           className="flex-row items-center px-4 pt-4 mb-2"
           entering={sectionEntering(0)}
@@ -105,7 +100,7 @@ export default function SetupScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+        <KeyboardAwareLayout style={{ paddingHorizontal: 24 }}>
           <Animated.View entering={sectionEntering(1)} className="items-center mb-8">
             <Text className="text-[28px] font-extrabold text-slate-800 text-center mb-3">
               Configura tu negocio
@@ -167,7 +162,7 @@ export default function SetupScreen() {
               </View>
             </View>
           </Animated.View>
-        </ScrollView>
+          </KeyboardAwareLayout>
 
         <Animated.View
           className="px-6 py-6 pb-8 pt-4 bg-white border-t border-slate-50"
@@ -208,7 +203,7 @@ export default function SetupScreen() {
             <Text className="text-violet-600 font-semibold text-sm">Ahora no, lo haré después</Text>
           </TouchableOpacity>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
 
       <Modal
         visible={isCategoryModalVisible}

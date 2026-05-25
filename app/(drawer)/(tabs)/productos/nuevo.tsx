@@ -2,13 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -479,15 +478,10 @@ export default function ProductosServiciosNuevoScreen() {
         </View>
       </Animated.View>
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <Animated.ScrollView
-          className="flex-1 px-5 pt-6"
-          showsVerticalScrollIndicator={false}
+      <Animated.View className="flex-1" entering={sectionEntering(1)}>
+        <KeyboardAwareLayout
+          style={{ paddingHorizontal: 20, paddingTop: 24 }}
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
-          entering={sectionEntering(1)}
         >
           <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
             <Text className="text-lg font-extrabold text-slate-800">Tipo de item</Text>
@@ -939,8 +933,8 @@ export default function ProductosServiciosNuevoScreen() {
               <Text className="text-sm font-semibold text-rose-600">{submitError}</Text>
             </View>
           ) : null}
-        </Animated.ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareLayout>
+      </Animated.View>
 
       <Animated.View
         className="border-t border-slate-100 bg-white px-5 pt-4 flex-row items-center justify-between"

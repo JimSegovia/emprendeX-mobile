@@ -26,6 +26,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -191,157 +193,162 @@ export default function ProductosScreen() {
         </View>
       </Animated.View>
 
-      <FlatList
-        data={filteredItems}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: Math.max(insets.bottom, 16) + 24,
-        }}
-        ListHeaderComponent={
-          <View>
-            <Animated.View className="mb-4" entering={sectionEntering(1)}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 8 }}
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <FlatList
+          data={filteredItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: Math.max(insets.bottom, 16) + 24,
+          }}
+          ListHeaderComponent={
+            <View>
+              <Animated.View className="mb-4" entering={sectionEntering(1)}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingRight: 8 }}
+                >
+                  <View className="flex-row">
+                    <TouchableOpacity
+                      className="mr-3 flex-row items-center rounded-2xl bg-violet-100 px-3.5 py-3"
+                      onPress={() => {
+                        setFilter((previousFilter) =>
+                          previousFilter === 'all'
+                            ? 'Producto'
+                            : previousFilter === 'Producto'
+                              ? 'Servicio'
+                              : 'all',
+                        );
+                      }}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel="Cambiar filtro"
+                    >
+                      <SlidersHorizontal size={16} color="#7c3aed" />
+                      <Text className="ml-2 font-semibold text-violet-800">
+                        {filter === 'all' ? 'Todo' : filter}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="flex-row items-center rounded-2xl bg-violet-600 px-4 py-3"
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        router.push('/(drawer)/(tabs)/productos/nuevo');
+                      }}
+                    >
+                      <Plus size={16} color="white" />
+                      <Text className="ml-2 font-semibold text-white">Nuevo</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </Animated.View>
+
+              <Animated.View className="mb-4" entering={sectionEntering(2)}>
+                <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
+                    <Search size={18} color="#64748b" />
+                    <TextInput
+                      className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
+                      placeholder="Buscar por nombre, código o SKU"
+                      placeholderTextColor="#94a3b8"
+                      value={query}
+                      onChangeText={setQuery}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="search"
+                    />
+                  </View>
+                  <Text className="mt-3 text-xs text-slate-500">
+                    {filteredItems.length} resultado(s) en{' '}
+                    {filter === 'all'
+                      ? 'todos los productos y servicios'
+                      : filter.toLowerCase()}.
+                  </Text>
+                </View>
+              </Animated.View>
+
+              <Animated.View
+                className="mb-6 flex-row flex-wrap justify-between"
+                entering={sectionEntering(3)}
               >
-                <View className="flex-row">
+                <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Items registrados</Text>
+                  <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                    {stats.total}
+                  </Text>
+                </View>
+                <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Productos</Text>
+                  <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                    {stats.products}
+                  </Text>
+                </View>
+                <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Servicios</Text>
+                  <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                    {stats.services}
+                  </Text>
+                </View>
+                <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                  <Text className="text-xs font-medium text-slate-500">Filtro actual</Text>
+                  <Text className="mt-2 text-2xl font-extrabold text-slate-800">
+                    {filter === 'all' ? 'Todo' : filter}
+                  </Text>
+                </View>
+              </Animated.View>
+
+              {isLoading ? (
+                <View className="mb-6 items-center justify-center rounded-[28px] border border-slate-100 bg-slate-50 p-6">
+                  <ActivityIndicator color="#7c3aed" />
+                  <Text className="mt-3 text-sm font-medium text-slate-500">
+                    Cargando productos y servicios...
+                  </Text>
+                </View>
+              ) : null}
+
+              {error ? (
+                <View className="mb-6 rounded-[28px] border border-rose-100 bg-rose-50 p-5">
+                  <Text className="text-sm font-semibold text-rose-600">{error}</Text>
                   <TouchableOpacity
-                    className="mr-3 flex-row items-center rounded-2xl bg-violet-100 px-3.5 py-3"
+                    className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
                     onPress={() => {
-                      setFilter((previousFilter) =>
-                        previousFilter === 'all'
-                          ? 'Producto'
-                          : previousFilter === 'Producto'
-                            ? 'Servicio'
-                            : 'all',
-                      );
-                    }}
-                    activeOpacity={0.85}
-                    accessibilityRole="button"
-                    accessibilityLabel="Cambiar filtro"
-                  >
-                    <SlidersHorizontal size={16} color="#7c3aed" />
-                    <Text className="ml-2 font-semibold text-violet-800">
-                      {filter === 'all' ? 'Todo' : filter}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="flex-row items-center rounded-2xl bg-violet-600 px-4 py-3"
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      router.push('/(drawer)/(tabs)/productos/nuevo');
+                      void loadProductosServicios();
                     }}
                   >
-                    <Plus size={16} color="white" />
-                    <Text className="ml-2 font-semibold text-white">Nuevo</Text>
+                    <Text className="font-semibold text-white">Reintentar</Text>
                   </TouchableOpacity>
                 </View>
-              </ScrollView>
-            </Animated.View>
-
-            <Animated.View className="mb-4" entering={sectionEntering(2)}>
-              <View className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <View className="flex-row items-center rounded-2xl bg-slate-50 px-4 py-3">
-                  <Search size={18} color="#64748b" />
-                  <TextInput
-                    className="ml-3 flex-1 text-[15px] font-semibold text-slate-800"
-                    placeholder="Buscar por nombre, código o SKU"
-                    placeholderTextColor="#94a3b8"
-                    value={query}
-                    onChangeText={setQuery}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                  />
-                </View>
-                <Text className="mt-3 text-xs text-slate-500">
-                  {filteredItems.length} resultado(s) en{' '}
-                  {filter === 'all'
-                    ? 'todos los productos y servicios'
-                    : filter.toLowerCase()}.
+              ) : null}
+            </View>
+          }
+          ListEmptyComponent={
+            !isLoading && !error ? (
+              <View className="rounded-[28px] border border-slate-100 bg-slate-50 p-6">
+                <Text className="text-base font-bold text-slate-800">Sin resultados</Text>
+                <Text className="mt-2 text-sm leading-6 text-slate-500">
+                  Prueba con otro nombre, código o cambia el filtro.
                 </Text>
-              </View>
-            </Animated.View>
-
-            <Animated.View
-              className="mb-6 flex-row flex-wrap justify-between"
-              entering={sectionEntering(3)}
-            >
-              <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Items registrados</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
-                  {stats.total}
-                </Text>
-              </View>
-              <View className="mb-3 w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Productos</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
-                  {stats.products}
-                </Text>
-              </View>
-              <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Servicios</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
-                  {stats.services}
-                </Text>
-              </View>
-              <View className="w-[48%] rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                <Text className="text-xs font-medium text-slate-500">Filtro actual</Text>
-                <Text className="mt-2 text-2xl font-extrabold text-slate-800">
-                  {filter === 'all' ? 'Todo' : filter}
-                </Text>
-              </View>
-            </Animated.View>
-
-            {isLoading ? (
-              <View className="mb-6 items-center justify-center rounded-[28px] border border-slate-100 bg-slate-50 p-6">
-                <ActivityIndicator color="#7c3aed" />
-                <Text className="mt-3 text-sm font-medium text-slate-500">
-                  Cargando productos y servicios...
-                </Text>
-              </View>
-            ) : null}
-
-            {error ? (
-              <View className="mb-6 rounded-[28px] border border-rose-100 bg-rose-50 p-5">
-                <Text className="text-sm font-semibold text-rose-600">{error}</Text>
                 <TouchableOpacity
                   className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
                   onPress={() => {
-                    void loadProductosServicios();
+                    setQuery('');
+                    setFilter('all');
                   }}
                 >
-                  <Text className="font-semibold text-white">Reintentar</Text>
+                  <Text className="font-semibold text-white">Limpiar filtros</Text>
                 </TouchableOpacity>
               </View>
-            ) : null}
-          </View>
-        }
-        ListEmptyComponent={
-          !isLoading && !error ? (
-            <View className="rounded-[28px] border border-slate-100 bg-slate-50 p-6">
-              <Text className="text-base font-bold text-slate-800">Sin resultados</Text>
-              <Text className="mt-2 text-sm leading-6 text-slate-500">
-                Prueba con otro nombre, código o cambia el filtro.
-              </Text>
-              <TouchableOpacity
-                className="mt-4 self-start rounded-2xl bg-violet-600 px-4 py-3"
-                onPress={() => {
-                  setQuery('');
-                  setFilter('all');
-                }}
-              >
-                <Text className="font-semibold text-white">Limpiar filtros</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null
-        }
-      />
+            ) : null
+          }
+        />
+      </KeyboardAvoidingView>
     </Animated.View>
   );
 }

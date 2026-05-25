@@ -4,11 +4,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Info } from 'lucide-react-native';
@@ -96,10 +94,7 @@ export default function ClienteFormScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View className="flex-1">
         <Animated.View className="flex-1" entering={screenEntering}>
           <Animated.View
             className="flex-row items-center px-4 pt-4 mb-2"
@@ -110,9 +105,8 @@ export default function ClienteFormScreen() {
             </TouchableOpacity>
           </Animated.View>
 
-          <ScrollView
-            className="flex-1 px-5"
-            showsVerticalScrollIndicator={false}
+          <KeyboardAwareLayout
+            style={{ paddingHorizontal: 20 }}
             contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
           >
             <Animated.View entering={sectionEntering(1)} className="items-center mb-8 mt-2">
@@ -204,7 +198,7 @@ export default function ClienteFormScreen() {
                 </View>
               </Animated.View>
             )}
-          </ScrollView>
+          </KeyboardAwareLayout>
 
           <Animated.View
             className="px-6 py-6 pb-8 bg-white border-t border-slate-50"
@@ -235,7 +229,7 @@ export default function ClienteFormScreen() {
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

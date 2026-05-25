@@ -3,7 +3,8 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar as CalendarIcon, Check, CreditCard, PackageMinus, PencilLine, Receipt, Trash2, X } from 'lucide-react-native';
 import React, { useState, useMemo, useEffect } from 'react';
-import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createCategoriaFinanciera, createGasto, createMetodoPago, createPago, deleteCategoriaFinanciera, deleteMetodoPago, fetchCategoriasFinancieras, fetchMetodosPago, getReadableContabilidadError, updateCategoriaFinanciera, updateMetodoPago } from '@/lib/contabilidad';
@@ -367,8 +368,8 @@ export default function NuevoRegistroScreen() {
         <Text className="text-white text-xl font-bold">Nuevo registro</Text>
       </Animated.View>
 
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Animated.ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }} entering={sectionEntering(1)}>
+      <Animated.View className="flex-1" entering={sectionEntering(1)}>
+        <KeyboardAwareLayout style={{ paddingHorizontal: 20, paddingTop: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
           <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
             <Text className="text-lg font-extrabold text-slate-800">Tipo de registro</Text>
             <DropDownPicker open={kindOpen} value={kind} items={kindItems} setOpen={setKindOpen} setValue={setKind} setItems={setKindItems} placeholder="Seleccionar tipo" listMode="SCROLLVIEW" maxHeight={dropdownSpacing} zIndex={3000} zIndexInverse={1000} style={{ borderColor: '#e5e7eb', backgroundColor: 'white', marginTop: 16 }} dropDownContainerStyle={{ borderColor: '#e5e7eb' }} textStyle={{ color: '#0f172a', fontWeight: '500' }} onOpen={() => { setQuoteOpen(false); setCategoryOpen(false); setMethodOpen(false); }} />
@@ -486,8 +487,8 @@ export default function NuevoRegistroScreen() {
           </View>
 
           {error ? <Text className="mt-4 text-sm font-medium text-rose-600">{error}</Text> : null}
-        </Animated.ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareLayout>
+      </Animated.View>
 
       <Animated.View className="border-t border-slate-100 bg-white px-5 pt-4 flex-row items-center justify-between" style={{ paddingBottom: Math.max(insets.bottom, 16) }} entering={sectionEntering(2)}>
         <View className="flex-row items-center"><View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-violet-50"><CreditCard size={20} color="#7c3aed" /></View><View><Text className="text-slate-500 font-medium">{isPago ? 'Cobro' : 'Gasto'} a registrar</Text><Text className="text-lg font-bold text-slate-800">S/ {amount.trim().length > 0 ? amount : '0.00'}</Text></View></View>
