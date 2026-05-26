@@ -8,6 +8,7 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
 }
 
+
 function normalizeApiPath(value: string): string {
   const trimmedValue = value.trim();
 
