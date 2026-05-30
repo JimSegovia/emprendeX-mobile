@@ -1,18 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import DropDownPicker from 'react-native-dropdown-picker';
-import { ArrowLeft, Briefcase, Check, Package, PencilLine, Trash2, X } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { useAuthSession } from '@/lib/auth-session-context';
 import {
   createProductoServicio,
   createProductoServicioCategory,
@@ -23,11 +11,16 @@ import {
   fetchProductosServiciosItemById,
   fetchProductosServiciosUnits,
   getReadableProductosServiciosError,
-  updateProductoServicioCategory,
   updateProductoServicio,
+  updateProductoServicioCategory,
   updateProductoServicioUnit,
 } from '@/lib/productos-servicios';
-import { useAuthSession } from '@/lib/auth-session-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Briefcase, Check, Package, PencilLine, Trash2, X } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ItemKind = 'Producto' | 'Servicio';
 
@@ -114,9 +107,7 @@ export default function ProductosServiciosNuevoScreen() {
           setStock(item.stock?.toString() ?? '1');
 
           if (item.kind === 'Producto') {
-            const matchingUnit = units.find(
-              (unitOption) => unitOption.unitName === item.unit,
-            );
+            const matchingUnit = units.find((unitOption) => unitOption.unitName === item.unit);
             setUnit(matchingUnit?.unitId ?? null);
           } else {
             const matchingCategory = categories.find(
@@ -203,7 +194,10 @@ export default function ProductosServiciosNuevoScreen() {
       setUnit(createdUnit.unitId);
       Alert.alert('Unidad agregada', `Se agregó: ${createdUnit.unitName}`);
     } catch (productosServiciosError) {
-      Alert.alert('No se pudo agregar la unidad', getReadableProductosServiciosError(productosServiciosError));
+      Alert.alert(
+        'No se pudo agregar la unidad',
+        getReadableProductosServiciosError(productosServiciosError),
+      );
     } finally {
       setIsSavingOption(false);
     }
@@ -254,7 +248,10 @@ export default function ProductosServiciosNuevoScreen() {
       setEditingUnitName('');
       Alert.alert('Unidad actualizada', `Ahora es: ${updatedUnit.unitName}`);
     } catch (productosServiciosError) {
-      Alert.alert('No se pudo actualizar la unidad', getReadableProductosServiciosError(productosServiciosError));
+      Alert.alert(
+        'No se pudo actualizar la unidad',
+        getReadableProductosServiciosError(productosServiciosError),
+      );
     } finally {
       setIsSavingOption(false);
     }
@@ -278,7 +275,10 @@ export default function ProductosServiciosNuevoScreen() {
           }
           Alert.alert('Unidad eliminada', `Se eliminó: ${label}`);
         } catch (productosServiciosError) {
-          Alert.alert('No se pudo eliminar la unidad', getReadableProductosServiciosError(productosServiciosError));
+          Alert.alert(
+            'No se pudo eliminar la unidad',
+            getReadableProductosServiciosError(productosServiciosError),
+          );
         } finally {
           setIsSavingOption(false);
         }
@@ -345,7 +345,8 @@ export default function ProductosServiciosNuevoScreen() {
 
     if (
       categoryItems.some(
-        (item) => item.value !== categoryId && item.label.trim().toLowerCase() === next.toLowerCase(),
+        (item) =>
+          item.value !== categoryId && item.label.trim().toLowerCase() === next.toLowerCase(),
       )
     ) {
       Alert.alert('Duplicado', 'Ya existe una categoría con ese nombre.');
@@ -455,7 +456,10 @@ export default function ProductosServiciosNuevoScreen() {
 
   if (isLoadingOptions) {
     return (
-      <Animated.View className="flex-1 items-center justify-center bg-white" entering={screenEntering}>
+      <Animated.View
+        className="flex-1 items-center justify-center bg-white"
+        entering={screenEntering}
+      >
         <ActivityIndicator color="#7c3aed" />
       </Animated.View>
     );
@@ -469,12 +473,13 @@ export default function ProductosServiciosNuevoScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/productos')} className="mr-4">
+          <TouchableOpacity
+            onPress={() => router.replace('/(drawer)/(tabs)/productos')}
+            className="mr-4"
+          >
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">
-            {id ? 'Editar item' : 'Nuevo item'}
-          </Text>
+          <Text className="text-white text-xl font-bold">{id ? 'Editar item' : 'Nuevo item'}</Text>
         </View>
       </Animated.View>
 
@@ -597,7 +602,7 @@ export default function ProductosServiciosNuevoScreen() {
             {isProduct ? (
               <>
                 <View className="mt-4">
-                  <Text className="text-sm font-bold text-slate-800 mb-2">Unidad</Text>
+                  <Text className="text-sm font-bold text-slate-800 mb-2">Tipo de unidad</Text>
                   <DropDownPicker
                     open={unitOpen}
                     value={unit}
@@ -605,7 +610,7 @@ export default function ProductosServiciosNuevoScreen() {
                     setOpen={setUnitOpen}
                     setValue={setUnit}
                     setItems={setUnitItems}
-                    placeholder="Seleccionar unidad de producto"
+                    placeholder="Seleccionar tipo de unidad de producto"
                     listMode="SCROLLVIEW"
                     maxHeight={dropdownSpacing}
                     zIndex={2000}
@@ -628,7 +633,9 @@ export default function ProductosServiciosNuevoScreen() {
                   onPress={() => setShowUnitManager((v) => !v)}
                 >
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-slate-700">Administrar unidades</Text>
+                    <Text className="text-sm font-semibold text-slate-700">
+                      Administrar unidades
+                    </Text>
                     <Text className="text-xs font-semibold text-slate-400">
                       {showUnitManager ? 'Ocultar' : 'Ver'}
                     </Text>
@@ -637,7 +644,9 @@ export default function ProductosServiciosNuevoScreen() {
 
                 {showUnitManager && (
                   <View className="mt-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">Unidades</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      Unidades
+                    </Text>
 
                     {unitItems.length > 0 ? (
                       <View className="mt-3">
@@ -668,12 +677,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
                                     activeOpacity={0.85}
-                                     accessibilityRole="button"
-                                     accessibilityLabel={`Guardar unidad ${option.label}`}
-                                     onPress={() => {
-                                       void handleUpdateUnit(option.value);
-                                     }}
-                                   >
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Guardar unidad ${option.label}`}
+                                    onPress={() => {
+                                      void handleUpdateUnit(option.value);
+                                    }}
+                                  >
                                     <Check size={18} color="#059669" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
@@ -694,24 +703,24 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-violet-50"
                                     activeOpacity={0.85}
-                                     accessibilityRole="button"
-                                     accessibilityLabel={`Editar unidad ${option.label}`}
-                                     onPress={() => {
-                                       setEditingUnitId(option.value);
-                                       setEditingUnitName(getUnitNameFromLabel(option.label));
-                                     }}
-                                   >
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Editar unidad ${option.label}`}
+                                    onPress={() => {
+                                      setEditingUnitId(option.value);
+                                      setEditingUnitName(getUnitNameFromLabel(option.label));
+                                    }}
+                                  >
                                     <PencilLine size={18} color="#7c3aed" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
                                     className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
                                     activeOpacity={0.85}
-                                     accessibilityRole="button"
-                                     accessibilityLabel={`Eliminar unidad ${option.label}`}
-                                     onPress={() => {
-                                       handleDeleteUnit(option.value, option.label);
-                                     }}
-                                   >
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Eliminar unidad ${option.label}`}
+                                    onPress={() => {
+                                      handleDeleteUnit(option.value, option.label);
+                                    }}
+                                  >
                                     <Trash2 size={18} color="#e11d48" />
                                   </TouchableOpacity>
                                 </View>
@@ -721,7 +730,10 @@ export default function ProductosServiciosNuevoScreen() {
                         })}
                       </View>
                     ) : (
-                      <Text className="mt-2 text-sm text-slate-500">Aún no hay unidades.</Text>
+                      <Text className="mt-2 text-sm text-slate-500">
+                        Aún no hay unidades. Crea un tipo de unidad para tu producto, ejemplos
+                        comunes: &quot;pieza&quot;, &quot;caja&quot;, &quot;docena&quot;, &quot;kilogramo&quot;, &quot;litro&quot;.
+                      </Text>
                     )}
 
                     <View className="mt-3 flex-row items-center">
@@ -792,7 +804,9 @@ export default function ProductosServiciosNuevoScreen() {
                   onPress={() => setShowCategoryManager((v) => !v)}
                 >
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-slate-700">Administrar categorías</Text>
+                    <Text className="text-sm font-semibold text-slate-700">
+                      Administrar categorías
+                    </Text>
                     <Text className="text-xs font-semibold text-slate-400">
                       {showCategoryManager ? 'Ocultar' : 'Ver'}
                     </Text>
@@ -801,7 +815,9 @@ export default function ProductosServiciosNuevoScreen() {
 
                 {showCategoryManager && (
                   <View className="mt-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">Categorías</Text>
+                    <Text className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      Categorías
+                    </Text>
 
                     {categoryItems.length > 0 ? (
                       <View className="mt-3">
@@ -832,12 +848,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"
                                     activeOpacity={0.85}
-                                     accessibilityRole="button"
-                                     accessibilityLabel={`Guardar categoría ${option.label}`}
-                                     onPress={() => {
-                                       void handleUpdateCategory(option.value);
-                                     }}
-                                   >
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Guardar categoría ${option.label}`}
+                                    onPress={() => {
+                                      void handleUpdateCategory(option.value);
+                                    }}
+                                  >
                                     <Check size={18} color="#059669" />
                                   </TouchableOpacity>
                                   <TouchableOpacity
@@ -870,12 +886,12 @@ export default function ProductosServiciosNuevoScreen() {
                                   <TouchableOpacity
                                     className="h-9 w-9 items-center justify-center rounded-xl bg-rose-50"
                                     activeOpacity={0.85}
-                                     accessibilityRole="button"
-                                     accessibilityLabel={`Eliminar categoría ${option.label}`}
-                                     onPress={() => {
-                                       handleDeleteCategory(option.value, option.label);
-                                     }}
-                                   >
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Eliminar categoría ${option.label}`}
+                                    onPress={() => {
+                                      handleDeleteCategory(option.value, option.label);
+                                    }}
+                                  >
                                     <Trash2 size={18} color="#e11d48" />
                                   </TouchableOpacity>
                                 </View>
