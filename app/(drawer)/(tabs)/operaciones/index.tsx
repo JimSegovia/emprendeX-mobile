@@ -7,8 +7,6 @@ import {
   FlatList,
   TextInput,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { Search, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -23,6 +21,7 @@ import Animated, {
 } from '@/components/ui/motion';
 import { fetchOperaciones, getReadableVentasError, type OperacionResumen } from '@/lib/ventas';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { KeyboardAwareScreen } from '@/components/ui/keyboard-aware-screen';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
@@ -125,7 +124,8 @@ export default function OperacionesScreen() {
   );
 
   return (
-    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+    <KeyboardAwareScreen>
+      <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
@@ -156,7 +156,6 @@ export default function OperacionesScreen() {
         </ScrollView>
       </Animated.View>
 
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
           data={filteredOperaciones}
           keyExtractor={(item) => item.id}
@@ -201,7 +200,7 @@ export default function OperacionesScreen() {
             )
           }
         />
-      </KeyboardAvoidingView>
     </Animated.View>
+    </KeyboardAwareScreen>
   );
 }

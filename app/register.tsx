@@ -1,11 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -32,6 +26,12 @@ export default function RegisterScreen() {
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const lastNameInputRef = useRef<TextInput>(null);
+  const phoneInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
+  const businessNameInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (!isHydrated || !authState) {
@@ -52,6 +52,7 @@ export default function RegisterScreen() {
   const hasCategoryError = attemptedSubmit && !businessCategory.trim();
 
   const handleRegister = async () => {
+    Keyboard.dismiss();
     setAttemptedSubmit(true);
 
     if (
@@ -102,7 +103,12 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-        <KeyboardAwareLayout contentContainerStyle={{ paddingBottom: 32 }}>
+        <KeyboardAwareLayout
+          bounces={false}
+          keyboardDismissMode="on-drag"
+          extraScrollHeight={48}
+          contentContainerStyle={{ paddingBottom: 32 }}
+        >
           <Animated.View className="px-6 pt-4" entering={sectionEntering(0)}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -135,6 +141,9 @@ export default function RegisterScreen() {
                 placeholderTextColor="#94a3b8"
                 value={firstName}
                 onChangeText={setFirstName}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => lastNameInputRef.current?.focus()}
               />
               {hasFirstNameError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa tus nombres.</Text>
@@ -144,11 +153,15 @@ export default function RegisterScreen() {
             <View className="mb-5">
               <Text className="mb-2 text-sm font-semibold text-slate-700">Apellidos *</Text>
               <TextInput
+                ref={lastNameInputRef}
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasLastNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. Perez"
                 placeholderTextColor="#94a3b8"
                 value={lastName}
                 onChangeText={setLastName}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => phoneInputRef.current?.focus()}
               />
               {hasLastNameError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa tus apellidos.</Text>
@@ -158,12 +171,16 @@ export default function RegisterScreen() {
             <View className="mb-5">
               <Text className="mb-2 text-sm font-semibold text-slate-700">Celular *</Text>
               <TextInput
+                ref={phoneInputRef}
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasPhoneError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. 999888777"
                 placeholderTextColor="#94a3b8"
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => emailInputRef.current?.focus()}
               />
               {hasPhoneError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa tu número de celular.</Text>
@@ -175,6 +192,7 @@ export default function RegisterScreen() {
                 Correo electrónico *
               </Text>
               <TextInput
+                ref={emailInputRef}
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasEmailError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="ejemplo@correo.com"
                 placeholderTextColor="#94a3b8"
@@ -183,6 +201,9 @@ export default function RegisterScreen() {
                 autoCorrect={false}
                 value={email}
                 onChangeText={setEmail}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
               />
               {hasEmailError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa un correo válido.</Text>
@@ -193,12 +214,16 @@ export default function RegisterScreen() {
               <Text className="mb-2 text-sm font-semibold text-slate-700">Contraseña *</Text>
               <View className="relative justify-center">
                 <TextInput
+                  ref={passwordInputRef}
                   className={`rounded-2xl border px-4 py-4 pr-12 text-base text-slate-800 ${hasPasswordError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                   placeholder="Minimo 8 caracteres"
                   placeholderTextColor="#94a3b8"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
                 />
                 <TouchableOpacity
                   className="absolute right-4"
@@ -224,12 +249,16 @@ export default function RegisterScreen() {
               </Text>
               <View className="relative justify-center">
                 <TextInput
+                  ref={confirmPasswordInputRef}
                   className={`rounded-2xl border px-4 py-4 pr-12 text-base text-slate-800 ${hasConfirmPasswordError || (attemptedSubmit && !confirmPassword.trim()) ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                   placeholder="Repite tu contraseña"
                   placeholderTextColor="#94a3b8"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() => businessNameInputRef.current?.focus()}
                 />
                 <TouchableOpacity
                   className="absolute right-4"
@@ -264,11 +293,18 @@ export default function RegisterScreen() {
                 Nombre del negocio *
               </Text>
               <TextInput
+                ref={businessNameInputRef}
                 className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasNameError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                 placeholder="Ej. Dulce Taller"
                 placeholderTextColor="#94a3b8"
                 value={businessName}
                 onChangeText={setBusinessName}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  if (!isSubmitting) {
+                    void handleRegister();
+                  }
+                }}
               />
               {hasNameError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa el nombre del negocio.</Text>

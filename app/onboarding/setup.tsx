@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
+import { KeyboardAwareScreen } from '@/components/ui/keyboard-aware-screen';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronLeft, Info } from 'lucide-react-native';
@@ -100,7 +100,7 @@ export default function SetupScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        <KeyboardAwareLayout style={{ paddingHorizontal: 24 }}>
+        <KeyboardAwareScreen>
           <Animated.View entering={sectionEntering(1)} className="items-center mb-8">
             <Text className="text-[28px] font-extrabold text-slate-800 text-center mb-3">
               Configura tu negocio
@@ -162,7 +162,7 @@ export default function SetupScreen() {
               </View>
             </View>
           </Animated.View>
-          </KeyboardAwareLayout>
+          </KeyboardAwareScreen>
 
         <Animated.View
           className="px-6 py-6 pb-8 pt-4 bg-white border-t border-slate-50"

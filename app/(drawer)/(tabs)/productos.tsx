@@ -26,8 +26,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -35,6 +33,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScreen } from '@/components/ui/keyboard-aware-screen';
 
 export default function ProductosScreen() {
   const insets = useSafeAreaInsets();
@@ -177,7 +176,8 @@ export default function ProductosScreen() {
   };
 
   return (
-    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+    <KeyboardAwareScreen>
+      <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
         className="bg-violet-600 px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
@@ -193,10 +193,6 @@ export default function ProductosScreen() {
         </View>
       </Animated.View>
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
@@ -348,7 +344,7 @@ export default function ProductosScreen() {
             ) : null
           }
         />
-      </KeyboardAvoidingView>
     </Animated.View>
+    </KeyboardAwareScreen>
   );
 }

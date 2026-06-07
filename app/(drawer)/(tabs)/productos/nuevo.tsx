@@ -485,6 +485,7 @@ export default function ProductosServiciosNuevoScreen() {
 
       <Animated.View className="flex-1" entering={sectionEntering(1)}>
         <KeyboardAwareLayout
+          insideTabBar={true}
           style={{ paddingHorizontal: 20, paddingTop: 24 }}
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
         >
