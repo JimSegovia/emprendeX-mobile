@@ -1,9 +1,12 @@
 import { Drawer } from 'expo-router/drawer';
 import { usePathname, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppSafeArea } from '@/components/AppSafeArea';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Crown, Lock } from 'lucide-react-native';
 import Animated, { itemEntering, smoothLayout } from '@/components/ui/motion';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
 
@@ -13,12 +16,12 @@ function CustomDrawerContent(props: any) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { authState } = useAuthSession();
+  const { logoUrl, palette } = useAccountPreferences();
   const { modules: DRAWER_ITEMS, isModuleEnabled } = useModulePreferences();
 
   const displayName = authState
     ? `${authState.user.firstNames} ${authState.user.lastNames}`.trim()
     : 'EmprendeX';
-  const avatarLetter = displayName.trim().charAt(0).toUpperCase() || 'E';
   const accountLabel = authState?.user?.businessProfile?.name ?? authState?.user?.email ?? 'Sin sesión activa';
   const planName = authState?.user.activeSubscription?.planName ?? 'Sin plan';
 
@@ -33,17 +36,30 @@ function CustomDrawerContent(props: any) {
   };
 
   return (
-    <View className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-violet-600 px-5 pb-6" style={{ paddingTop: insets.top + 28 }}>
+      <View className="px-5 pb-6" style={{ paddingTop: insets.top + 28, backgroundColor: palette.primary }}>
         <View className="flex-row items-center">
           <View className="mr-3 h-12 w-12 items-center justify-center rounded-full border border-white/60">
-            <Text className="text-xl font-bold text-white">{avatarLetter}</Text>
+            {logoUrl ? (
+              <Image
+                source={{ uri: logoUrl }}
+                style={{ width: 44, height: 44, borderRadius: 999 }}
+                contentFit="cover"
+                accessibilityLabel="Logo del negocio"
+              />
+            ) : (
+              <Text className="text-xl font-semibold text-white">
+                {displayName.trim().charAt(0).toUpperCase() || 'E'}
+              </Text>
+            )}
           </View>
 
           <View className="flex-1">
-            <Text className="text-base font-bold text-white">{displayName}</Text>
-            <Text className="mt-1 text-sm font-medium text-violet-100">{accountLabel}</Text>
+            <Text className="text-base font-semibold text-white">{displayName}</Text>
+            <Text className="mt-1 text-sm font-medium" style={{ color: palette.primaryMutedText }}>
+              {accountLabel}
+            </Text>
           </View>
         </View>
       </View>
@@ -57,12 +73,8 @@ function CustomDrawerContent(props: any) {
             : item.match.some((match) => pathname.startsWith(match));
           const isPremium = Boolean(item.premium);
           const isLocked = isPremium && !isModuleEnabled(item.id);
-          const iconColor = isActive ? '#7c3aed' : isPremium ? '#d97706' : '#475569';
-          const textColor = isActive
-            ? 'text-violet-600'
-            : isPremium
-              ? 'text-amber-700'
-              : 'text-slate-700';
+          const iconColor = isActive ? palette.primary : isPremium ? '#d97706' : '#475569';
+          const textColor = isActive ? palette.primaryText : isPremium ? '#b45309' : '#334155';
 
           return (
             <Animated.View
@@ -73,12 +85,14 @@ function CustomDrawerContent(props: any) {
             >
               {isActive && (
                 <Animated.View
-                  className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-violet-500"
+                  className="absolute left-0 top-2 bottom-2 w-1 rounded-full"
+                  style={{ backgroundColor: palette.primary }}
                   entering={itemEntering(0)}
                 />
               )}
               <TouchableOpacity
-                className={`flex-row items-center py-3.5 px-4 ${isActive ? 'bg-violet-50' : 'bg-transparent'}`}
+                className="flex-row items-center py-3.5 px-4"
+                style={{ backgroundColor: isActive ? palette.primarySoft : 'transparent' }}
                 activeOpacity={0.75}
                 onPress={() => {
                   if (isLocked) {
@@ -90,20 +104,20 @@ function CustomDrawerContent(props: any) {
                 }}
               >
                 <Icon size={19} color={iconColor} />
-                <Text className={`ml-4 flex-1 text-[15px] font-semibold ${textColor}`}>
+                <Text className="ml-4 flex-1 text-[15px] font-semibold" style={{ color: textColor }}>
                   {item.label}
                 </Text>
                 {isLocked && !isActive && (
                   <View className="flex-row items-center rounded-full bg-amber-100 px-2 py-1">
-                    <Lock size={12} color="#b45309" className="mr-1" />
-                    <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                    <Lock size={12} color="#b45309" />
+                    <Text className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                       Pro
                     </Text>
                   </View>
                 )}
                 {isPremium && !isLocked && !isActive && (
                   <View className="rounded-full bg-amber-100 px-2.5 py-1">
-                    <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                    <Text className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                       Pro
                     </Text>
                   </View>
@@ -115,9 +129,10 @@ function CustomDrawerContent(props: any) {
       </ScrollView>
 
       {/* Footer */}
-      <SafeAreaView edges={['bottom']} className="bg-white px-4 pt-2 pb-4">
+      <AppSafeArea edges={['bottom']} className="bg-white px-4 pt-2 pb-4">
         <TouchableOpacity
-          className="rounded-2xl border border-violet-100 bg-violet-50 px-4 py-4"
+          className="rounded-2xl px-4 py-4"
+          style={{ backgroundColor: palette.primarySoft, borderColor: palette.primaryBorder, borderWidth: 1 }}
           onPress={() => {
             navigation.closeDrawer();
             requestAnimationFrame(() => router.push('/(drawer)/(tabs)/plan-pro'));
@@ -129,14 +144,14 @@ function CustomDrawerContent(props: any) {
             </View>
 
             <View className="flex-1">
-              <Text className="text-sm font-bold text-slate-800">
-                Tu plan: <Text className="text-violet-600">{planName}</Text>
+              <Text className="text-sm font-semibold text-slate-800">
+                Tu plan: <Text style={{ color: palette.primaryText }}>{planName}</Text>
               </Text>
               <Text className="mt-1 text-xs text-slate-500">Explora funciones premium</Text>
             </View>
           </View>
         </TouchableOpacity>
-      </SafeAreaView>
+      </AppSafeArea>
     </View>
   );
 }
