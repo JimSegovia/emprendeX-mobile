@@ -5,14 +5,16 @@ export default function ContabilidadLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'simple_push',
+        animationDuration: 240,
+        animationMatchesGesture: true,
         contentStyle: { backgroundColor: '#ffffff' },
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="nuevo" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="nuevo" />
     </Stack>
   );
 }

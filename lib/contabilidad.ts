@@ -14,6 +14,19 @@ export type RegistroContable = {
   status: string;
   type: 'Pago' | 'Gasto';
   createdAt: string;
+  paymentDetails?: Array<{
+    id: string;
+    paymentMethodName: string;
+    amount: string;
+    createdAt: string;
+  }>;
+};
+
+export type DetallePago = {
+  id: string;
+  paymentMethodName: string;
+  amount: string;
+  createdAt: string;
 };
 
 export type MetodoPago = {
@@ -59,6 +72,14 @@ export async function fetchResumenContable(accessToken: string) {
 
 export async function fetchRegistrosContables(accessToken: string) {
   return apiRequest<RegistroContable[]>('/contabilidad/records', { method: 'GET' }, accessToken);
+}
+
+export async function fetchDetallesPago(accessToken: string, paymentId: string) {
+  return apiRequest<DetallePago[]>(
+    `/contabilidad/payments/${paymentId}/details`,
+    { method: 'GET' },
+    accessToken,
+  );
 }
 
 export async function fetchMetodosPago(accessToken: string) {
