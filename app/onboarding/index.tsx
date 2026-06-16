@@ -1,21 +1,22 @@
 import React, { useRef, useState } from 'react';
 import {
   FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeArea } from '@/components/AppSafeArea';
 import { router } from 'expo-router';
-import { ArrowRight, Clock, FileText, LucideIcon, TrendingUp } from 'lucide-react-native';
+import { ArrowRight, Clock, FileText, TrendingUp } from 'lucide-react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import Animated, {
   AnimatedTouchableOpacity,
   screenEntering,
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 
 type FeatureSlide = {
   id: string;
@@ -50,6 +51,7 @@ const FEATURE_SLIDES: FeatureSlide[] = [
 ];
 
 export default function OnboardingStep1() {
+  const { palette } = useAccountPreferences();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList<FeatureSlide>>(null);
   const { width } = useWindowDimensions();
@@ -76,12 +78,12 @@ export default function OnboardingStep1() {
   const isLastSlide = currentIndex === FEATURE_SLIDES.length - 1;
 
   return (
-    <SafeAreaView className="flex-1 bg-white pt-12">
+    <AppSafeArea className="flex-1 bg-white pt-12">
       <Animated.View className="flex-1 justify-between pb-8" entering={screenEntering}>
         <View className="px-6">
           <Animated.View className="items-center mt-12 mb-8" entering={sectionEntering(0)}>
-            <Text className="text-3xl font-extrabold text-slate-800 text-center mb-4 px-4 leading-tight">
-              Todo lo que tu <Text className="text-violet-600">negocio</Text> necesita
+            <Text className="text-2xl font-semibold text-slate-800 text-center mb-4 px-4 leading-tight">
+              Todo lo que tu <Text style={{ color: palette.primaryText }}>negocio</Text> necesita
             </Text>
             <Text className="text-slate-500 text-center text-base px-2 leading-relaxed">
               Gestiona pedidos, clientes, productos, contabilidad y más. Desde cualquier lugar.
@@ -111,8 +113,8 @@ export default function OnboardingStep1() {
                     layout={smoothLayout}
                   >
                     <View className="flex-row items-center justify-between mb-6">
-                      <View className="bg-violet-100 p-3 rounded-2xl">
-                        <Icon size={24} color="#7c3aed" />
+                      <View className="p-3 rounded-2xl" style={{ backgroundColor: palette.primarySoft }}>
+                        <Icon size={24} color={palette.primary} />
                       </View>
 
                       <View className="rounded-full bg-slate-100 px-3 py-1.5">
@@ -122,15 +124,15 @@ export default function OnboardingStep1() {
                       </View>
                     </View>
 
-                    <Text className="text-slate-800 font-bold text-2xl leading-tight">
+                    <Text className="text-slate-800 font-semibold text-xl leading-tight">
                       {item.title}
                     </Text>
                     <Text className="mt-3 text-slate-500 text-base leading-6">
                       {item.description}
                     </Text>
 
-                    <View className="mt-6 rounded-2xl bg-violet-50 px-4 py-4 border border-violet-100">
-                      <Text className="text-sm leading-6 text-violet-900">{item.detail}</Text>
+                    <View className="mt-6 rounded-2xl px-4 py-4 border" style={{ backgroundColor: palette.primarySoft, borderColor: palette.primaryBorder }}>
+                      <Text className="text-sm leading-6" style={{ color: palette.primaryText }}>{item.detail}</Text>
                     </View>
                   </Animated.View>
                 </View>
@@ -147,7 +149,8 @@ export default function OnboardingStep1() {
               return (
                 <AnimatedTouchableOpacity
                   key={slide.id}
-                  className={`h-2 rounded-full ${isActive ? 'w-6 bg-violet-600' : 'w-2 bg-slate-200'} ${index === FEATURE_SLIDES.length - 1 ? '' : 'mr-2'}`}
+                  className={`h-2 rounded-full ${isActive ? 'w-6' : 'w-2'} ${index === FEATURE_SLIDES.length - 1 ? '' : 'mr-2'}`}
+                  style={{ backgroundColor: isActive ? palette.primary : '#e2e8f0' }}
                   onPress={() => goToSlide(index)}
                   layout={smoothLayout}
                 />
@@ -156,17 +159,18 @@ export default function OnboardingStep1() {
           </View>
 
           <AnimatedTouchableOpacity
-            className="w-full bg-violet-600 rounded-xl py-4 items-center justify-center active:bg-violet-700 flex-row"
+            className="w-full rounded-xl py-4 items-center justify-center flex-row"
+            style={{ backgroundColor: palette.primary }}
             onPress={handleNext}
             layout={smoothLayout}
           >
-            <Text className="text-white font-bold text-lg mr-2">
+            <Text className="text-white font-semibold text-lg mr-2">
               {isLastSlide ? 'Comenzar' : 'Siguiente'}
             </Text>
             {!isLastSlide && <ArrowRight size={20} color="white" />}
           </AnimatedTouchableOpacity>
         </Animated.View>
       </Animated.View>
-    </SafeAreaView>
+    </AppSafeArea>
   );
 }
