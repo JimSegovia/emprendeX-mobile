@@ -1,26 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AppSafeArea } from '@/components/AppSafeArea';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { getColorPalette } from '@/lib/account-preferences';
 import { getReadableAuthError, registerUser, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { DNI_LENGTH, isValidDni, sanitizeDniInput } from '@/lib/dni';
+import { AUTH_PASSWORD_MIN_LENGTH } from '@/lib/runtime-config';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const palette = getColorPalette('violet');
   const { authState, isHydrated, setAuthenticatedSession } = useAuthSession();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [dni, setDni] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,9 +42,11 @@ export default function RegisterScreen() {
 
   const hasFirstNameError = attemptedSubmit && !firstName.trim();
   const hasLastNameError = attemptedSubmit && !lastName.trim();
+  const hasDniError = attemptedSubmit && !isValidDni(dni);
   const hasPhoneError = attemptedSubmit && !phone.trim();
   const hasEmailError = attemptedSubmit && !EMAIL_REGEX.test(email.trim());
-  const hasPasswordError = attemptedSubmit && password.trim().length < 8;
+  const hasPasswordError =
+    attemptedSubmit && password.trim().length < AUTH_PASSWORD_MIN_LENGTH;
   const hasConfirmPasswordError =
     attemptedSubmit && confirmPassword.trim().length > 0 && confirmPassword !== password;
   const hasNameError = attemptedSubmit && !businessName.trim();
@@ -57,6 +58,7 @@ export default function RegisterScreen() {
     if (
       hasFirstNameError ||
       hasLastNameError ||
+      hasDniError ||
       hasPhoneError ||
       hasEmailError ||
       hasPasswordError ||
@@ -75,6 +77,7 @@ export default function RegisterScreen() {
       const session = await registerUser({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        dni,
         phone: phone.trim(),
         email: email.trim().toLowerCase(),
         password,
@@ -93,14 +96,14 @@ export default function RegisterScreen() {
 
   if (!isHydrated || authState) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#7c3aed" />
-      </SafeAreaView>
+      <AppSafeArea className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={palette.primary} />
+      </AppSafeArea>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <AppSafeArea className="flex-1 bg-white">
       <Animated.View className="flex-1 bg-white" entering={screenEntering}>
         <KeyboardAwareLayout contentContainerStyle={{ paddingBottom: 32 }}>
           <Animated.View className="px-6 pt-4" entering={sectionEntering(0)}>
@@ -113,7 +116,7 @@ export default function RegisterScreen() {
           </Animated.View>
 
           <Animated.View className="px-6 pt-5" entering={sectionEntering(1)}>
-            <Text className="text-3xl font-extrabold text-slate-800">Crea tu cuenta</Text>
+            <Text className="text-2xl font-semibold text-slate-800">Crea tu cuenta</Text>
             <Text className="mt-2 text-base leading-6 text-slate-500">
               Registra tu acceso y los datos base de tu negocio para empezar.
             </Text>
@@ -123,7 +126,7 @@ export default function RegisterScreen() {
             className="mx-6 mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
             entering={sectionEntering(2)}
           >
-            <Text className="mb-4 text-sm font-bold uppercase tracking-wide text-violet-600">
+            <Text className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: palette.primaryText }}>
               Tu cuenta
             </Text>
 
@@ -152,6 +155,25 @@ export default function RegisterScreen() {
               />
               {hasLastNameError ? (
                 <Text className="mt-2 text-sm text-rose-500">Ingresa tus apellidos.</Text>
+              ) : null}
+            </View>
+
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-semibold text-slate-700">DNI *</Text>
+              <TextInput
+                className={`rounded-2xl border px-4 py-4 text-base text-slate-800 ${hasDniError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
+                placeholder="Solo números"
+                placeholderTextColor="#94a3b8"
+                keyboardType="number-pad"
+                maxLength={DNI_LENGTH}
+                autoCorrect={false}
+                value={dni}
+                onChangeText={(value) => setDni(sanitizeDniInput(value))}
+              />
+              {hasDniError ? (
+                  <Text className="mt-2 text-sm text-rose-500">
+                    {`Ingresa un DNI de ${DNI_LENGTH} dígitos.`}
+                  </Text>
               ) : null}
             </View>
 
@@ -194,7 +216,7 @@ export default function RegisterScreen() {
               <View className="relative justify-center">
                 <TextInput
                   className={`rounded-2xl border px-4 py-4 pr-12 text-base text-slate-800 ${hasPasswordError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
-                  placeholder="Minimo 8 caracteres"
+                    placeholder={`Mínimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
                   placeholderTextColor="#94a3b8"
                   secureTextEntry={!showPassword}
                   value={password}
@@ -213,9 +235,9 @@ export default function RegisterScreen() {
               </View>
               {hasPasswordError ? (
                 <Text className="mt-2 text-sm text-rose-500">
-                  La contraseña debe tener al menos 8 caracteres.
-                </Text>
-              ) : null}
+                    {`La contraseña debe tener al menos ${AUTH_PASSWORD_MIN_LENGTH} caracteres.`}
+                  </Text>
+                ) : null}
             </View>
 
             <View>
@@ -255,7 +277,7 @@ export default function RegisterScreen() {
             className="mx-6 mt-5 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
             entering={sectionEntering(3)}
           >
-            <Text className="mb-4 text-sm font-bold uppercase tracking-wide text-violet-600">
+            <Text className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: palette.primaryText }}>
               Datos del negocio
             </Text>
 
@@ -298,7 +320,8 @@ export default function RegisterScreen() {
             ) : null}
 
             <TouchableOpacity
-              className={`items-center rounded-2xl py-4 ${isSubmitting ? 'bg-violet-500' : 'bg-violet-600'}`}
+              className="items-center rounded-2xl py-4"
+              style={{ backgroundColor: isSubmitting ? palette.primaryDark : palette.primary }}
               onPress={() => {
                 void handleRegister();
               }}
@@ -307,19 +330,19 @@ export default function RegisterScreen() {
               {isSubmitting ? (
                 <View className="flex-row items-center">
                   <ActivityIndicator color="white" />
-                  <Text className="ml-3 text-lg font-bold text-white">Creando cuenta...</Text>
+                  <Text className="ml-3 text-lg font-semibold text-white">Creando cuenta...</Text>
                 </View>
               ) : (
-                <Text className="text-lg font-bold text-white">Crear cuenta y continuar</Text>
+                <Text className="text-lg font-semibold text-white">Crear cuenta y continuar</Text>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity className="mt-4 items-center" onPress={() => router.back()}>
-              <Text className="font-medium text-violet-600">Ya tengo cuenta, volver</Text>
+              <Text className="font-medium" style={{ color: palette.primaryText }}>Ya tengo cuenta, volver</Text>
             </TouchableOpacity>
           </Animated.View>
         </KeyboardAwareLayout>
       </Animated.View>
-    </SafeAreaView>
+    </AppSafeArea>
   );
 }

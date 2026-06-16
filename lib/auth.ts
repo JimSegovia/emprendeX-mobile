@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApiBaseUrl } from '@/lib/api-config';
+import { isValidDni } from '@/lib/dni';
 import type { ModuleId } from '@/lib/modules';
 
 const AUTH_STORAGE_KEY = 'emprendex:auth:v1';
@@ -8,6 +9,7 @@ export type AuthUser = {
   id: string;
   firstNames: string;
   lastNames: string;
+  dni: string;
   email: string;
   phone: string;
   status: 'Inactive' | 'Active' | 'Blocked';
@@ -49,6 +51,7 @@ type LoginPayload = {
 type RegisterPayload = {
   firstName: string;
   lastName: string;
+  dni: string;
   phone: string;
   email: string;
   password: string;
@@ -57,6 +60,13 @@ type RegisterPayload = {
 };
 
 type OnboardingSetupPayload = {
+  businessName: string;
+  businessCategory: string;
+};
+
+type UpdateCurrentUserProfilePayload = {
+  firstName: string;
+  lastName: string;
   businessName: string;
   businessCategory: string;
 };
@@ -115,13 +125,14 @@ function isAuthUser(value: unknown): value is AuthUser {
     typeof value.id === 'string' &&
     typeof value.firstNames === 'string' &&
     typeof value.lastNames === 'string' &&
+    typeof value.dni === 'string' &&
+    isValidDni(value.dni) &&
     typeof value.email === 'string' &&
     typeof value.phone === 'string' &&
     ['Inactive', 'Active', 'Blocked'].includes(String(value.status)) &&
     typeof value.onboardingCompleted === 'boolean' &&
     isStringArray(value.enabledModuleIds) &&
-    (value.activeSubscription === null ||
-      isSubscriptionSummary(value.activeSubscription)) &&
+    (value.activeSubscription === null || isSubscriptionSummary(value.activeSubscription)) &&
     isNullableString(value.businessProfile.id) &&
     isNullableString(value.businessProfile.name) &&
     isNullableString(value.businessProfile.category)
@@ -249,6 +260,22 @@ export async function fetchCurrentUser(accessToken: string): Promise<AuthStateRe
   return authState;
 }
 
+export async function updateCurrentUserProfile(
+  accessToken: string,
+  payload: UpdateCurrentUserProfilePayload,
+): Promise<AuthStateResponse> {
+  const authState = await request<unknown>('/auth/me', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  assertAuthStatePayload(authState);
+  return authState;
+}
+
 export async function updateOnboardingSetup(
   accessToken: string,
   payload: OnboardingSetupPayload,
@@ -262,9 +289,7 @@ export async function updateOnboardingSetup(
   });
 }
 
-export async function completeOnboardingModules(
-  accessToken: string,
-): Promise<AuthStateResponse> {
+export async function completeOnboardingModules(accessToken: string): Promise<AuthStateResponse> {
   return request<AuthStateResponse>('/onboarding/modules', {
     method: 'PUT',
     headers: {
@@ -319,10 +344,6 @@ export function getReadableAuthError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 401) {
       return 'Correo o contraseña incorrectos.';
-    }
-
-    if (error.status === 409) {
-      return 'Ese correo ya está registrado.';
     }
 
     return error.message;

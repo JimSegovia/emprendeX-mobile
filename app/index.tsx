@@ -6,18 +6,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AppSafeArea } from '@/components/AppSafeArea';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { getColorPalette } from '@/lib/account-preferences';
 import { getReadableAuthError, loginUser, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { AUTH_PASSWORD_MIN_LENGTH } from '@/lib/runtime-config';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
+  const palette = getColorPalette('violet');
   const { authState, isHydrated, setAuthenticatedSession } = useAuthSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +38,8 @@ export default function LoginScreen() {
   }, [authState, isHydrated]);
 
   const hasEmailError = attemptedSubmit && !EMAIL_REGEX.test(email.trim());
-  const hasPasswordError = attemptedSubmit && password.trim().length < 6;
+  const hasPasswordError =
+    attemptedSubmit && password.trim().length < AUTH_PASSWORD_MIN_LENGTH;
 
   const handleLogin = async () => {
     setAttemptedSubmit(true);
@@ -64,14 +68,14 @@ export default function LoginScreen() {
 
   if (!isHydrated || authState) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#7c3aed" />
-      </SafeAreaView>
+      <AppSafeArea className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={palette.primary} />
+      </AppSafeArea>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <AppSafeArea className="flex-1 bg-white">
       <KeyboardAwareLayout>
           <Animated.View className="flex-1 px-8 py-10 justify-between" entering={screenEntering}>
             <Animated.View className="items-center mt-4" entering={sectionEntering(0)}>
@@ -142,14 +146,14 @@ export default function LoginScreen() {
                 </View>
                 {hasPasswordError ? (
                   <Text className="mt-2 text-sm text-rose-500">
-                    La contraseña debe tener al menos 6 caracteres.
+                    {`La contraseña debe tener al menos ${AUTH_PASSWORD_MIN_LENGTH} caracteres.`}
                   </Text>
                 ) : null}
               </View>
 
               <View className="items-end mb-8">
                 <TouchableOpacity>
-                  <Text className="text-violet-600 font-medium text-sm">
+                  <Text className="font-medium text-sm" style={{ color: palette.primaryText }}>
                     ¿Olvidaste tu contraseña?
                   </Text>
                 </TouchableOpacity>
@@ -162,7 +166,8 @@ export default function LoginScreen() {
               ) : null}
 
               <TouchableOpacity
-                className={`mb-6 rounded-xl py-4 items-center justify-center shadow-sm shadow-violet-200 ${isSubmitting ? 'bg-violet-500' : 'bg-violet-600 active:bg-violet-700'}`}
+                className="mb-6 rounded-xl py-4 items-center justify-center shadow-sm"
+                style={{ backgroundColor: isSubmitting ? palette.primaryDark : palette.primary, shadowColor: palette.shadow }}
                 onPress={() => {
                   void handleLogin();
                 }}
@@ -171,10 +176,10 @@ export default function LoginScreen() {
                 {isSubmitting ? (
                   <View className="flex-row items-center">
                     <ActivityIndicator color="white" />
-                    <Text className="ml-3 text-white font-bold text-lg">Ingresando...</Text>
+                    <Text className="ml-3 text-white font-semibold text-lg">Ingresando...</Text>
                   </View>
                 ) : (
-                  <Text className="text-white font-bold text-lg">Iniciar sesión</Text>
+                  <Text className="text-white font-semibold text-lg">Iniciar sesión</Text>
                 )}
               </TouchableOpacity>
 
@@ -182,13 +187,13 @@ export default function LoginScreen() {
                 <Text className="text-slate-500 font-medium mr-1">¿No tienes cuenta?</Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity>
-                    <Text className="text-violet-600 font-bold">Regístrate</Text>
+                    <Text className="font-semibold" style={{ color: palette.primaryText }}>Regístrate</Text>
                   </TouchableOpacity>
                 </Link>
               </View>
             </Animated.View>
           </Animated.View>
       </KeyboardAwareLayout>
-    </SafeAreaView>
+    </AppSafeArea>
   );
 }
