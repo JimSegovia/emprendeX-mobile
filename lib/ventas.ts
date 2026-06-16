@@ -12,6 +12,7 @@ export type Cotizacion = {
   itemsCount: number;
   status: string;
   createdAt: string;
+  originLabel: string | null;
 };
 
 export type OperacionResumen = {
@@ -22,6 +23,7 @@ export type OperacionResumen = {
   total: string;
   status: string;
   createdAt: string;
+  originLabel: string | null;
 };
 
 export type OperacionDetalle = {
@@ -40,6 +42,7 @@ export type OperacionDetalle = {
   deliveryMethod: string;
   description: string | null;
   quotationReferenceCode: string;
+  sourceLabel: string | null;
   total: string;
   items: Array<{
     id: string;
@@ -48,6 +51,7 @@ export type OperacionDetalle = {
     kind: 'Producto' | 'Servicio';
     quantity: number;
     discount: string;
+    unitPrice: string;
     price: string;
   }>;
 };
@@ -62,10 +66,15 @@ export type PedidoPendiente = {
 
 export type CrearCotizacionPayload = {
   customerId: string;
-  itemIds: string[];
+  details: Array<{
+    itemId: string;
+    quantity: number;
+    unitPrice: string;
+    discount?: string;
+  }>;
   description?: string;
   deliveryDate: string;
-  deliveryMethod: 'Delivery' | 'Recojo en tienda';
+  deliveryMethod: 'Entrega a domicilio' | 'Recojo en tienda';
 };
 
 export async function fetchCotizaciones(accessToken: string) {
@@ -78,6 +87,10 @@ export async function createCotizacion(accessToken: string, payload: CrearCotiza
     { method: 'POST', body: JSON.stringify(payload) },
     accessToken,
   );
+}
+
+export async function deleteCotizacion(accessToken: string, quotationId: string) {
+  return apiRequest<void>(`/cotizaciones/${quotationId}`, { method: 'DELETE' }, accessToken);
 }
 
 export async function convertCotizacionToPedido(accessToken: string, quotationId: string) {
