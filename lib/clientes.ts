@@ -10,9 +10,14 @@ export type Cliente = {
   address: string | null;
   operationsCount: number;
   createdAt: string;
+  updatedAt: string;
 };
 
-export type ClienteDetalle = Cliente & {
+export type ClienteConDni = Cliente & {
+  dni: string;
+};
+
+export type ClienteDetalle = ClienteConDni & {
   operations: Array<{
     id: string;
     referenceCode: string;
@@ -25,6 +30,7 @@ export type ClienteDetalle = Cliente & {
 
 export type GuardarClientePayload = {
   firstNames: string;
+  dni: string;
   lastNames?: string;
   email?: string;
   phone?: string;
@@ -40,7 +46,7 @@ export async function fetchClienteById(accessToken: string, customerId: string) 
 }
 
 export async function createCliente(accessToken: string, payload: GuardarClientePayload) {
-  return apiRequest<Cliente>(
+  return apiRequest<ClienteConDni>(
     '/clientes',
     { method: 'POST', body: JSON.stringify(payload) },
     accessToken,
@@ -52,7 +58,7 @@ export async function updateCliente(
   customerId: string,
   payload: GuardarClientePayload,
 ) {
-  return apiRequest<Cliente>(
+  return apiRequest<ClienteConDni>(
     `/clientes/${customerId}`,
     { method: 'PATCH', body: JSON.stringify(payload) },
     accessToken,
