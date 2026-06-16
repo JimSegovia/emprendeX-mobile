@@ -4,15 +4,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Crown, Check, Sparkles } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Animated, { AnimatedTouchableOpacity, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { DEFAULT_MODULES } from '@/lib/modules';
 import { fetchPlanes, getReadablePlanesError, type Plan } from '@/lib/planes';
+import { formatCurrencyValue } from '@/lib/runtime-config';
 
 export default function PlanProScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState('Mensual');
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,15 +37,38 @@ export default function PlanProScreen() {
     void loadPlans();
   }, [accessToken]);
 
-  const proPlan = useMemo(() => plans.find((plan) => plan.name.toLowerCase() === 'pro') ?? null, [plans]);
-  const monthlyPrice = proPlan?.prices.find((price) => price.period === 'Mensual');
-  const yearlyPrice = proPlan?.prices.find((price) => price.period === 'Anual');
-  const features = ['Módulos ilimitados', 'Reportes avanzados', 'Calendario inteligente', 'Exportación de datos', 'Soporte prioritario'];
+  const proPlan = useMemo(
+    () =>
+      plans.find((plan) => plan.name.trim().toLowerCase() === 'pro') ??
+      plans.find((plan) => plan.prices.some((price) => price.isActive)) ??
+      plans[0] ??
+      null,
+    [plans],
+  );
+  const availablePrices = useMemo(
+    () => proPlan?.prices.filter((price) => price.isActive) ?? [],
+    [proPlan],
+  );
+  const highlightedFeatures = useMemo(
+    () => DEFAULT_MODULES.filter((module) => module.premium).map((module) => module.label),
+    [],
+  );
+
+  useEffect(() => {
+    if (availablePrices.length === 0) {
+      setSelectedPlan(null);
+      return;
+    }
+
+    if (!selectedPlan || !availablePrices.some((price) => price.period === selectedPlan)) {
+      setSelectedPlan(availablePrices[0]?.period ?? null);
+    }
+  }, [availablePrices, selectedPlan]);
 
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
-      <Animated.View className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between" style={{ paddingTop: Math.max(insets.top, 16) + 16 }} entering={sectionEntering(0)}>
-        <View className="flex-row items-center"><TouchableOpacity onPress={() => router.back()} className="mr-4"><ArrowLeft color="white" size={24} /></TouchableOpacity><Text className="text-white text-xl font-bold">Plan Pro</Text></View>
+      <Animated.View className="px-4 pb-4 flex-row items-center justify-between" style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }} entering={sectionEntering(0)}>
+        <View className="flex-row items-center"><TouchableOpacity onPress={() => router.back()} className="mr-4"><ArrowLeft color="white" size={24} /></TouchableOpacity><Text className="text-white text-xl font-semibold">Plan Pro</Text></View>
       </Animated.View>
       <Animated.ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }} entering={sectionEntering(1)}>
         <Animated.View className="items-center justify-center mb-8 relative" entering={sectionEntering(2)}>
@@ -49,21 +76,28 @@ export default function PlanProScreen() {
           <View className="absolute top-0 right-1/4"><Sparkles size={24} color="#f59e0b" /></View>
           <View className="absolute bottom-2 left-1/4"><Sparkles size={16} color="#f59e0b" /></View>
         </Animated.View>
-        {isLoading ? <View className="py-10 items-center"><ActivityIndicator color="#7c3aed" /><Text className="mt-3 text-slate-500">Cargando planes...</Text></View> : null}
+        {isLoading ? <View className="py-10 items-center"><ActivityIndicator color={palette.primary} /><Text className="mt-3 text-slate-500">Cargando planes...</Text></View> : null}
         {error ? <Text className="text-rose-600">{error}</Text> : null}
         <Text className="text-center text-slate-800 text-lg mb-8">
           Desbloquea todo el potencial de{`\n`}
-          <Text className="text-2xl font-extrabold text-violet-900 tracking-tight">EmprendeX</Text>
+          <Text className="text-2xl font-semibold tracking-tight" style={{ color: palette.primaryText }}>EmprendeX</Text>
         </Text>
         <Animated.View className="mb-10 px-2 space-y-4" entering={sectionEntering(3)}>
-          {features.map((feature) => <View key={feature} className="flex-row items-center mb-3"><Check size={20} color="#10b981" className="mr-3" /><Text className="text-slate-700 text-base">{feature}</Text></View>)}
+          {highlightedFeatures.map((feature) => <View key={feature} className="flex-row items-center mb-3"><Check size={20} color="#10b981" className="mr-3" /><Text className="text-slate-700 text-base">{feature}</Text></View>)}
         </Animated.View>
-        <Animated.View className="flex-row justify-between mb-8" entering={sectionEntering(4)}>
-          <AnimatedTouchableOpacity className={`w-[48%] p-4 rounded-2xl border-2 ${selectedPlan === 'Mensual' ? 'border-violet-600 bg-violet-50' : 'border-slate-100 bg-white'}`} onPress={() => setSelectedPlan('Mensual')} layout={smoothLayout}><Text className={`font-bold mb-2 ${selectedPlan === 'Mensual' ? 'text-violet-900' : 'text-slate-800'}`}>Mensual</Text><Text className="text-2xl font-extrabold text-slate-800">S/ {monthlyPrice?.price ?? '0.00'}</Text></AnimatedTouchableOpacity>
-          <AnimatedTouchableOpacity className={`w-[48%] p-4 rounded-2xl border-2 ${selectedPlan === 'Anual' ? 'border-violet-600 bg-violet-50' : 'border-slate-100 bg-slate-50'}`} onPress={() => setSelectedPlan('Anual')} layout={smoothLayout}><Text className={`font-bold mb-2 ${selectedPlan === 'Anual' ? 'text-violet-900' : 'text-slate-600'}`}>Anual</Text><Text className="text-2xl font-extrabold text-slate-800 mb-1">S/ {yearlyPrice?.price ?? '0.00'}</Text></AnimatedTouchableOpacity>
-        </Animated.View>
-        <TouchableOpacity className="bg-violet-600 w-full py-4 rounded-xl items-center shadow-md shadow-violet-200 mb-6"><Text className="text-white font-bold text-lg">Activar Plan Pro</Text></TouchableOpacity>
-        <TouchableOpacity className="items-center pb-8" onPress={() => router.back()}><Text className="text-violet-600 font-medium">Ahora no, continuar gratis</Text></TouchableOpacity>
+        {availablePrices.length > 0 ? (
+          <Animated.View className="flex-row justify-between mb-8" entering={sectionEntering(4)}>
+            {availablePrices.slice(0, 2).map((price) => {
+              const isSelected = selectedPlan === price.period;
+
+              return (
+                <AnimatedTouchableOpacity key={price.id} className="w-[48%] p-4 rounded-2xl border-2" style={{ borderColor: isSelected ? palette.primary : '#f1f5f9', backgroundColor: isSelected ? palette.primarySoft : '#ffffff' }} onPress={() => setSelectedPlan(price.period)} layout={smoothLayout}><Text className="font-semibold mb-2" style={{ color: isSelected ? palette.primaryText : '#1e293b' }}>{price.period}</Text><Text className="text-2xl font-semibold text-slate-800">{formatCurrencyValue(price.price)}</Text></AnimatedTouchableOpacity>
+              );
+            })}
+          </Animated.View>
+        ) : null}
+        <TouchableOpacity className="w-full py-4 rounded-xl items-center shadow-md mb-6" style={{ backgroundColor: palette.primary, shadowColor: palette.shadow }}><Text className="text-white font-semibold text-lg">Activar Plan Pro</Text></TouchableOpacity>
+        <TouchableOpacity className="items-center pb-8" onPress={() => router.back()}><Text className="font-medium" style={{ color: palette.primaryText }}>Ahora no, continuar gratis</Text></TouchableOpacity>
       </Animated.ScrollView>
     </Animated.View>
   );
