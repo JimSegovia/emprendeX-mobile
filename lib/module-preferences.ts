@@ -24,7 +24,9 @@ function migrateOrder(order: ModuleId[] | null | undefined): ModuleId[] {
 
   const known = new Set(defaultOrder);
   // Keep only modules that still exist.
-  const filtered = order.filter((id) => known.has(id));
+  const filtered = order.filter(
+    (id, index) => known.has(id) && order.indexOf(id) === index,
+  );
   // Append any new modules added by an update.
   for (const id of defaultOrder) {
     if (!filtered.includes(id)) filtered.push(id);
