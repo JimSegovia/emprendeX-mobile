@@ -28,10 +28,12 @@ Ejemplo de `.env`:
 ```env
 EXPO_PUBLIC_API_TARGET=local
 EXPO_PUBLIC_API_SCHEME=http
-EXPO_PUBLIC_API_HOST=192.168.18.9
+EXPO_PUBLIC_API_HOST=tu-host-local
 EXPO_PUBLIC_API_PORT=3000
 EXPO_PUBLIC_API_PATH=/api/v1
-EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://tu-api-publica.example.com/api/v1
+EXPO_PUBLIC_DEFAULT_CURRENCY_SYMBOL=S/
+EXPO_PUBLIC_PASSWORD_MIN_LENGTH=8
 ```
 
 Notas:
@@ -47,13 +49,17 @@ Ejemplo de `.env`:
 
 ```env
 EXPO_PUBLIC_API_TARGET=railway
-EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+EXPO_PUBLIC_API_RAILWAY_BASE_URL=https://tu-api-publica.example.com/api/v1
+EXPO_PUBLIC_DEFAULT_CURRENCY_SYMBOL=S/
+EXPO_PUBLIC_PASSWORD_MIN_LENGTH=8
 ```
 
 Tambien puedes usar una URL explicita completa:
 
 ```env
-EXPO_PUBLIC_API_BASE_URL=https://api-production-159f1.up.railway.app/api/v1
+EXPO_PUBLIC_API_BASE_URL=https://tu-api-publica.example.com/api/v1
+EXPO_PUBLIC_DEFAULT_CURRENCY_SYMBOL=S/
+EXPO_PUBLIC_PASSWORD_MIN_LENGTH=8
 ```
 
 ## Archivos de entorno
