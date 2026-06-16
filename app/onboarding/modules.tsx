@@ -1,87 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeArea } from '@/components/AppSafeArea';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
-  BarChart2,
-  Briefcase,
-  Calculator,
-  Crown,
-  FileText,
-  type LucideIcon,
-  Users,
 } from 'lucide-react-native';
-import type { ModuleId } from '@/lib/modules';
+import { DEFAULT_MODULES, type ModuleId } from '@/lib/modules';
 import Animated, {
   screenEntering,
   sectionEntering,
   smoothLayout,
 } from '@/components/ui/motion';
 import { completeOnboardingModules, getReadableAuthError, resolvePostAuthRoute } from '@/lib/auth';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 type SelectableModuleId = Extract<
   ModuleId,
-  'operaciones' | 'clientes' | 'productos' | 'cotizaciones' | 'contabilidad'
+  'operaciones' | 'clientes' | 'catalogo' | 'cotizaciones' | 'contabilidad'
 >;
 
-type ModuleItem = {
-  id: SelectableModuleId | 'reportes' | 'alertas-pro';
-  title: string;
-  desc: string;
-  icon: LucideIcon;
-  premium?: boolean;
-};
-
-const MODULES: ModuleItem[] = [
-  {
-    id: 'operaciones',
-    title: 'Operaciones',
-    desc: 'Gestiona pedidos, registros y seguimiento.',
-    icon: FileText,
-  },
-  {
-    id: 'clientes',
-    title: 'Clientes',
-    desc: 'Administra tus clientes.',
-    icon: Users,
-  },
-  {
-    id: 'productos',
-    title: 'Productos / Servicios',
-    desc: 'Gestiona tu catálogo.',
-    icon: Briefcase,
-  },
-  {
-    id: 'cotizaciones',
-    title: 'Cotizaciones',
-    desc: 'Crea y envía cotizaciones.',
-    icon: FileText,
-  },
-  {
-    id: 'contabilidad',
-    title: 'Contabilidad',
-    desc: 'Controla pagos y gastos.',
-    icon: Calculator,
-  },
-  {
-    id: 'reportes',
-    title: 'Reportes avanzados',
-    desc: 'Comparativos, evolución y resúmenes premium.',
-    icon: BarChart2,
-    premium: true,
-  },
-  {
-    id: 'alertas-pro',
-    title: 'Alertas inteligentes',
-    desc: 'Recordatorios automáticos y foco en pendientes clave.',
-    icon: Crown,
-    premium: true,
-  },
+const ONBOARDING_MODULE_IDS: (SelectableModuleId | 'reportes' | 'alertas-pro')[] = [
+  'operaciones',
+  'clientes',
+  'catalogo',
+  'cotizaciones',
+  'contabilidad',
+  'reportes',
+  'alertas-pro',
 ];
 
+const MODULES = DEFAULT_MODULES.filter((module) =>
+  ONBOARDING_MODULE_IDS.includes(module.id as (typeof ONBOARDING_MODULE_IDS)[number]),
+).map((module) => ({
+  id: module.id as SelectableModuleId | 'reportes' | 'alertas-pro',
+  title: module.label,
+  desc: module.detail ?? '',
+  icon: module.icon,
+  premium: module.premium,
+}));
+
 export default function ModulesScreen() {
+  const { palette } = useAccountPreferences();
   const { accessToken, isHydrated, updateAuthState } = useAuthSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -116,14 +76,14 @@ export default function ModulesScreen() {
 
   if (!isHydrated || !accessToken) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#7c3aed" />
-      </SafeAreaView>
+      <AppSafeArea className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={palette.primary} />
+      </AppSafeArea>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white pt-12">
+    <AppSafeArea className="flex-1 bg-white pt-12">
       <Animated.View className="flex-row items-center px-4 mb-4" entering={sectionEntering(0)}>
         <TouchableOpacity className="p-2 rounded-full" onPress={() => router.back()}>
           <ArrowLeft size={24} color="#334155" />
@@ -131,13 +91,13 @@ export default function ModulesScreen() {
       </Animated.View>
 
       <Animated.View className="items-center px-6 mb-6" entering={sectionEntering(1)}>
-        <Text className="text-3xl font-bold text-slate-800 text-center mb-2">
+        <Text className="text-2xl font-semibold text-slate-800 text-center mb-2">
           Conoce tus módulos
         </Text>
         <Text className="text-slate-500 text-center text-base">
           Explora los espacios clave que tendrás disponibles desde el inicio.
         </Text>
-        <Text className="mt-2 text-center text-sm text-violet-600">
+        <Text className="mt-2 text-center text-sm" style={{ color: palette.primaryText }}>
           Los módulos Pro aparecen bloqueados para la demo freemium.
         </Text>
       </Animated.View>
@@ -160,16 +120,17 @@ export default function ModulesScreen() {
                 layout={smoothLayout}
               >
                 <View
-                  className={`${isPremium ? 'bg-amber-100' : 'bg-violet-50'} p-2 rounded-xl mr-4`}
+                  className={`${isPremium ? 'bg-amber-100' : ''} p-2 rounded-xl mr-4`}
+                  style={{ backgroundColor: isPremium ? undefined : palette.primarySoft }}
                 >
-                  <Icon size={24} color={isPremium ? '#d97706' : '#7c3aed'} />
+                  <Icon size={24} color={isPremium ? '#d97706' : palette.primary} />
                 </View>
                 <View className="flex-1 pr-4">
                   <View className="mb-1 flex-row items-center">
-                    <Text className="text-slate-800 font-bold text-base">{module.title}</Text>
+                    <Text className="text-slate-800 font-semibold text-base">{module.title}</Text>
                     {isPremium ? (
                       <View className="ml-2 rounded-full bg-amber-500 px-2 py-1">
-                        <Text className="text-[10px] font-bold uppercase tracking-wide text-white">
+                        <Text className="text-[10px] font-semibold uppercase tracking-wide text-white">
                           Pro
                         </Text>
                       </View>
@@ -199,7 +160,8 @@ export default function ModulesScreen() {
         ) : null}
 
         <TouchableOpacity
-          className={`w-full rounded-xl py-4 items-center justify-center ${isSubmitting ? 'bg-violet-500' : 'bg-violet-600 active:bg-violet-700'}`}
+          className="w-full rounded-xl py-4 items-center justify-center"
+          style={{ backgroundColor: isSubmitting ? palette.primaryDark : palette.primary }}
           onPress={() => {
             void handleSave();
           }}
@@ -208,13 +170,13 @@ export default function ModulesScreen() {
           {isSubmitting ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="white" />
-              <Text className="ml-3 text-white font-bold text-lg">Continuar...</Text>
+              <Text className="ml-3 text-white font-semibold text-lg">Continuar...</Text>
             </View>
           ) : (
-            <Text className="text-white font-bold text-lg">Continuar</Text>
+            <Text className="text-white font-semibold text-lg">Continuar</Text>
           )}
         </TouchableOpacity>
       </Animated.View>
-    </SafeAreaView>
+    </AppSafeArea>
   );
 }

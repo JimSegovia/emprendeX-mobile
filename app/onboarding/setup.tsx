@@ -8,25 +8,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AppSafeArea } from '@/components/AppSafeArea';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Check, ChevronDown, ChevronLeft, Info } from 'lucide-react-native';
 import Animated, { sectionEntering } from '@/components/ui/motion';
 import { getReadableAuthError, resolvePostAuthRoute, updateOnboardingSetup } from '@/lib/auth';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
-
-const CATEGORIES = [
-  'Restaurante / Comida',
-  'Tienda de Ropa / Moda',
-  'Tecnología / Electrónica',
-  'Servicios Profesionales',
-  'Salud y Belleza',
-  'Bodega / Minimarket',
-  'Otro',
-];
+import { BUSINESS_CATEGORIES } from '@/lib/business-categories';
 
 export default function SetupScreen() {
+  const { palette } = useAccountPreferences();
   const { accessToken, authState, isHydrated, updateAuthState } = useAuthSession();
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
@@ -82,14 +75,14 @@ export default function SetupScreen() {
 
   if (!isHydrated || !accessToken) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#7c3aed" />
-      </SafeAreaView>
+      <AppSafeArea className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={palette.primary} />
+      </AppSafeArea>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <AppSafeArea className="flex-1 bg-white">
       <View className="flex-1">
         <Animated.View
           className="flex-row items-center px-4 pt-4 mb-2"
@@ -102,7 +95,7 @@ export default function SetupScreen() {
 
         <KeyboardAwareLayout style={{ paddingHorizontal: 24 }}>
           <Animated.View entering={sectionEntering(1)} className="items-center mb-8">
-            <Text className="text-[28px] font-extrabold text-slate-800 text-center mb-3">
+            <Text className="text-2xl font-semibold text-slate-800 text-center mb-3">
               Configura tu negocio
             </Text>
             <Text className="text-slate-500 text-center text-base px-4 leading-relaxed mb-6">
@@ -110,15 +103,15 @@ export default function SetupScreen() {
             </Text>
 
             <View className="flex-row justify-center space-x-2">
-              <View className="h-1.5 w-12 bg-violet-600 rounded-full" />
-              <View className="h-1.5 w-12 bg-violet-600 rounded-full" />
+              <View className="h-1.5 w-12 rounded-full" style={{ backgroundColor: palette.primary }} />
+              <View className="h-1.5 w-12 rounded-full" style={{ backgroundColor: palette.primary }} />
               <View className="h-1.5 w-12 bg-slate-200 rounded-full" />
             </View>
           </Animated.View>
 
           <Animated.View entering={sectionEntering(2)} className="space-y-6">
             <View>
-              <Text className="text-sm font-bold text-slate-700 mb-2">Nombre de tu negocio</Text>
+              <Text className="text-sm font-semibold text-slate-700 mb-2">Nombre de tu negocio</Text>
               <TextInput
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-base text-slate-800"
                 placeholder="Ej. Pastelería Dulce Momento"
@@ -132,7 +125,7 @@ export default function SetupScreen() {
             </View>
 
             <View>
-              <Text className="text-sm font-bold text-slate-700 mb-2">Rubro o categoría</Text>
+              <Text className="text-sm font-semibold text-slate-700 mb-2">Rubro o categoría</Text>
               <TouchableOpacity
                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 flex-row items-center justify-between"
                 onPress={() => setCategoryModalVisible(true)}
@@ -147,15 +140,18 @@ export default function SetupScreen() {
               </Text>
             </View>
 
-            <View className="bg-violet-50 rounded-2xl p-4 flex-row items-start border border-violet-100 mt-4">
+            <View
+              className="rounded-2xl p-4 flex-row items-start border mt-4"
+              style={{ backgroundColor: palette.primarySoft, borderColor: palette.primaryBorder }}
+            >
               <View className="mt-0.5 mr-3">
-                <Info size={20} color="#7c3aed" />
+                <Info size={20} color={palette.primary} />
               </View>
               <View className="flex-1">
-                <Text className="text-violet-900 font-semibold text-sm mb-1">
+                <Text className="font-semibold text-sm mb-1" style={{ color: palette.primaryText }}>
                   ¿Por qué te pedimos esto?
                 </Text>
-                <Text className="text-violet-800/80 text-xs leading-5">
+                <Text className="text-xs leading-5" style={{ color: palette.primaryText }}>
                   Con esta información configuraremos tu espacio de trabajo y tus reportes con los
                   valores y opciones correctas para tu negocio.
                 </Text>
@@ -175,7 +171,8 @@ export default function SetupScreen() {
           ) : null}
 
           <TouchableOpacity
-            className={`w-full rounded-xl py-4 items-center justify-center mb-4 ${isFormValid && !isSubmitting ? 'bg-violet-600 active:bg-violet-700' : 'bg-slate-200'}`}
+            className="w-full rounded-xl py-4 items-center justify-center mb-4"
+            style={{ backgroundColor: isFormValid && !isSubmitting ? palette.primary : '#e2e8f0' }}
             disabled={!isFormValid || isSubmitting}
             onPress={() => {
               void handleContinue();
@@ -184,11 +181,11 @@ export default function SetupScreen() {
             {isSubmitting ? (
               <View className="flex-row items-center">
                 <ActivityIndicator color="white" />
-                <Text className="ml-3 font-bold text-lg text-white">Guardando...</Text>
+                <Text className="ml-3 font-semibold text-lg text-white">Guardando...</Text>
               </View>
             ) : (
               <Text
-                className={`font-bold text-lg ${isFormValid ? 'text-white' : 'text-slate-400'}`}
+                className={`font-semibold text-lg ${isFormValid ? 'text-white' : 'text-slate-400'}`}
               >
                 Continuar
               </Text>
@@ -200,7 +197,7 @@ export default function SetupScreen() {
             onPress={handleSkip}
             disabled={isSubmitting}
           >
-            <Text className="text-violet-600 font-semibold text-sm">Ahora no, lo haré después</Text>
+            <Text className="font-semibold text-sm" style={{ color: palette.primaryText }}>Ahora no, lo haré después</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -214,7 +211,7 @@ export default function SetupScreen() {
         <View className="flex-1 justify-end bg-black/40">
           <View className="bg-white rounded-t-3xl pt-6 pb-8 px-6 max-h-[80%]">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-slate-800">Selecciona el rubro</Text>
+              <Text className="text-xl font-semibold text-slate-800">Selecciona el rubro</Text>
               <TouchableOpacity
                 onPress={() => setCategoryModalVisible(false)}
                 className="p-2 bg-slate-100 rounded-full"
@@ -223,7 +220,7 @@ export default function SetupScreen() {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={CATEGORIES}
+              data={BUSINESS_CATEGORIES}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -234,11 +231,12 @@ export default function SetupScreen() {
                   }}
                 >
                   <Text
-                    className={`text-base ${category === item ? 'text-violet-600 font-bold' : 'text-slate-700'}`}
+                    className={`text-base ${category === item ? 'font-semibold' : 'text-slate-700'}`}
+                    style={{ color: category === item ? palette.primaryText : undefined }}
                   >
                     {item}
                   </Text>
-                  {category === item ? <Check size={20} color="#7c3aed" /> : null}
+                  {category === item ? <Check size={20} color={palette.primary} /> : null}
                 </TouchableOpacity>
               )}
               showsVerticalScrollIndicator={false}
@@ -246,6 +244,6 @@ export default function SetupScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </AppSafeArea>
   );
 }
