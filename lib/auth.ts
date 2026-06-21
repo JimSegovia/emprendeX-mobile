@@ -59,6 +59,15 @@ type RegisterPayload = {
   businessCategory: string;
 };
 
+type ForgotPasswordPayload = {
+  email: string;
+};
+
+type ResetPasswordPayload = {
+  token: string;
+  password: string;
+};
+
 type OnboardingSetupPayload = {
   businessName: string;
   businessCategory: string;
@@ -246,6 +255,20 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
 
   assertAuthSessionResponse(session);
   return session;
+}
+
+export async function requestPasswordReset(payload: ForgotPasswordPayload): Promise<void> {
+  await request<unknown>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
+  await request<unknown>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function fetchCurrentUser(accessToken: string): Promise<AuthStateResponse> {
