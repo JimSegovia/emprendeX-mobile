@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { ArrowLeft, Briefcase, Check, Package, PencilLine, Trash2, X } from 'lucide-react-native';
+import { ArrowLeft, Briefcase, Camera, Check, ImageIcon, Package, PencilLine, Trash2, X } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
   createCatalogCategory,
@@ -27,6 +28,8 @@ import {
   updateCatalogItem,
   updateCatalogUnit,
 } from '@/lib/catalog';
+import { AttachmentSheet } from '@/components/ui/attachment-sheet';
+import { uploadCatalogImage } from '@/lib/catalog';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { DEFAULT_CURRENCY_SYMBOL, formatCurrencyValue } from '@/lib/runtime-config';
@@ -71,6 +74,8 @@ export default function CatalogEntryScreen() {
   const [isSavingOption, setIsSavingOption] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
 
   const currency = DEFAULT_CURRENCY_SYMBOL;
   const dropdownSpacing = 220;
@@ -467,13 +472,24 @@ export default function CatalogEntryScreen() {
         stock: isProduct ? Number(stock || '0') : undefined,
       };
 
-      const createdItem = id
+      const savedItem = id
         ? await updateCatalogItem(accessToken, id, payload)
         : await createCatalogItem(accessToken, payload);
 
+      // Upload image if one was selected
+      if (selectedImageUri) {
+        try {
+          await uploadCatalogImage(accessToken, savedItem.id, selectedImageUri);
+        } catch {
+          // Image upload failure is non-blocking; item was already saved
+          setSubmitError('Item guardado, pero no se pudo subir la imagen.');
+          return;
+        }
+      }
+
       router.replace({
         pathname: '/(drawer)/(tabs)/catalog/[id]',
-        params: { id: createdItem.id },
+        params: { id: savedItem.id },
       });
     } catch (catalogError) {
       setSubmitError(getReadableCatalogError(catalogError));
@@ -561,6 +577,56 @@ export default function CatalogEntryScreen() {
                 <Text className="mt-1 text-sm text-slate-500">{selectedKindMeta.hint}</Text>
               </View>
             </View>
+          </View>
+
+          {/* ── Imagen ── */}
+          <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+            <Text className="text-lg font-semibold text-slate-800">Imagen</Text>
+            <Text className="mt-1 text-sm text-slate-500">
+              {isProduct
+                ? 'Agrega una foto del producto para identificarlo mejor.'
+                : 'Agrega una foto representativa del servicio.'}
+            </Text>
+
+            <TouchableOpacity
+              className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+              activeOpacity={0.85}
+              onPress={() => setShowAttachmentSheet(true)}
+            >
+              {selectedImageUri ? (
+                <View className="relative">
+                  <Image
+                    source={{ uri: selectedImageUri }}
+                    style={{ width: '100%', height: 180 }}
+                    contentFit="cover"
+                    transition={220}
+                  />
+                  <View className="absolute inset-0 bg-black/0 active:bg-black/10" />
+                  <View className="absolute bottom-3 left-3 flex-row items-center rounded-full bg-white/90 px-3 py-1.5 shadow-sm">
+                    <Camera size={14} color="#334155" />
+                    <Text className="ml-1.5 text-xs font-semibold text-slate-700">Cambiar foto</Text>
+                  </View>
+                </View>
+              ) : (
+                <View className="h-40 items-center justify-center">
+                  <View className="h-14 w-14 rounded-2xl bg-slate-100 items-center justify-center">
+                    <ImageIcon size={28} color="#94a3b8" />
+                  </View>
+                  <Text className="mt-3 text-sm font-semibold text-slate-500">Agregar foto</Text>
+                  <Text className="mt-1 text-xs text-slate-400">Toca para adjuntar una imagen</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {selectedImageUri ? (
+              <TouchableOpacity
+                className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-2.5 items-center"
+                activeOpacity={0.85}
+                onPress={() => setSelectedImageUri(null)}
+              >
+                <Text className="text-sm font-semibold text-rose-600">Eliminar foto</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           <View className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
@@ -1008,6 +1074,17 @@ export default function CatalogEntryScreen() {
           )}
         </TouchableOpacity>
       </Animated.View>
+
+      <AttachmentSheet
+        visible={showAttachmentSheet}
+        onClose={() => setShowAttachmentSheet(false)}
+        onAttach={(uris) => {
+          if (uris.length > 0) {
+            setSelectedImageUri(uris[0]);
+          }
+          setShowAttachmentSheet(false);
+        }}
+      />
     </Animated.View>
   );
 }
