@@ -1,11 +1,11 @@
 ---
 name: flujo-git-trabajo
-description: Flujo de trabajo Git — ramas temporales por módulo, Conventional Commits en español, PR hacia develop, merge directo con squash o aprobación
+description: Flujo de trabajo Git — ramas temporales por módulo, Conventional Commits en español, PR hacia develop, merge commit preservando el grafo de ramas
 ---
 
 # Flujo de Trabajo Git — Ramas Temporales y Conventional Commits
 
-Flujo completo para trabajar en features individuales: crear rama temporal nombrada por módulo, commits con Conventional Commits en español, push al repositorio, PR hacia `develop`, y merge directo con squash (eliminando la rama remota al finalizar).
+Flujo completo para trabajar en features individuales: crear rama temporal nombrada por módulo, commits con Conventional Commits en español, push al repositorio, PR hacia `develop`, y merge directo con merge commit (eliminando la rama remota al finalizar).
 
 ---
 
@@ -25,11 +25,11 @@ main ─────────────────────────
 2. Hacer commits usando Conventional Commits con scope y asunto en español.
 3. Pushear la rama temporal al repositorio remoto.
 4. Crear un PR de la rama temporal hacia `develop`.
-5. Hacer merge directo del PR con squash y eliminar la rama remota.
-
-> El merge directo con `--squash --delete-branch` no requiere aprobación previa. GitHub bloquea `gh pr review --approve` en PRs propios, por lo que se usa merge directo como flujo estándar.
+5. Hacer merge del PR con merge commit y eliminar la rama remota.
 
 > `main` no se modifica en este flujo. La rama de integración es `develop`.
+>
+> **Estrategia de merge**: Se usa `--merge` (merge commit) para preservar la estructura de ramas en el historial de git. Esto produce un commit con dos padres que `git log --oneline --graph` muestra con `|\`, donde el commit original de la rama temporal se conserva como ancestro visible. GitHub bloquea `gh pr review --approve` en PRs propios, por lo que se omite el paso de aprobación y se hace merge directo con merge commit.
 
 ---
 
@@ -243,12 +243,12 @@ de solicitud y pantalla de confirmación de envío de email.
 5. Verificar que el endpoint devuelve 200"
 ```
 
-### Paso 6 — Hacer merge del PR con squash
+### Paso 6 — Hacer merge del PR con merge commit
 
-El merge se hace directamente con `gh pr merge`, sin necesidad de aprobación previa (GitHub bloquea la auto-aprobación en PRs propios). Se usa `--squash` para mantener un historial limpio en `develop` y `--delete-branch` para eliminar la rama remota automáticamente:
+El merge se hace directamente con `gh pr merge`, sin necesidad de aprobación previa (GitHub bloquea la auto-aprobación en PRs propios). Se usa `--merge` para producir un merge commit que preserva la estructura de ramas en el grafo de git:
 
 ```bash
-gh pr merge feat/pantalla-recuperar-contrasena --squash --delete-branch
+gh pr merge feat/pantalla-recuperar-contrasena --merge --delete-branch
 ```
 
 Salida esperada:
@@ -257,14 +257,23 @@ Salida esperada:
 ✓ Deleted branch feat/pantalla-recuperar-contrasena
 ```
 
-> **Nota**: `gh pr merge --squash` aplasta todos los commits de la rama en un solo commit con el título del PR. El mensaje del commit resultante en `develop` será el título del PR.
+**Estructura resultante en el grafo** — Cada PR mergeado con `--merge` produce dos commits visibles en `git log --oneline --graph`:
 
-Opciones de merge:
-| Flag | Estrategia | Uso recomendado |
-|------|-----------|----------------|
-| `--squash` | Squash and merge | **Usar siempre**. Historial limpio: un commit por PR en `develop` |
-| `--merge` | Merge commit | Ramas con múltiples commits significativos (poco frecuente) |
-| `--rebase` | Rebase and merge | Historial lineal, ramas con pocos commits (poco frecuente) |
+1. **Merge commit**: `Merge pull request #XX from Ankarmin/rama` (tiene dos padres)
+2. **Commit(s) original(es)**: El o los commits de la rama temporal, conservados como ancestros
+
+```
+*   0483ae7 Merge pull request #31 from Ankarmin/chore/flujo-git-trabajo
+|\
+| * 888e533 docs(infra): agregar skill de flujo de trabajo git con Conventional Commits y merge commit
+|/
+*   ca7f4b5 Merge pull request #28 from Ankarmin/chore/env-local-setup
+|\
+| * b696fe2 chore: configuracion de entorno local con Docker y scripts dev:local / dev:railway
+|/
+```
+
+> La estructura `|\` es la firma visual de un merge correcto: el commit de la rama temporal queda como hijo directo del merge commit, con trazabilidad completa de qué rama y qué commits introdujeron cada cambio.
 
 ---
 
@@ -371,20 +380,24 @@ Implementa la pantalla de recuperación de contraseña:
 5. Verificar que el endpoint \`POST /auth/forgot-password\` responde 200"
 ```
 
-### 5. Mergear con squash
+### 5. Mergear con merge commit
 
 ```bash
-# Hacer merge directo (squash para historial limpio, delete-branch para limpiar la rama remota)
-gh pr merge feat/pantalla-recuperar-contrasena --squash --delete-branch
+# Hacer merge directo (merge commit para preservar estructura de ramas)
+gh pr merge feat/pantalla-recuperar-contrasena --merge --delete-branch
 ```
 
 ### 6. Resultado final
 
 ```
-$ git log --oneline develop
-abc1234 feat(auth): HU-27 — pantalla de recuperación de contraseña (#42)
-def5678 feat(dashboard): HU-03 — módulos visibles personalizables (#41)
-...
+$ git log --oneline --graph develop
+*   abc1234 Merge pull request #42 from Ankarmin/feat/pantalla-recuperar-contrasena
+|\
+| * def5678 feat(auth): HU-27 — endpoint POST /auth/forgot-password
+| * ghi9012 feat(auth): HU-27 — pantalla de confirmación de envío de email
+| * jkl3456 feat(auth): HU-27 — formulario de solicitud de recuperación de contraseña
+|/
+*   ...
 ```
 
 ---
@@ -398,7 +411,7 @@ def5678 feat(dashboard): HU-03 — módulos visibles personalizables (#41)
 | Commit | `git commit -m "tipo(alcance): descripción en español"` |
 | Push inicial | `git push -u origin <rama>` |
 | Crear PR | `gh pr create --base develop --head <rama> --title "..." --body "..."` |
-| Merge PR (squash) | `gh pr merge <rama> --squash --delete-branch` |
+| Merge PR | `gh pr merge <rama> --merge --delete-branch` |
 | Ver PRs abiertos | `gh pr list --base develop` |
 | Ver estado PR | `gh pr view <rama>` |
 
@@ -414,8 +427,8 @@ git pull origin develop
 # Verificar que la rama temporal fue eliminada del remoto
 git branch -r | grep feat/pantalla-recuperar-contrasena  # No debe mostrar resultado
 
-# Verificar historial de develop
-git log --oneline -5
+# Verificar historial de develop (debe mostrar merge commit con |\)
+git log --oneline --graph -5
 
 # Verificar PRs cerrados recientemente
 gh pr list --base develop --state merged --limit 5
@@ -440,3 +453,4 @@ gh pr list --base develop --state merged --limit 5
 3. **Push frecuente**: No acumular muchos commits locales sin pushear.
 4. **Revisar antes del PR**: `git diff develop...<rama>` para ver qué se incluirá en el PR.
 5. **Eliminar la rama después del merge**: Mantener el repositorio limpio.
+6. **Verificar el merge commit**: Después del merge, confirmar con `git log --oneline --graph` que aparece la estructura `|\` con el commit original de la rama.
