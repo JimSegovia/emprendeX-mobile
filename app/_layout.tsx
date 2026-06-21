@@ -62,6 +62,14 @@ export default function RootLayout() {
                   name="register"
                   options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
                 />
+                <Stack.Screen
+                  name="forgot-password"
+                  options={{ animation: 'slide_from_right' }}
+                />
+                <Stack.Screen
+                  name="reset-password"
+                  options={{ animation: 'slide_from_right' }}
+                />
                 <Stack.Screen name="onboarding" />
                 <Stack.Screen name="(drawer)" options={{ animation: 'fade' }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
