@@ -7,17 +7,20 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Briefcase, Package } from 'lucide-react-native';
+import { ArrowLeft, Briefcase, Camera, ImageIcon, Package } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import {
+  deleteCatalogImage,
   deleteCatalogItem,
   fetchCatalogItemById,
   formatMoney,
   getReadableCatalogError,
+  uploadCatalogImage,
   type CatalogItem,
 } from '@/lib/catalog';
+import { AttachmentSheet } from '@/components/ui/attachment-sheet';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 
@@ -31,6 +34,9 @@ export default function CatalogDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
 
   useEffect(() => {
     const loadItem = async () => {
@@ -99,6 +105,42 @@ export default function CatalogDetailScreen() {
   const Icon = isService ? Briefcase : Package;
   const createdAt = new Date(item.createdAt).toLocaleDateString();
   const updatedAt = new Date(item.updatedAt).toLocaleDateString();
+
+  const handleUploadImage = async (uri: string) => {
+    if (!accessToken || !item) {
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setError(null);
+
+    try {
+      const updatedItem = await uploadCatalogImage(accessToken, item.id, uri);
+      setItem(updatedItem);
+    } catch (catalogError) {
+      setError(getReadableCatalogError(catalogError));
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!accessToken || !item || !item.imageUrl) {
+      return;
+    }
+
+    setIsDeletingImage(true);
+    setError(null);
+
+    try {
+      await deleteCatalogImage(accessToken, item.id);
+      setItem({ ...item, imageUrl: null });
+    } catch (catalogError) {
+      setError(getReadableCatalogError(catalogError));
+    } finally {
+      setIsDeletingImage(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!accessToken || !item || isDeleting) {
@@ -228,6 +270,64 @@ export default function CatalogDetailScreen() {
             </View>
           </View>
 
+          {/* ── Image management ── */}
+          <View className="mt-5 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
+            <Text className="text-lg font-semibold text-slate-900">Imagen</Text>
+
+            {item.imageUrl ? (
+              <View>
+                <View className="mt-3 overflow-hidden rounded-2xl bg-slate-100 h-48">
+                  <Image
+                    source={item.imageUrl}
+                    style={{ width: '100%', height: '100%' }}
+                    contentFit="cover"
+                    transition={220}
+                    cachePolicy="memory-disk"
+                    recyclingKey={item.imageUrl}
+                  />
+                </View>
+                <View className="mt-3 flex-row">
+                  <TouchableOpacity
+                    className="mr-3 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 items-center flex-row justify-center"
+                    activeOpacity={0.85}
+                    onPress={() => setShowAttachmentSheet(true)}
+                  >
+                    <Camera size={16} color="#334155" />
+                    <Text className="ml-2 text-sm font-semibold text-slate-700">Cambiar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 items-center flex-row justify-center"
+                    activeOpacity={0.85}
+                    onPress={() => { void handleDeleteImage(); }}
+                    disabled={isDeletingImage}
+                  >
+                    <Text className="text-sm font-semibold text-rose-600">
+                      {isDeletingImage ? 'Eliminando...' : 'Eliminar foto'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                className="mt-3 h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50"
+                activeOpacity={0.85}
+                onPress={() => setShowAttachmentSheet(true)}
+              >
+                {isUploadingImage ? (
+                  <ActivityIndicator color={palette.primary} />
+                ) : (
+                  <>
+                    <View className="h-14 w-14 rounded-2xl bg-slate-100 items-center justify-center">
+                      <ImageIcon size={28} color="#94a3b8" />
+                    </View>
+                    <Text className="mt-3 text-sm font-semibold text-slate-500">Agregar foto</Text>
+                    <Text className="mt-1 text-xs text-slate-400">Toca para adjuntar una imagen</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
           {error ? (
             <View className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 p-4">
               <Text className="text-sm font-semibold text-rose-600">{error}</Text>
@@ -263,6 +363,16 @@ export default function CatalogDetailScreen() {
           </View>
         </Animated.View>
       </ScrollView>
+      <AttachmentSheet
+        visible={showAttachmentSheet}
+        onClose={() => setShowAttachmentSheet(false)}
+        onAttach={(uris) => {
+          if (uris.length > 0) {
+            void handleUploadImage(uris[0]);
+          }
+          setShowAttachmentSheet(false);
+        }}
+      />
     </Animated.View>
   );
 }
