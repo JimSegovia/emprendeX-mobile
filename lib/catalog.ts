@@ -313,6 +313,62 @@ export function getReadableCatalogError(error: unknown): string {
   return 'No se pudo conectar con el servidor. Intenta de nuevo.';
 }
 
+export async function uploadCatalogImage(
+  accessToken: string,
+  itemId: string,
+  imageUri: string,
+): Promise<CatalogItem> {
+  const formData = new FormData();
+  const filename = imageUri.split('/').pop() || 'photo.jpg';
+  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+  formData.append('image', {
+    uri: imageUri,
+    name: `catalog-${itemId}-${Date.now()}.${ext}`,
+    type: mimeType,
+  } as unknown as Blob);
+
+  const response = await fetch(`${getApiBaseUrl()}/catalogo/items/${itemId}/image`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      // Content-Type is omitted so fetch sets multipart/form-data with boundary
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const rawBody = await response.text();
+    const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
+    throw new CatalogApiError(getErrorMessage(payload), response.status);
+  }
+
+  const rawBody = await response.text();
+  return mapCatalogItem(rawBody ? (JSON.parse(rawBody) as ApiItem) : ({} as ApiItem));
+}
+
+export async function deleteCatalogImage(
+  accessToken: string,
+  itemId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/catalogo/items/${itemId}/image`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const rawBody = await response.text();
+    const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
+    throw new CatalogApiError(getErrorMessage(payload), response.status);
+  }
+}
+
 export function formatMoney(currencySymbol: string, value: number) {
   return formatCurrencyAmount(value, currencySymbol);
 }
