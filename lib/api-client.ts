@@ -4,6 +4,9 @@ type ApiErrorBody = {
 
 import { getApiBaseUrl } from '@/lib/api-config';
 
+/**
+ * Error normalizado para respuestas HTTP no exitosas del backend.
+ */
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -13,6 +16,9 @@ export class ApiClientError extends Error {
   }
 }
 
+/**
+ * Ejecuta una solicitud JSON contra la API mobile y unifica headers, parsing y errores.
+ */
 export async function apiRequest<T>(
   path: string,
   options: RequestInit,
@@ -42,6 +48,9 @@ export async function apiRequest<T>(
   return payload as T;
 }
 
+/**
+ * Extrae un mensaje legible desde el payload de error devuelto por el backend.
+ */
 export function getErrorMessage(payload: unknown): string {
   if (!payload || typeof payload !== 'object' || !('message' in payload)) {
     return 'No se pudo completar la solicitud.';
@@ -56,6 +65,9 @@ export function getErrorMessage(payload: unknown): string {
   return message ?? 'No se pudo completar la solicitud.';
 }
 
+/**
+ * Convierte errores tecnicos o HTTP en un mensaje apto para mostrar en UI.
+ */
 export function getReadableApiError(error: unknown): string {
   if (error instanceof ApiClientError) {
     return error.message;

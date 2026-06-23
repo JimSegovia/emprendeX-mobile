@@ -55,6 +55,9 @@ function resolveRailwayBaseUrl(): string {
   ).replace(/\/+$/, '');
 }
 
+/**
+ * Resuelve la base URL efectiva del backend segun las variables EXPO_PUBLIC_*.
+ */
 export function getApiBaseUrl(): string {
   const configuredBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 

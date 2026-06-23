@@ -4,6 +4,9 @@ import type { ModuleId } from '@/lib/modules';
 
 const AUTH_STORAGE_KEY = 'emprendex:auth:v1';
 
+/**
+ * Representa al usuario autenticado segun el contrato actual del backend.
+ */
 export type AuthUser = {
   id: string;
   firstNames: string;
@@ -29,8 +32,14 @@ export type AuthUser = {
   };
 };
 
+/**
+ * Estado minimo que la app necesita para decidir onboarding, modulos y navegacion.
+ */
 export type AuthStateResponse = Pick<AuthSessionResponse, 'requiresOnboarding' | 'user'>;
 
+/**
+ * Respuesta completa de login o registro con credenciales y snapshot inicial del usuario.
+ */
 export type AuthSessionResponse = {
   accessToken: string;
   tokenType: 'Bearer';
@@ -217,6 +226,9 @@ function getErrorMessage(payload: unknown): string {
   return message ?? 'No se pudo completar la solicitud.';
 }
 
+/**
+ * Autentica un usuario y devuelve la sesion inicial emitida por backend.
+ */
 export async function loginUser(payload: LoginPayload): Promise<AuthSessionResponse> {
   const session = await request<unknown>('/auth/login', {
     method: 'POST',
@@ -227,6 +239,9 @@ export async function loginUser(payload: LoginPayload): Promise<AuthSessionRespo
   return session;
 }
 
+/**
+ * Registra un usuario nuevo y devuelve una sesion autenticada lista para persistirse.
+ */
 export async function registerUser(payload: RegisterPayload): Promise<AuthSessionResponse> {
   const session = await request<unknown>('/auth/register', {
     method: 'POST',
@@ -237,6 +252,9 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
   return session;
 }
 
+/**
+ * Recupera el estado actual del usuario autenticado a partir del access token activo.
+ */
 export async function fetchCurrentUser(accessToken: string): Promise<AuthStateResponse> {
   const authState = await request<unknown>('/auth/me', {
     method: 'GET',
@@ -249,6 +267,9 @@ export async function fetchCurrentUser(accessToken: string): Promise<AuthStateRe
   return authState;
 }
 
+/**
+ * Actualiza los datos base del negocio durante onboarding.
+ */
 export async function updateOnboardingSetup(
   accessToken: string,
   payload: OnboardingSetupPayload,
@@ -262,6 +283,9 @@ export async function updateOnboardingSetup(
   });
 }
 
+/**
+ * Marca como completado el paso informativo de modulos dentro del onboarding.
+ */
 export async function completeOnboardingModules(
   accessToken: string,
 ): Promise<AuthStateResponse> {
@@ -273,6 +297,9 @@ export async function completeOnboardingModules(
   });
 }
 
+/**
+ * Guarda localmente la parte minima de la sesion necesaria para rehidratar auth.
+ */
 export async function saveAuthSession(session: AuthSessionResponse): Promise<void> {
   const authSession: StoredAuthSession = {
     accessToken: session.accessToken,
@@ -282,6 +309,9 @@ export async function saveAuthSession(session: AuthSessionResponse): Promise<voi
   await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authSession));
 }
 
+/**
+ * Carga la sesion guardada localmente. Devuelve null si no existe o no puede parsearse.
+ */
 export async function loadAuthSession(): Promise<StoredAuthSession | null> {
   try {
     const rawSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
@@ -296,10 +326,16 @@ export async function loadAuthSession(): Promise<StoredAuthSession | null> {
   }
 }
 
+/**
+ * Elimina la sesion persistida para forzar un arranque sin credenciales locales.
+ */
 export async function clearAuthSession(): Promise<void> {
   await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+/**
+ * Decide la ruta de entrada posterior a login o rehidratacion segun el estado del onboarding.
+ */
 export function resolvePostAuthRoute(session: {
   requiresOnboarding: boolean;
   user: AuthUser;
@@ -315,6 +351,9 @@ export function resolvePostAuthRoute(session: {
   return hasBusinessProfile ? '/onboarding/modules' : '/onboarding';
 }
 
+/**
+ * Traduce errores tecnicos de auth a mensajes consistentes para formularios y pantallas.
+ */
 export function getReadableAuthError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 401) {
