@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, Search, Plus } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -13,7 +13,6 @@ import Animated, {
 } from '@/components/ui/motion';
 import { fetchClientes, getReadableClientesError, type Cliente } from '@/lib/clientes';
 import { useAuthSession } from '@/lib/auth-session-context';
-import { KeyboardAwareScreen } from '@/components/ui/keyboard-aware-screen';
 
 export default function ClientesScreen() {
   const [query, setQuery] = useState('');
@@ -84,8 +83,7 @@ export default function ClientesScreen() {
   );
 
   return (
-    <KeyboardAwareScreen>
-      <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
         className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
@@ -106,6 +104,7 @@ export default function ClientesScreen() {
         </TouchableOpacity>
       </Animated.View>
 
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
           data={filteredClientes}
           keyExtractor={(item) => item.id}
@@ -148,7 +147,7 @@ export default function ClientesScreen() {
             )
           }
         />
+      </KeyboardAvoidingView>
     </Animated.View>
-    </KeyboardAwareScreen>
   );
 }
