@@ -369,7 +369,7 @@ export default function NuevoRegistroScreen() {
       </Animated.View>
 
       <Animated.View className="flex-1" entering={sectionEntering(1)}>
-        <KeyboardAwareLayout style={{ paddingHorizontal: 20, paddingTop: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
+        <KeyboardAwareLayout insideTabBar={true} style={{ paddingHorizontal: 20, paddingTop: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
           <View className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100">
             <Text className="text-lg font-extrabold text-slate-800">Tipo de registro</Text>
             <DropDownPicker open={kindOpen} value={kind} items={kindItems} setOpen={setKindOpen} setValue={setKind} setItems={setKindItems} placeholder="Seleccionar tipo" listMode="SCROLLVIEW" maxHeight={dropdownSpacing} zIndex={3000} zIndexInverse={1000} style={{ borderColor: '#e5e7eb', backgroundColor: 'white', marginTop: 16 }} dropDownContainerStyle={{ borderColor: '#e5e7eb' }} textStyle={{ color: '#0f172a', fontWeight: '500' }} onOpen={() => { setQuoteOpen(false); setCategoryOpen(false); setMethodOpen(false); }} />

@@ -106,6 +106,7 @@ export default function ClienteFormScreen() {
           </Animated.View>
 
           <KeyboardAwareLayout
+            insideTabBar={true}
             style={{ paddingHorizontal: 20 }}
             contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
           >
