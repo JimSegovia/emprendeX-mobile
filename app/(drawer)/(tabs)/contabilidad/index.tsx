@@ -7,6 +7,8 @@ import {
   FlatList,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Search, Menu, Plus } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
@@ -15,7 +17,6 @@ import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import Animated, { AnimatedTouchableOpacity, itemEntering, screenEntering, sectionEntering, smoothLayout } from '@/components/ui/motion';
 import { fetchRegistrosContables, fetchResumenContable, getReadableContabilidadError, type RegistroContable } from '@/lib/contabilidad';
 import { useAuthSession } from '@/lib/auth-session-context';
-import { KeyboardAwareScreen } from '@/components/ui/keyboard-aware-screen';
 
 const tabs = ['Todas', 'Pagos', 'Gastos'];
 
@@ -95,8 +96,7 @@ export default function ContabilidadScreen() {
   );
 
   return (
-    <KeyboardAwareScreen>
-      <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between" style={{ paddingTop: Math.max(insets.top, 16) + 16 }} entering={sectionEntering(0)}>
         <View className="flex-row items-center flex-1 pr-4">
           <TouchableOpacity onPress={openDrawer} className="mr-4"><Menu color="white" size={24} /></TouchableOpacity>
@@ -118,6 +118,7 @@ export default function ContabilidadScreen() {
         </ScrollView>
       </Animated.View>
 
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
           data={filteredData}
           keyExtractor={(item) => item.id}
@@ -150,7 +151,7 @@ export default function ContabilidadScreen() {
           }
           ListEmptyComponent={isLoading ? <View className="py-10 items-center"><ActivityIndicator color="#7c3aed" /><Text className="mt-3 text-slate-500">Cargando registros...</Text></View> : <View className="py-10 items-center"><Text className="text-slate-500">No hay registros contables.</Text></View>}
         />
+      </KeyboardAvoidingView>
     </Animated.View>
-    </KeyboardAwareScreen>
   );
 }

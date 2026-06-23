@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, ViewStyle, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 interface KeyboardAwareLayoutProps {
@@ -7,19 +7,13 @@ interface KeyboardAwareLayoutProps {
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   extraScrollHeight?: number;
-  bounces?: boolean;
-  keyboardDismissMode?: 'none' | 'interactive' | 'on-drag';
-  insideTabBar?: boolean;
 }
 
-export function KeyboardAwareLayout({
-  children,
-  style,
+export function KeyboardAwareLayout({ 
+  children, 
+  style, 
   contentContainerStyle,
-  extraScrollHeight = 20,
-  bounces = true,
-  keyboardDismissMode = 'none',
-  insideTabBar = false,
+  extraScrollHeight = 20
 }: KeyboardAwareLayoutProps) {
   return (
     <KeyboardAwareScrollView
@@ -30,9 +24,7 @@ export function KeyboardAwareLayout({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       enableAutomaticScroll={true}
-      viewIsInsideTabBar={insideTabBar}
-      bounces={bounces}
-      keyboardDismissMode={keyboardDismissMode}
+      viewIsInsideTabBar={true}
     >
       {children}
     </KeyboardAwareScrollView>
