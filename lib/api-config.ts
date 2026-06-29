@@ -1,5 +1,3 @@
-const DEFAULT_RAILWAY_API_BASE_URL =
-  'https://api-production-159f1.up.railway.app/api/v1';
 const DEFAULT_API_PATH = '/api/v1';
 
 type ApiTarget = 'auto' | 'local' | 'railway';
@@ -48,11 +46,10 @@ function buildConfiguredLocalBaseUrl(): string | null {
   return `${protocol}://${hostWithPort}${path}`;
 }
 
-function resolveRailwayBaseUrl(): string {
-  return (
-    process.env.EXPO_PUBLIC_API_RAILWAY_BASE_URL?.trim() ||
-    DEFAULT_RAILWAY_API_BASE_URL
-  ).replace(/\/+$/, '');
+function resolveRailwayBaseUrl(): string | null {
+  const configuredRailwayBaseUrl = process.env.EXPO_PUBLIC_API_RAILWAY_BASE_URL?.trim();
+
+  return configuredRailwayBaseUrl ? trimTrailingSlash(configuredRailwayBaseUrl) : null;
 }
 
 /**
@@ -66,15 +63,38 @@ export function getApiBaseUrl(): string {
   }
 
   const configuredLocalBaseUrl = buildConfiguredLocalBaseUrl();
+  const configuredRailwayBaseUrl = resolveRailwayBaseUrl();
   const apiTarget = normalizeApiTarget(process.env.EXPO_PUBLIC_API_TARGET);
 
   if (apiTarget === 'railway') {
-    return resolveRailwayBaseUrl();
+    if (configuredRailwayBaseUrl) {
+      return configuredRailwayBaseUrl;
+    }
+
+    throw new Error(
+      'Falta EXPO_PUBLIC_API_RAILWAY_BASE_URL para usar EXPO_PUBLIC_API_TARGET=railway.',
+    );
   }
 
   if (apiTarget === 'local') {
-    return configuredLocalBaseUrl ?? resolveRailwayBaseUrl();
+    if (configuredLocalBaseUrl) {
+      return configuredLocalBaseUrl;
+    }
+
+    throw new Error(
+      'Faltan EXPO_PUBLIC_API_HOST y variables locales para usar EXPO_PUBLIC_API_TARGET=local.',
+    );
   }
 
-  return configuredLocalBaseUrl ?? resolveRailwayBaseUrl();
+  if (configuredLocalBaseUrl) {
+    return configuredLocalBaseUrl;
+  }
+
+  if (configuredRailwayBaseUrl) {
+    return configuredRailwayBaseUrl;
+  }
+
+  throw new Error(
+    'Configura EXPO_PUBLIC_API_BASE_URL o define EXPO_PUBLIC_API_HOST / EXPO_PUBLIC_API_RAILWAY_BASE_URL.',
+  );
 }

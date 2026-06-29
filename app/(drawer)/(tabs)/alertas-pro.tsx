@@ -5,11 +5,13 @@ import { Bell, Crown, Menu, Sparkles } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 
-export default function NotificacionesScreen() {
+export default function AlertasProScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const { palette } = useAccountPreferences();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -18,15 +20,15 @@ export default function NotificacionesScreen() {
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
-        className="bg-violet-600 px-4 pb-4"
-        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
+        className="px-4 pb-4"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Notificaciones</Text>
+          <Text className="text-white text-xl font-semibold">Alertas inteligentes</Text>
         </View>
       </Animated.View>
 
@@ -45,11 +47,11 @@ export default function NotificacionesScreen() {
               <Sparkles size={18} color="#f59e0b" />
             </View>
           </View>
-          <Text className="text-center text-2xl font-extrabold text-amber-950">
-            Notificaciones avanzadas
+          <Text className="text-center text-2xl font-semibold text-amber-950">
+            Alertas inteligentes
           </Text>
           <Text className="mt-3 text-center text-sm leading-6 text-amber-900">
-            Esta seccin muestra claramente una funcionalidad premium disponible en el catǭlogo,
+            Esta sección muestra claramente una funcionalidad premium disponible en el catálogo,
             pero bloqueada para el plan gratis del MVP.
           </Text>
         </Animated.View>
@@ -60,13 +62,13 @@ export default function NotificacionesScreen() {
         >
           <View className="mb-4 flex-row items-center justify-between">
             <View>
-              <Text className="text-lg font-bold text-slate-800">Lo que desbloquea</Text>
+              <Text className="text-lg font-semibold text-slate-800">Lo que desbloquea</Text>
               <Text className="mt-1 text-sm text-slate-500">
-                Avisos automǭticos para un control inteligente.
+                Avisos automáticos para un control inteligente.
               </Text>
             </View>
-            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
-              <Bell size={22} color="#7c3aed" />
+            <View className="h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: palette.primarySoft }}>
+              <Bell size={22} color={palette.primary} />
             </View>
           </View>
 
@@ -89,10 +91,11 @@ export default function NotificacionesScreen() {
         </Animated.View>
 
         <TouchableOpacity
-          className="mt-6 items-center rounded-2xl bg-violet-600 py-4"
+          className="mt-6 items-center rounded-2xl py-4"
+          style={{ backgroundColor: palette.primary }}
           onPress={() => router.push('/(drawer)/(tabs)/plan-pro')}
         >
-          <Text className="text-lg font-bold text-white">Ver planes premium</Text>
+          <Text className="text-lg font-semibold text-white">Ver planes premium</Text>
         </TouchableOpacity>
       </ScrollView>
     </Animated.View>

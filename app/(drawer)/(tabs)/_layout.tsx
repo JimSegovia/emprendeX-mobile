@@ -1,4 +1,5 @@
 import { HapticTab } from '@/components/haptic-tab';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useModulePreferences } from '@/lib/module-preferences-context';
 import { resolveModuleIdFromPathname } from '@/lib/modules';
 import { BlurView } from 'expo-blur';
@@ -12,25 +13,42 @@ import {
   Plus,
   Settings,
   Users,
-  X,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const bottomInset = insets.bottom;
+  const tabBarBottomPadding = Math.max(bottomInset, 14);
+  const tabBarTopPadding = 4;
+  const { palette } = useAccountPreferences();
   const { isModuleEnabled } = useModulePreferences();
 
   const isOperationsEnabled = isModuleEnabled('operaciones');
   const isClientsEnabled = isModuleEnabled('clientes');
 
   const [fabOpen, setFabOpen] = useState(false);
-  const tabBarHeight = 76 + bottomInset;
+  const tabBarHeight = 54 + tabBarBottomPadding;
+  const fabButtonBottom = tabBarHeight - 32;
+  const fabButtonLeft = (windowWidth - 56) / 2 + 3;
   const fabAnim = useRef(new Animated.Value(0)).current;
+  const fabRotation = fabAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'],
+  });
 
   useEffect(() => {
     const protectedModuleId = resolveModuleIdFromPathname(pathname);
@@ -40,7 +58,7 @@ export default function TabLayout() {
     }
 
     if (!isModuleEnabled(protectedModuleId)) {
-      router.replace('/(drawer)/(tabs)');
+      router.replace('/(drawer)/(tabs)/plan-pro');
     }
   }, [isModuleEnabled, pathname, router]);
 
@@ -57,21 +75,21 @@ export default function TabLayout() {
   const fabActions = [
     {
       label: 'Cotiza',
-      icon: <FilePlus size={20} color="#7c3aed" />,
+      icon: <FilePlus size={20} color={palette.primary} />,
       onPress: () => router.push('/(drawer)/(tabs)/operaciones/nueva'),
       offset: { x: -58, y: -42 }, // Más bajo y armónico en arco
     },
     {
       label: 'Pago',
-      icon: <CreditCard size={20} color="#7c3aed" />,
+      icon: <CreditCard size={20} color={palette.primary} />,
       onPress: () => router.push('/(drawer)/(tabs)/contabilidad/nuevo?tipo=pago'),
-      offset: { x: 0, y: -62 },   // Más bajo
+      offset: { x: 0, y: -62 }, // Más bajo
     },
     {
       label: 'Gasto',
-      icon: <PackagePlus size={20} color="#7c3aed" />,
+      icon: <PackagePlus size={20} color={palette.primary} />,
       onPress: () => router.push('/(drawer)/(tabs)/contabilidad/nuevo?tipo=gasto'),
-      offset: { x: 58, y: -42 },  // Más bajo y armónico en arco
+      offset: { x: 58, y: -42 }, // Más bajo y armónico en arco
     },
   ];
 
@@ -80,7 +98,7 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#7c3aed',
+          tabBarActiveTintColor: palette.primary,
           tabBarInactiveTintColor: '#94a3b8',
           tabBarAllowFontScaling: false,
           tabBarButton: HapticTab,
@@ -91,21 +109,21 @@ export default function TabLayout() {
             borderTopColor: '#f1f5f9',
             borderTopWidth: 1,
             height: tabBarHeight,
-            paddingBottom: bottomInset,
-            paddingTop: 10,
+            paddingBottom: tabBarBottomPadding,
+            paddingTop: tabBarTopPadding,
           },
           tabBarItemStyle: {
-            height: 58,
-            paddingVertical: 2,
+            height: 46,
+            paddingVertical: 1,
           },
           tabBarIconStyle: {
             marginTop: 2,
           },
           tabBarLabelStyle: {
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: '600',
-            lineHeight: 14,
-            marginTop: 2,
+            lineHeight: 12,
+            marginTop: 1,
           },
         }}
       >
@@ -135,23 +153,19 @@ export default function TabLayout() {
           options={{
             title: '',
             href: isOperationsEnabled ? undefined : null,
-            tabBarIcon: () => (
-              <View
-                className="h-14 w-14 items-center justify-center rounded-full bg-violet-600 -mt-4 border-4 border-white shadow-sm shadow-violet-200"
-                style={fabOpen ? styles.fabActive : undefined}
-              >
-                {fabOpen ? <X size={22} color="white" /> : <Plus size={26} color="white" />}
-              </View>
-            ),
+            tabBarIcon: () => <View className="h-14 w-14" />,
             tabBarButton: isOperationsEnabled
               ? (props: any) => (
-                <TouchableOpacity
-                  {...props}
-                  activeOpacity={0.8}
-                  style={[props.style, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
-                  onPress={() => setFabOpen((prev) => !prev)}
-                />
-              )
+                  <TouchableOpacity
+                    {...props}
+                    activeOpacity={0.8}
+                    style={[
+                      props.style,
+                      { flex: 1, alignItems: 'center', justifyContent: 'center' },
+                    ]}
+                    onPress={() => setFabOpen((prev) => !prev)}
+                  />
+                )
               : () => null,
           }}
           listeners={{
@@ -161,14 +175,15 @@ export default function TabLayout() {
             },
           }}
         />
-        <Tabs.Screen name="productos" options={{ href: null }} />
-        <Tabs.Screen name="productos/[id]" options={{ href: null }} />
-        <Tabs.Screen name="productos/nuevo" options={{ href: null }} />
+        <Tabs.Screen name="catalog" options={{ href: null }} />
+        <Tabs.Screen name="catalog/[id]" options={{ href: null }} />
+        <Tabs.Screen name="catalog/new" options={{ href: null }} />
         <Tabs.Screen name="calendario" options={{ href: null }} />
         <Tabs.Screen name="cotizaciones" options={{ href: null }} />
+        <Tabs.Screen name="cotizaciones/[id]" options={{ href: null }} />
         <Tabs.Screen name="contabilidad" options={{ href: null }} />
         <Tabs.Screen name="reportes" options={{ href: null }} />
-        <Tabs.Screen name="notificaciones" options={{ href: null }} />
+        <Tabs.Screen name="alertas-pro" options={{ href: null }} />
         <Tabs.Screen
           name="clientes"
           options={{
@@ -212,6 +227,24 @@ export default function TabLayout() {
             <Pressable style={StyleSheet.absoluteFill} onPress={() => setFabOpen(false)} />
           </BlurView>
         </Animated.View>
+        {isOperationsEnabled ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setFabOpen((prev) => !prev)}
+            style={[styles.fabButton, { bottom: fabButtonBottom, left: fabButtonLeft }]}
+          >
+            <Animated.View
+              className="h-14 w-14 items-center justify-center rounded-full border-4 border-white shadow-sm"
+              style={{
+                backgroundColor: palette.primary,
+                shadowColor: palette.shadow,
+                transform: [{ rotate: fabRotation }],
+              }}
+            >
+              <Plus size={26} color="white" />
+            </Animated.View>
+          </TouchableOpacity>
+        ) : null}
         <View pointerEvents="box-none" style={[styles.fabAnchor, { bottom: tabBarHeight + 4 }]}>
           {fabActions.map((action) => {
             const translateX = fabAnim.interpolate({
@@ -247,7 +280,9 @@ export default function TabLayout() {
                   }}
                 >
                   <View style={styles.fabIcon}>{action.icon}</View>
-                  <Text style={styles.fabLabel}>{action.label}</Text>
+                  <Text style={[styles.fabLabel, { color: palette.primaryText }]}>
+                    {action.label}
+                  </Text>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -268,8 +303,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  fabActive: {
-    transform: [{ rotate: '45deg' }],
+  fabButton: {
+    position: 'absolute',
+    height: 56,
+    width: 56,
+    zIndex: 3,
+    elevation: 12,
   },
   fabAnchor: {
     position: 'absolute',
@@ -306,7 +345,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '600',
-    color: '#7c3aed',
     paddingHorizontal: 4,
     backgroundColor: 'rgba(248, 250, 252, 0.9)',
     borderRadius: 8,

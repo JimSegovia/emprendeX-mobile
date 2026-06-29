@@ -12,6 +12,7 @@ import Animated, {
   smoothLayout,
 } from '@/components/ui/motion';
 import { fetchClientes, getReadableClientesError, type Cliente } from '@/lib/clientes';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 
 export default function ClientesScreen() {
@@ -22,6 +23,7 @@ export default function ClientesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
 
   const openDrawer = () => {
@@ -70,11 +72,16 @@ export default function ClientesScreen() {
       layout={smoothLayout}
     >
       <View className="flex-row items-center flex-1 pr-4">
-        <View className="w-14 h-14 rounded-full mr-4 bg-violet-50 items-center justify-center">
-          <Text className="text-lg font-bold text-violet-700">{item.fullName.charAt(0)}</Text>
+        <View
+          className="w-14 h-14 rounded-full mr-4 items-center justify-center"
+          style={{ backgroundColor: palette.primarySoft }}
+        >
+          <Text className="text-lg font-semibold" style={{ color: palette.primaryText }}>
+            {item.fullName.charAt(0)}
+          </Text>
         </View>
         <View className="flex-1">
-          <Text className="font-bold text-slate-800 text-[15px] mb-0.5">{item.fullName}</Text>
+          <Text className="font-semibold text-slate-800 text-[15px] mb-0.5">{item.fullName}</Text>
           <Text className="text-slate-500 text-sm">{item.phone ?? item.email ?? 'Sin contacto'}</Text>
         </View>
       </View>
@@ -85,15 +92,15 @@ export default function ClientesScreen() {
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
-        className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
-        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
+        className="px-4 pb-4 flex-row items-center justify-between"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Clientes</Text>
+          <Text className="text-white text-xl font-semibold">Clientes</Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center rounded-2xl bg-white/15 px-4 py-3"
@@ -132,12 +139,13 @@ export default function ClientesScreen() {
                 </Text>
                 {error ? <Text className="mt-3 text-sm font-medium text-rose-600">{error}</Text> : null}
               </View>
-            </Animated.View>
-          }
+
+             </Animated.View>
+           }
           ListEmptyComponent={
             isLoading ? (
               <View className="py-10 items-center">
-                <ActivityIndicator color="#7c3aed" />
+                <ActivityIndicator color={palette.primary} />
                 <Text className="mt-3 text-slate-500">Cargando clientes...</Text>
               </View>
             ) : (

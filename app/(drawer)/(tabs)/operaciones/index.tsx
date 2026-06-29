@@ -22,7 +22,9 @@ import Animated, {
   smoothLayout,
 } from '@/components/ui/motion';
 import { fetchOperaciones, getReadableVentasError, type OperacionResumen } from '@/lib/ventas';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { formatCurrencyValue } from '@/lib/runtime-config';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
@@ -35,6 +37,7 @@ export default function OperacionesScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
 
   const openDrawer = () => {
@@ -76,50 +79,73 @@ export default function OperacionesScreen() {
     });
   }, [activeTab, operaciones, query]);
 
-  const getStatusStyle = (status: string) => {
+  const getStatusStyle = (type: OperacionResumen['type'], status: string) => {
+    if (type === 'Cotización') {
+      switch (status) {
+        case 'Pendiente':
+          return { backgroundColor: '#fffbeb', color: '#b45309' };
+        case 'Aprobada':
+          return { backgroundColor: '#ecfdf5', color: '#047857' };
+        case 'Borrador':
+          return { backgroundColor: '#f1f5f9', color: '#475569' };
+        default:
+          return { backgroundColor: palette.primarySoft, color: palette.primaryText };
+      }
+    }
+
     switch (status) {
-      case 'En camino':
-        return 'bg-orange-100 text-orange-600';
       case 'Pendiente':
+        return { backgroundColor: '#dbeafe', color: '#1d4ed8' };
       case 'Reserva':
-        return 'bg-amber-100 text-amber-600';
+        return { backgroundColor: '#fffbeb', color: '#b45309' };
+      case 'En camino':
+        return { backgroundColor: '#ffedd5', color: '#c2410c' };
       case 'Entregado':
-      case 'Aprobada':
-        return 'bg-emerald-100 text-emerald-600';
+        return { backgroundColor: '#ecfdf5', color: '#047857' };
       case 'Activo':
-        return 'bg-violet-100 text-violet-600';
+        return { backgroundColor: palette.primarySoft, color: palette.primaryText };
       default:
-        return 'bg-gray-100 text-gray-600';
+        return { backgroundColor: '#f3f4f6', color: '#4b5563' };
     }
   };
 
   const renderItem = ({ item, index }: { item: OperacionResumen; index: number }) => (
     <AnimatedTouchableOpacity
       className="bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm"
-      onPress={() =>
-        router.push({ pathname: '/(drawer)/(tabs)/operaciones/[id]', params: { id: item.id } })
-      }
+      onPress={() => {
+        if (item.type === 'Cotización') {
+          router.push({
+            pathname: '/(drawer)/(tabs)/cotizaciones/[id]',
+            params: { id: item.id, source: 'operaciones' },
+          });
+          return;
+        }
+
+        router.push({ pathname: '/(drawer)/(tabs)/operaciones/[id]', params: { id: item.id } });
+      }}
       entering={itemEntering(index)}
       layout={smoothLayout}
     >
       <View className="flex-row justify-between items-center mb-1">
-        <Text className="font-bold text-slate-800">{item.referenceCode}</Text>
-        <View className={`px-3 py-1 rounded-full ${getStatusStyle(item.status).split(' ')[0]}`}>
-          <Text className={`text-xs font-semibold ${getStatusStyle(item.status).split(' ')[1]}`}>
+        <Text className="font-semibold text-slate-800">{item.referenceCode}</Text>
+        <View
+          className="px-3 py-1 rounded-full"
+          style={{ backgroundColor: getStatusStyle(item.type, item.status).backgroundColor }}
+        >
+          <Text
+            className="text-xs font-semibold"
+            style={{ color: getStatusStyle(item.type, item.status).color }}
+          >
             {item.status}
           </Text>
         </View>
       </View>
 
-      <Text
-        className={`text-xs mb-2 ${item.type === 'Cotización' ? 'text-violet-500' : 'text-slate-500'}`}
-      >
-        {item.type}
-      </Text>
+      <Text className="text-xs mb-2 text-slate-500">{item.type}</Text>
 
       <View className="flex-row justify-between items-center">
         <Text className="text-slate-500 text-sm">{item.customerName}</Text>
-        <Text className="font-semibold text-slate-800 text-sm">S/ {item.total}</Text>
+        <Text className="font-semibold text-slate-800 text-sm">{formatCurrencyValue(item.total)}</Text>
       </View>
     </AnimatedTouchableOpacity>
   );
@@ -127,15 +153,15 @@ export default function OperacionesScreen() {
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
-        className="bg-violet-600 px-4 pb-4 flex-row items-center justify-between"
-        style={{ paddingTop: Math.max(insets.top, 16) + 16 }}
+        className="px-4 pb-4 flex-row items-center justify-between"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={openDrawer} className="mr-4">
             <Menu color="white" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Operaciones</Text>
+          <Text className="text-white text-xl font-semibold">Operaciones</Text>
         </View>
       </Animated.View>
 
@@ -145,10 +171,14 @@ export default function OperacionesScreen() {
             <AnimatedTouchableOpacity
               key={tab}
               onPress={() => setActiveTab(tab)}
-              className={`py-4 mr-6 border-b-2 ${activeTab === tab ? 'border-violet-600' : 'border-transparent'}`}
+              className="py-4 mr-6 border-b-2"
+              style={{ borderColor: activeTab === tab ? palette.primary : 'transparent' }}
               layout={smoothLayout}
             >
-              <Text className={`${activeTab === tab ? 'text-violet-600 font-semibold' : 'text-slate-500'}`}>
+              <Text
+                className={`${activeTab === tab ? 'font-semibold' : 'text-slate-500'}`}
+                style={{ color: activeTab === tab ? palette.primaryText : undefined }}
+              >
                 {tab}
               </Text>
             </AnimatedTouchableOpacity>
@@ -191,7 +221,7 @@ export default function OperacionesScreen() {
           ListEmptyComponent={
             isLoading ? (
               <View className="py-10 items-center">
-                <ActivityIndicator color="#7c3aed" />
+                <ActivityIndicator color={palette.primary} />
                 <Text className="mt-3 text-slate-500">Cargando operaciones...</Text>
               </View>
             ) : (

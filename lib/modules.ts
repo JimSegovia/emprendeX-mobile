@@ -16,12 +16,24 @@ export type ModuleId =
   | 'index'
   | 'operaciones'
   | 'clientes'
-  | 'productos'
+  | 'catalogo'
   | 'calendario'
   | 'cotizaciones'
   | 'contabilidad'
   | 'reportes'
-  | 'notificaciones'
+  | 'alertas-pro'
+  | 'configuracion';
+
+export type TabRoute =
+  | 'index'
+  | 'operaciones'
+  | 'clientes'
+  | 'catalog'
+  | 'calendario'
+  | 'cotizaciones'
+  | 'contabilidad'
+  | 'reportes'
+  | 'alertas-pro'
   | 'configuracion';
 
 export type ModuleDefinition = {
@@ -29,7 +41,7 @@ export type ModuleDefinition = {
   label: string;
   icon: LucideIcon;
   // expo-router tab/screen name inside /(drawer)/(tabs)
-  tab: ModuleId;
+  tab: TabRoute;
   // pathname prefixes used to detect active item
   match: string[];
   premium?: boolean;
@@ -62,12 +74,12 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     detail: 'Gestion de contactos y fichas.',
   },
   {
-    id: 'productos',
-    label: 'Productos-Servicios',
+    id: 'catalogo',
+    label: 'Catálogo',
     icon: Package,
-    tab: 'productos',
-    match: ['/productos'],
-    detail: 'Catǭlogo reutilizable para pedidos.',
+    tab: 'catalog',
+    match: ['/catalog'],
+    detail: 'Catalogo reutilizable para pedidos.',
   },
   {
     id: 'cotizaciones',
@@ -104,11 +116,11 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     detail: 'Indicadores y tendencias.',
   },
   {
-    id: 'notificaciones',
-    label: 'Notificaciones avanzadas',
+    id: 'alertas-pro',
+    label: 'Alertas inteligentes',
     icon: Bell,
-    tab: 'notificaciones',
-    match: ['/notificaciones'],
+    tab: 'alertas-pro',
+    match: ['/alertas-pro'],
     premium: true,
     detail: 'Avisos y alertas inteligentes.',
   },
@@ -134,7 +146,17 @@ export function buildVisibleModuleOrder(
 }
 
 export function isModuleAvailable(moduleId: ModuleId, enabledModuleIds: ModuleId[]): boolean {
-  return ALWAYS_VISIBLE_MODULE_IDS.includes(moduleId) || enabledModuleIds.includes(moduleId);
+  const moduleDefinition = DEFAULT_MODULES.find((module) => module.id === moduleId);
+
+  if (!moduleDefinition) {
+    return false;
+  }
+
+  if (ALWAYS_VISIBLE_MODULE_IDS.includes(moduleId) && !moduleDefinition.premium) {
+    return true;
+  }
+
+  return enabledModuleIds.includes(moduleId);
 }
 
 export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
@@ -146,8 +168,8 @@ export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
     return 'clientes';
   }
 
-  if (pathname.startsWith('/productos')) {
-    return 'productos';
+  if (pathname.startsWith('/catalog')) {
+    return 'catalogo';
   }
 
   if (pathname.startsWith('/cotizaciones')) {
@@ -166,8 +188,8 @@ export function resolveModuleIdFromPathname(pathname: string): ModuleId | null {
     return 'calendario';
   }
 
-  if (pathname.startsWith('/notificaciones')) {
-    return 'notificaciones';
+  if (pathname.startsWith('/alertas-pro')) {
+    return 'alertas-pro';
   }
 
   return null;

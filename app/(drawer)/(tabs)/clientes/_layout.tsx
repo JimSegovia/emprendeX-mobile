@@ -5,7 +5,9 @@ export default function ClientesLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'simple_push',
+        animationDuration: 240,
+        animationMatchesGesture: true,
         contentStyle: { backgroundColor: '#ffffff' },
         gestureEnabled: true,
         fullScreenGestureEnabled: true,

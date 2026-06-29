@@ -24,19 +24,28 @@ export async function apiRequest<T>(
   options: RequestInit,
   accessToken?: string,
 ): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {}),
-      ...(options.headers ?? {}),
-    },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...options,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : {}),
+        ...(options.headers ?? {}),
+      },
+    });
+  } catch {
+    throw new ApiClientError(
+      'No se pudo conectar con el servidor. Verifica tu conexión a internet.',
+      0,
+    );
+  }
 
   const rawBody = await response.text();
   const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
