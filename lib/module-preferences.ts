@@ -34,6 +34,9 @@ function migrateOrder(order: ModuleId[] | null | undefined): ModuleId[] {
   return filtered;
 }
 
+/**
+ * Carga preferencias locales del sidebar y migra el orden si el catalogo de modulos cambio.
+ */
 export async function loadModulePreferences(): Promise<ModulePreferences> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -48,12 +51,18 @@ export async function loadModulePreferences(): Promise<ModulePreferences> {
   }
 }
 
+/**
+ * Persiste el orden del sidebar conservando compatibilidad con modulos agregados o removidos.
+ */
 export async function saveModuleOrder(order: ModuleId[]): Promise<void> {
   const migrated = migrateOrder(order);
   const payload: StoredPrefs = { order: migrated };
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
+/**
+ * Restablece las preferencias locales de modulos al orden por defecto.
+ */
 export async function resetModulePreferences(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEY);
 }

@@ -35,7 +35,7 @@ Prioridad de resolución:
 3. `EXPO_PUBLIC_API_TARGET=local` — construye desde `HOST` + `PORT` + `SCHEME` + `PATH`
 4. `EXPO_PUBLIC_API_TARGET=auto` — prueba local primero, luego railway
 
-## Modo local
+### Modo local
 
 Usa el backend local levantado desde el monorepo con `pnpm dev`.
 
@@ -54,7 +54,7 @@ EXPO_PUBLIC_PASSWORD_MIN_LENGTH=8
 > La IP `192.168.18.9` es un ejemplo. Cambia `EXPO_PUBLIC_API_HOST` por la IP de tu máquina si es diferente.
 > Si usas emulador, usa `localhost` (o `10.0.2.2` en Android).
 
-## Modo Railway
+### Modo Railway
 
 Usa la API desplegada en Railway.
 
@@ -122,11 +122,11 @@ npm run start
 
 También puedes usar:
 
-```bash
-npm run android
-npm run ios
-npm run web
-```
+1. La vision global vive en `docs/`.
+2. El `README` debe responder como correr, como esta organizado y donde leer mas.
+3. El codigo compartido y exportado debe usar `JSDoc` cuando su contrato no sea obvio.
+4. Los comentarios inline deben reservarse para decisiones o flujos no evidentes.
+5. Al agregar una funcionalidad nueva, se debe actualizar al menos un documento externo si cambia arquitectura, flujo o dominio.
 
 ## Verificación rápida
 

@@ -27,6 +27,9 @@ type ModulePreferencesContextValue = {
 
 const ModulePreferencesContext = createContext<ModulePreferencesContextValue | null>(null);
 
+/**
+ * Combina preferencias locales de orden con los modulos habilitados por la sesion actual.
+ */
 export function ModulePreferencesProvider({ children }: { children: React.ReactNode }) {
   const { authState } = useAuthSession();
   const [isHydrated, setIsHydrated] = useState(false);
@@ -63,9 +66,9 @@ export function ModulePreferencesProvider({ children }: { children: React.ReactN
 
   const value = useMemo<ModulePreferencesContextValue>(() => {
     return {
-        isHydrated,
-        order,
-        modules,
+      isHydrated,
+      order,
+      modules,
       visibleOrder,
       enabledModuleIds,
       isModuleEnabled: (moduleId) => isModuleAvailable(moduleId, enabledModuleIds),
@@ -89,6 +92,9 @@ export function ModulePreferencesProvider({ children }: { children: React.ReactN
   );
 }
 
+/**
+ * Hook de acceso al orden visible de modulos y a sus reglas de disponibilidad.
+ */
 export function useModulePreferences() {
   const ctx = useContext(ModulePreferencesContext);
   if (!ctx) throw new Error('useModulePreferences must be used within ModulePreferencesProvider');

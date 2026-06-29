@@ -9,7 +9,7 @@ import {
   Home,
   Package,
   Settings,
-  Users
+  Users,
 } from 'lucide-react-native';
 
 export type ModuleId =

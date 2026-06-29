@@ -20,6 +20,9 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
+/**
+ * Expone la sesion autenticada e hidrata el estado del usuario al arrancar la app.
+ */
 export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -108,6 +111,9 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
 }
 
+/**
+ * Hook de acceso unico al contexto de autenticacion de la aplicacion.
+ */
 export function useAuthSession() {
   const context = useContext(AuthSessionContext);
 
