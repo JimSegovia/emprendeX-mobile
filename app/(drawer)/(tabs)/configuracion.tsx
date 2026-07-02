@@ -4,7 +4,7 @@ import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { getReadableAuthError, updateCurrentUserProfile } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { BUSINESS_CATEGORIES } from '@/lib/business-categories';
-import { getReadableBusinessPreferencesError } from '@/lib/business-preferences';
+import { getReadableBusinessPreferencesError, uploadBusinessLogo } from '@/lib/business-preferences';
 import { useModulePreferences } from '@/lib/module-preferences-context';
 import { DEFAULT_MODULES, type ModuleDefinition, type ModuleId } from '@/lib/modules';
 import {
@@ -66,6 +66,7 @@ export default function ConfiguracionScreen() {
     palette,
     logoUrl,
     setColorPalette,
+    refreshPreferences,
   } = useAccountPreferences();
   const { accessToken, authState, signOut, updateAuthState } = useAuthSession();
   const { isHydrated, visibleOrder, setOrder, reset } = useModulePreferences();
@@ -182,7 +183,8 @@ export default function ConfiguracionScreen() {
     trimmedFirstName !== (authState?.user.firstNames.trim() ?? '') ||
     trimmedLastName !== (authState?.user.lastNames.trim() ?? '') ||
     trimmedBusinessName !== (businessProfile?.name?.trim() ?? '') ||
-    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '');
+    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '') ||
+    selectedLogoUri !== logoUrl;
 
   useEffect(() => {
     const loadCatalogSettings = async () => {
@@ -271,6 +273,19 @@ export default function ConfiguracionScreen() {
         businessName: trimmedBusinessName,
         businessCategory: trimmedBusinessCategory,
       });
+
+      if (
+        selectedLogoUri &&
+        selectedLogoUri !== logoUrl &&
+        !selectedLogoUri.startsWith('https://')
+      ) {
+        try {
+          await uploadBusinessLogo(accessToken, selectedLogoUri);
+          await refreshPreferences();
+        } catch {
+          // Logo upload failure is non-blocking
+        }
+      }
 
       updateAuthState(nextAuthState);
       setIsEditingProfile(false);

@@ -12,6 +12,7 @@ import { useAuthSession } from '@/lib/auth-session-context';
 import { DNI_LENGTH, isValidDni, sanitizeDniInput } from '@/lib/dni';
 import { AUTH_PASSWORD_MIN_LENGTH } from '@/lib/runtime-config';
 import { AttachmentSheet } from '@/components/ui/attachment-sheet';
+import { uploadBusinessLogo } from '@/lib/business-preferences';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -109,6 +110,15 @@ export default function RegisterScreen() {
       });
 
       await setAuthenticatedSession(session);
+
+      if (selectedLogoUri && session.accessToken) {
+        try {
+          await uploadBusinessLogo(session.accessToken, selectedLogoUri);
+        } catch {
+          // Logo upload failure is non-blocking
+        }
+      }
+
       router.replace(resolvePostAuthRoute(session));
     } catch (error) {
       setSubmitError(getReadableAuthError(error));
