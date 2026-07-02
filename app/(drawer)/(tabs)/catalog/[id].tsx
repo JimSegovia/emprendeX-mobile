@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
+  Image as RNImage,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -37,6 +39,22 @@ export default function CatalogDetailScreen() {
   const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
+  const [previewHeight, setPreviewHeight] = useState(256);
+  const screenWidth = Dimensions.get('window').width;
+
+  useEffect(() => {
+    if (item?.imageUrl) {
+      RNImage.getSize(
+        item.imageUrl,
+        (width, height) => {
+          const maxWidth = screenWidth - 48;
+          const calculated = height > 0 ? (maxWidth * height) / width : 256;
+          setPreviewHeight(Math.min(calculated, 320));
+        },
+        () => setPreviewHeight(256),
+      );
+    }
+  }, [item?.imageUrl, screenWidth]);
 
   useEffect(() => {
     const loadItem = async () => {
@@ -191,13 +209,6 @@ export default function CatalogDetailScreen() {
       >
         <Animated.View entering={sectionEntering(1)}>
           <View className="overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm shadow-slate-100">
-            <View className="h-72 bg-slate-100">
-              <CatalogDetailImage
-                imageUrl={item.imageUrl}
-                isService={isService}
-                Icon={Icon}
-              />
-            </View>
 
             <View className="p-5">
               <View className="mb-3 flex-row items-center">
@@ -276,11 +287,11 @@ export default function CatalogDetailScreen() {
 
             {item.imageUrl ? (
               <View>
-                <View className="mt-3 overflow-hidden rounded-2xl bg-slate-100 h-48">
+                <View className="mt-3 overflow-hidden rounded-2xl bg-slate-100" style={{ height: previewHeight }}>
                   <Image
                     source={item.imageUrl}
                     style={{ width: '100%', height: '100%' }}
-                    contentFit="cover"
+                    contentFit="contain"
                     transition={220}
                     cachePolicy="memory-disk"
                     recyclingKey={item.imageUrl}
@@ -334,9 +345,9 @@ export default function CatalogDetailScreen() {
             </View>
           ) : null}
 
-          <View className="mt-6 flex-row">
+          <View className="mt-6 flex-row gap-3">
             <TouchableOpacity
-              className="mr-3 rounded-2xl px-4 py-3"
+              className="flex-1 rounded-2xl px-4 py-3 items-center"
               style={{ backgroundColor: palette.primary }}
               activeOpacity={0.85}
               onPress={() =>
@@ -349,7 +360,7 @@ export default function CatalogDetailScreen() {
               <Text className="font-semibold text-white">Editar</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3"
+              className="flex-1 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 items-center"
               activeOpacity={0.85}
               onPress={() => {
                 void handleDelete();
@@ -377,44 +388,3 @@ export default function CatalogDetailScreen() {
   );
 }
 
-function CatalogDetailImage({
-  imageUrl,
-  isService,
-  Icon,
-}: {
-  imageUrl: string | null;
-  isService: boolean;
-  Icon: typeof Briefcase;
-}) {
-  const { palette } = useAccountPreferences();
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [imageUrl]);
-
-  if (imageUrl && !hasError) {
-    return (
-      <Image
-        source={imageUrl}
-        style={{ width: '100%', height: '100%' }}
-        contentFit="cover"
-        transition={220}
-        cachePolicy="memory-disk"
-        recyclingKey={imageUrl}
-        onError={() => setHasError(true)}
-        accessibilityLabel="Imagen del item del catálogo"
-      />
-    );
-  }
-
-  return (
-    <View
-      className={`h-full w-full items-center justify-center ${isService ? 'bg-emerald-50' : ''}`}
-      style={{ backgroundColor: isService ? undefined : palette.primarySoft }}
-    >
-      <Icon size={48} color={isService ? '#059669' : palette.primary} />
-      <Text className="mt-3 text-sm font-semibold text-slate-500">Sin imagen</Text>
-    </View>
-  );
-}

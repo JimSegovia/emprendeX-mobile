@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -7,11 +7,12 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X } from 'lucide-react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Camera, RefreshCw, X } from 'lucide-react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { CameraGridSlot } from './camera-grid-slot';
 import { GalleryThumbnail } from './gallery-thumbnail';
 import { useAttachment } from '@/hooks/use-attachment';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
@@ -22,10 +23,9 @@ const ITEM_SPACING = 4;
 const GRID_PADDING = 16;
 const ITEM_SIZE =
   (SCREEN_WIDTH - GRID_PADDING * 2 - ITEM_SPACING * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+const CAMERA_HEIGHT = 200;
 
-type GridItem =
-  | { type: 'camera'; id: string }
-  | { type: 'photo'; id: string; uri: string };
+type GridItem = { type: 'photo'; id: string; uri: string };
 
 type AttachmentSheetProps = {
   visible: boolean;
@@ -46,8 +46,12 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
   } = useAttachment();
 
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
+  const [fullscreenCamera, setFullscreenCamera] = useState(false);
+  const fullCameraRef = useRef<CameraView>(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState<'back' | 'front'>('back');
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  // Reset selection and load gallery when sheet becomes visible
   useEffect(() => {
     if (visible) {
       setSelectedUri(null);
@@ -77,14 +81,12 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
   }, [onClose]);
 
   const gridData: GridItem[] = useMemo(
-    () => [
-      { type: 'camera', id: 'camera' },
-      ...recentPhotos.map((asset) => ({
+    () =>
+      recentPhotos.map((asset) => ({
         type: 'photo' as const,
         id: asset.id,
         uri: asset.uri,
       })),
-    ],
     [recentPhotos],
   );
 
@@ -94,7 +96,7 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
     }
   }, [hasMore, isLoadingGallery, loadMorePhotos]);
 
-  const renderFooter = useCallback(
+  const renderGalleryFooter = useCallback(
     () =>
       isLoadingGallery ? (
         <View className="py-4 items-center">
@@ -104,7 +106,44 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
     [isLoadingGallery, palette.primary],
   );
 
+  const openFullscreenCamera = useCallback(() => {
+    setFacing('back');
+    setFullscreenCamera(true);
+  }, []);
+
+  const closeFullscreenCamera = useCallback(() => {
+    setFullscreenCamera(false);
+  }, []);
+
+  const captureFullscreen = useCallback(async () => {
+    if (!fullCameraRef.current || isCapturing) return;
+    setIsCapturing(true);
+    try {
+      const photo = await fullCameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (photo?.uri) {
+        handlePhotoCapture(photo.uri);
+        setFullscreenCamera(false);
+      }
+    } catch {
+      // silent
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [isCapturing, handlePhotoCapture]);
+
+  const toggleFacing = useCallback(() => {
+    setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
+  }, []);
+
+  const handleRequestCameraPermission = useCallback(async () => {
+    const result = await requestCameraPermission();
+    if (result?.granted) {
+      setFullscreenCamera(true);
+    }
+  }, [requestCameraPermission]);
+
   const hasSelection = selectedUri !== null;
+  const hasCameraPermission = cameraPermission?.granted;
 
   return (
     <Modal
@@ -120,9 +159,8 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
       >
         <View
           className="bg-white rounded-t-3xl overflow-hidden"
-          style={{ maxHeight: '75%', paddingBottom: insets.bottom }}
+          style={{ maxHeight: '85%', paddingBottom: insets.bottom }}
         >
-          {/* ── Header ── */}
           <View className="flex-row items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
             <Text className="text-lg font-semibold text-slate-800">Adjuntar imagen</Text>
             <TouchableOpacity
@@ -133,28 +171,41 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
             </TouchableOpacity>
           </View>
 
-          {/* ── Camera + gallery grid (camera as first cell) ── */}
+          <TouchableOpacity
+            className="mx-4 mt-3 rounded-2xl overflow-hidden bg-black"
+            style={{ height: CAMERA_HEIGHT }}
+            activeOpacity={0.9}
+            onPress={hasCameraPermission ? openFullscreenCamera : handleRequestCameraPermission}
+          >
+            {hasCameraPermission ? (
+              <CameraView
+                style={{ flex: 1 }}
+                facing={facing}
+                mode="picture"
+                autofocus="on"
+              />
+            ) : (
+              <View className="flex-1 rounded-2xl bg-slate-100 items-center justify-center">
+                <Camera size={32} color="#64748b" />
+                <Text className="mt-2 text-xs font-medium text-slate-500 text-center px-2">
+                  Abrir cámara
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
           <FlatList
             data={gridData}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              if (item.type === 'camera') {
-                return (
-                  <View style={{ width: ITEM_SIZE, height: ITEM_SIZE }} className="m-0.5">
-                    <CameraGridSlot onPhotoCapture={handlePhotoCapture} />
-                  </View>
-                );
-              }
-              return (
-                <View style={{ width: ITEM_SIZE, height: ITEM_SIZE }} className="m-0.5">
-                  <GalleryThumbnail
-                    uri={item.uri}
-                    isSelected={selectedUri === item.uri}
-                    onToggle={handleSelectImage}
-                  />
-                </View>
-              );
-            }}
+            renderItem={({ item }) => (
+              <View style={{ width: ITEM_SIZE, height: ITEM_SIZE }} className="m-0.5">
+                <GalleryThumbnail
+                  uri={item.uri}
+                  isSelected={selectedUri === item.uri}
+                  onToggle={handleSelectImage}
+                />
+              </View>
+            )}
             numColumns={NUM_COLUMNS}
             contentContainerStyle={{
               paddingHorizontal: GRID_PADDING - 2,
@@ -164,10 +215,9 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
             showsVerticalScrollIndicator={false}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
-            ListFooterComponent={renderFooter}
+            ListFooterComponent={renderGalleryFooter}
           />
 
-          {/* ── Footer ── */}
           <View className="border-t border-slate-100 px-5 py-4">
             <TouchableOpacity
               className="rounded-2xl py-3.5 items-center"
@@ -182,14 +232,60 @@ export function AttachmentSheet({ visible, onClose, onAttach }: AttachmentSheetP
                 className="font-semibold text-base"
                 style={{ color: hasSelection ? '#ffffff' : '#94a3b8' }}
               >
-                {hasSelection
-                  ? 'Adjuntar'
-                  : 'Selecciona una imagen'}
+                {hasSelection ? 'Adjuntar' : 'Selecciona una imagen'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Animated.View>
+
+      {fullscreenCamera ? (
+        <Modal
+          visible={fullscreenCamera}
+          animationType="fade"
+          onRequestClose={closeFullscreenCamera}
+        >
+          <StatusBar barStyle="light-content" />
+          <View className="flex-1 bg-black">
+            <CameraView
+              ref={fullCameraRef}
+              style={{ flex: 1 }}
+              facing={facing}
+              mode="picture"
+              autofocus="on"
+            />
+
+            <TouchableOpacity
+              className="absolute top-12 right-5 h-10 w-10 rounded-full bg-black/40 items-center justify-center"
+              onPress={closeFullscreenCamera}
+            >
+              <X size={22} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="absolute bottom-10 right-5 h-10 w-10 rounded-full bg-black/40 items-center justify-center"
+              onPress={toggleFacing}
+            >
+              <RefreshCw size={20} color="white" />
+            </TouchableOpacity>
+
+            <View className="absolute bottom-10 left-0 right-0 items-center">
+              <TouchableOpacity
+                className="h-20 w-20 rounded-full border-4 border-white items-center justify-center"
+                activeOpacity={0.7}
+                onPress={captureFullscreen}
+                disabled={isCapturing}
+              >
+                {isCapturing ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <View className="h-[70px] w-[70px] rounded-full bg-white" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </Modal>
   );
 }
