@@ -183,8 +183,20 @@ export default function ConfiguracionScreen() {
     trimmedFirstName !== (authState?.user.firstNames.trim() ?? '') ||
     trimmedLastName !== (authState?.user.lastNames.trim() ?? '') ||
     trimmedBusinessName !== (businessProfile?.name?.trim() ?? '') ||
-    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '') ||
-    selectedLogoUri !== logoUrl;
+    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '');
+
+  const handleLogoUpload = async (uri: string) => {
+    if (!accessToken) return;
+    setSelectedLogoUri(uri);
+
+    try {
+      const result = await uploadBusinessLogo(accessToken, uri);
+      await refreshPreferences();
+      setSelectedLogoUri(result.logoUrl);
+    } catch {
+      // Logo upload failure is non-blocking
+    }
+  };
 
   useEffect(() => {
     const loadCatalogSettings = async () => {
@@ -273,19 +285,6 @@ export default function ConfiguracionScreen() {
         businessName: trimmedBusinessName,
         businessCategory: trimmedBusinessCategory,
       });
-
-      if (
-        selectedLogoUri &&
-        selectedLogoUri !== logoUrl &&
-        !selectedLogoUri.startsWith('https://')
-      ) {
-        try {
-          await uploadBusinessLogo(accessToken, selectedLogoUri);
-          await refreshPreferences();
-        } catch {
-          // Logo upload failure is non-blocking
-        }
-      }
 
       updateAuthState(nextAuthState);
       setIsEditingProfile(false);
@@ -954,7 +953,7 @@ export default function ConfiguracionScreen() {
           onClose={() => setShowLogoSheet(false)}
           onAttach={(uris) => {
             if (uris[0]) {
-              setSelectedLogoUri(uris[0]);
+              void handleLogoUpload(uris[0]);
             }
             setShowLogoSheet(false);
           }}
