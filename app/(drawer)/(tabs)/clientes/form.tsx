@@ -92,7 +92,7 @@ export default function ClienteFormScreen() {
         await createCliente(accessToken, payload);
       }
 
-      router.back();
+      router.replace('/(drawer)/(tabs)/clientes');
     } catch (submitError) {
       setError(getReadableClientesError(submitError));
     } finally {
@@ -108,7 +108,7 @@ export default function ClienteFormScreen() {
             className="flex-row items-center px-4 pt-4 mb-2"
             entering={sectionEntering(0)}
           >
-            <TouchableOpacity className="p-2 rounded-full" onPress={() => router.back()}>
+            <TouchableOpacity className="p-2 rounded-full" onPress={() => router.replace('/(drawer)/(tabs)/clientes')}>
               <ArrowLeft size={24} color="#334155" />
             </TouchableOpacity>
           </Animated.View>

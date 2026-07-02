@@ -14,6 +14,7 @@ import Animated, {
 import { fetchClientes, getReadableClientesError, type Cliente } from '@/lib/clientes';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 export default function ClientesScreen() {
   const [query, setQuery] = useState('');
@@ -25,6 +26,7 @@ export default function ClientesScreen() {
   const router = useRouter();
   const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -113,6 +115,7 @@ export default function ClientesScreen() {
 
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
+          ref={mainScrollRef}
           data={filteredClientes}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}

@@ -9,6 +9,7 @@ import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { fetchReporteResumen, getReadableReportesError, type ReporteResumen } from '@/lib/reportes';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 export default function ReportesScreen() {
   const insets = useSafeAreaInsets();
@@ -19,6 +20,7 @@ export default function ReportesScreen() {
   const [summary, setSummary] = useState<ReporteResumen | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
 
@@ -47,7 +49,7 @@ export default function ReportesScreen() {
           <Text className="text-white text-xl font-semibold">Reportes</Text>
         </View>
       </Animated.View>
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
+      <ScrollView ref={mainScrollRef} className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
         {isLoading ? <View className="py-10 items-center"><ActivityIndicator color={palette.primary} /><Text className="mt-3 text-slate-500">Cargando reportes...</Text></View> : null}
         {error ? <Text className="text-rose-600">{error}</Text> : null}
         {summary ? (

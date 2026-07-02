@@ -22,6 +22,7 @@ import {
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const badgeStyles = {
   Pendiente: { bg: 'bg-amber-50', text: 'text-amber-700' },
@@ -127,6 +128,7 @@ export default function CotizacionesScreen() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'Pendiente' | 'Aprobada'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -256,6 +258,7 @@ export default function CotizacionesScreen() {
       </Animated.View>
 
       <ScrollView
+        ref={mainScrollRef}
         className="flex-1 px-5 pt-0"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}

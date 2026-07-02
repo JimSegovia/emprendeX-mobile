@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image as RNImage, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { AppSafeArea } from '@/components/AppSafeArea';
 import { KeyboardAwareLayout } from '@/components/KeyboardAwareLayout';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Camera, Eye, EyeOff } from 'lucide-react-native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import { getColorPalette } from '@/lib/account-preferences';
 import { getReadableAuthError, registerUser, resolvePostAuthRoute } from '@/lib/auth';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { DNI_LENGTH, isValidDni, sanitizeDniInput } from '@/lib/dni';
 import { AUTH_PASSWORD_MIN_LENGTH } from '@/lib/runtime-config';
+import { AttachmentSheet } from '@/components/ui/attachment-sheet';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,6 +33,27 @@ export default function RegisterScreen() {
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedLogoUri, setSelectedLogoUri] = useState<string | null>(null);
+  const [showLogoSheet, setShowLogoSheet] = useState(false);
+  const [logoPreviewHeight, setLogoPreviewHeight] = useState(160);
+  const screenWidth = Dimensions.get('window').width;
+
+  useEffect(() => {
+    if (!selectedLogoUri) return;
+    const scheme = selectedLogoUri.split(':')[0];
+    if (scheme === 'ph' || scheme === 'assets-library') {
+      setLogoPreviewHeight(160);
+      return;
+    }
+    RNImage.getSize(
+      selectedLogoUri,
+      (width, height) => {
+        const maxWidth = screenWidth - 72;
+        setLogoPreviewHeight(Math.min(height > 0 ? (maxWidth * height) / width : 160, 200));
+      },
+      () => setLogoPreviewHeight(160),
+    );
+  }, [selectedLogoUri, screenWidth]);
 
   useEffect(() => {
     if (!isHydrated || !authState) {
@@ -310,6 +333,30 @@ export default function RegisterScreen() {
                 <Text className="mt-2 text-sm text-rose-500">Ingresa el rubro principal.</Text>
               ) : null}
             </View>
+
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-semibold text-slate-700">Logo del negocio</Text>
+
+              <TouchableOpacity
+                className="overflow-hidden rounded-2xl border border-slate-200"
+                activeOpacity={0.85}
+                onPress={() => setShowLogoSheet(true)}
+                style={{ height: logoPreviewHeight }}
+              >
+                {selectedLogoUri ? (
+                  <Image
+                    source={{ uri: selectedLogoUri }}
+                    style={{ width: '100%', height: '100%' }}
+                    contentFit="contain"
+                  />
+                ) : (
+                  <View className="flex-1 items-center justify-center bg-slate-50">
+                    <Camera size={24} color="#94a3b8" />
+                    <Text className="mt-2 text-sm font-semibold text-slate-400">Agregar logo</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </Animated.View>
 
           <Animated.View className="px-6 pt-6" entering={sectionEntering(4)}>
@@ -343,6 +390,19 @@ export default function RegisterScreen() {
           </Animated.View>
         </KeyboardAwareLayout>
       </Animated.View>
+
+      {showLogoSheet ? (
+        <AttachmentSheet
+          visible={showLogoSheet}
+          onClose={() => setShowLogoSheet(false)}
+          onAttach={(uris) => {
+            if (uris[0]) {
+              setSelectedLogoUri(uris[0]);
+            }
+            setShowLogoSheet(false);
+          }}
+        />
+      ) : null}
     </AppSafeArea>
   );
 }

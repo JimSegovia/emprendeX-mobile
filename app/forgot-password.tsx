@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen() {
                   </Text>
                   <TouchableOpacity
                     className="rounded-xl bg-violet-600 px-8 py-3"
-                    onPress={() => router.push(`/reset-password?token=${encodeURIComponent(mockToken)}`)}
+                    onPress={() => router.push({ pathname: '/reset-password', params: { token: mockToken } })}
                   >
                     <Text className="text-center font-semibold text-white">Simular clic en enlace</Text>
                   </TouchableOpacity>

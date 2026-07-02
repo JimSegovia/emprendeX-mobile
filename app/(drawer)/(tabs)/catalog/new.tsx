@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
+  Image as RNImage,
   Text,
   TextInput,
   TouchableOpacity,
@@ -27,9 +29,9 @@ import {
   updateCatalogCategory,
   updateCatalogItem,
   updateCatalogUnit,
+  uploadCatalogImage,
 } from '@/lib/catalog';
 import { AttachmentSheet } from '@/components/ui/attachment-sheet';
-import { uploadCatalogImage } from '@/lib/catalog';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { DEFAULT_CURRENCY_SYMBOL, formatCurrencyValue } from '@/lib/runtime-config';
@@ -76,6 +78,31 @@ export default function CatalogEntryScreen() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
+  const [previewHeight, setPreviewHeight] = useState(260);
+  const screenWidth = Dimensions.get('window').width;
+
+  useEffect(() => {
+    if (!selectedImageUri) {
+      return;
+    }
+
+    const scheme = selectedImageUri.split(':')[0];
+
+    if (scheme === 'ph' || scheme === 'assets-library') {
+      setPreviewHeight(260);
+      return;
+    }
+
+      RNImage.getSize(
+        selectedImageUri,
+        (width, height) => {
+          const maxWidth = screenWidth - 48;
+          const calculated = height > 0 ? (maxWidth * height) / width : 260;
+          setPreviewHeight(Math.min(calculated, 320));
+        },
+        () => setPreviewHeight(260),
+      );
+  }, [selectedImageUri, screenWidth]);
 
   const currency = DEFAULT_CURRENCY_SYMBOL;
   const dropdownSpacing = 220;
@@ -597,8 +624,8 @@ export default function CatalogEntryScreen() {
                 <View className="relative">
                   <Image
                     source={{ uri: selectedImageUri }}
-                    style={{ width: '100%', height: 180 }}
-                    contentFit="cover"
+                    style={{ width: '100%', height: previewHeight }}
+                    contentFit="contain"
                     transition={220}
                   />
                   <View className="absolute inset-0 bg-black/0 active:bg-black/10" />

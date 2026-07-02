@@ -8,6 +8,7 @@ import Animated, { screenEntering, sectionEntering } from '@/components/ui/motio
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { fetchCalendarioEventos, getReadableCalendarioError, type CalendarioEvento } from '@/lib/calendario';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 export default function CalendarioScreen() {
   const insets = useSafeAreaInsets();
@@ -17,6 +18,7 @@ export default function CalendarioScreen() {
   const [events, setEvents] = useState<CalendarioEvento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
 
@@ -42,7 +44,7 @@ export default function CalendarioScreen() {
       <Animated.View className="px-4 pb-4" style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }} entering={sectionEntering(0)}>
         <View className="flex-row items-center"><TouchableOpacity onPress={openDrawer} className="mr-4"><Menu color="white" size={24} /></TouchableOpacity><Text className="text-white text-xl font-semibold">Calendario</Text></View>
       </Animated.View>
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
+      <ScrollView ref={mainScrollRef} className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}>
         {isLoading ? <View className="py-10 items-center"><ActivityIndicator color={palette.primary} /><Text className="mt-3 text-slate-500">Cargando eventos...</Text></View> : null}
         {error ? <Text className="text-rose-600">{error}</Text> : null}
         {events.map((event) => (

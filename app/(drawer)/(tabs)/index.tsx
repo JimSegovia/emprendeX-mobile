@@ -27,6 +27,7 @@ import { fetchCalendarioEventos, getReadableCalendarioError, type CalendarioEven
 import { useModulePreferences } from '@/lib/module-preferences-context';
 import { fetchBusinessKpis, getReadableReportesError, type BusinessKpis } from '@/lib/reportes';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 type QuickAction = {
   key: string;
@@ -47,6 +48,7 @@ export default function DashboardScreen() {
   const [kpisError, setKpisError] = useState<string | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarioEvento[]>([]);
   const [deliveriesError, setDeliveriesError] = useState<string | null>(null);
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const firstName = authState?.user.firstNames.split(' ')[0] ?? 'Hola';
   const isOperationsEnabled = isModuleEnabled('operaciones');
@@ -245,7 +247,7 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 bg-slate-50" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={mainScrollRef} className="flex-1 bg-slate-50" showsVerticalScrollIndicator={false}>
         <Animated.View className="px-6 pt-6 pb-4" entering={sectionEntering(1)}>
           <Text className="text-2xl font-semibold text-slate-800 mb-1">
             {`¡Hola, ${firstName}! 👋`}

@@ -16,11 +16,12 @@ import {
 } from '@/lib/public-catalog';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation, useRouter } from 'expo-router';
-import { Briefcase, Crown, Globe, GripVertical, Link2, Menu, Paintbrush, Pencil } from 'lucide-react-native';
+import { Briefcase, Camera, Crown, Globe, GripVertical, Link2, Menu, Paintbrush, Pencil } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image as RNImage,
   Modal,
   ScrollView,
   Share,
@@ -30,8 +31,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AttachmentSheet } from '@/components/ui/attachment-sheet';
 
 const premiumModules = [
   {
@@ -61,6 +64,7 @@ export default function ConfiguracionScreen() {
     isHydrated: areAccountPreferencesHydrated,
     isSaving: isSavingPreferences,
     palette,
+    logoUrl,
     setColorPalette,
   } = useAccountPreferences();
   const { accessToken, authState, signOut, updateAuthState } = useAuthSession();
@@ -75,6 +79,9 @@ export default function ConfiguracionScreen() {
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isReorderingModules, setIsReorderingModules] = useState(false);
+  const [selectedLogoUri, setSelectedLogoUri] = useState<string | null>(null);
+  const [showLogoSheet, setShowLogoSheet] = useState(false);
+  const [logoPreviewHeight, setLogoPreviewHeight] = useState(160);
   const [catalogSettings, setCatalogSettings] =
     useState<BusinessPublicCatalogSettings | null>(null);
   const [catalogSlug, setCatalogSlug] = useState('');
@@ -128,6 +135,39 @@ export default function ConfiguracionScreen() {
     setBusinessName(authState.user.businessProfile.name ?? '');
     setBusinessCategory(authState.user.businessProfile.category ?? '');
   }, [authState]);
+
+  useEffect(() => {
+    if (logoUrl) {
+      setSelectedLogoUri(logoUrl);
+      RNImage.getSize(
+        logoUrl,
+        (width, height) => {
+          const maxWidth = windowWidth - 72;
+          setLogoPreviewHeight(Math.min(height > 0 ? (maxWidth * height) / width : 160, 220));
+        },
+        () => setLogoPreviewHeight(160),
+      );
+    } else {
+      setSelectedLogoUri(null);
+    }
+  }, [logoUrl, windowWidth]);
+
+  useEffect(() => {
+    if (!selectedLogoUri) return;
+    const scheme = selectedLogoUri.split(':')[0];
+    if (scheme === 'ph' || scheme === 'assets-library') {
+      setLogoPreviewHeight(160);
+      return;
+    }
+    RNImage.getSize(
+      selectedLogoUri,
+      (width, height) => {
+        const maxWidth = windowWidth - 72;
+        setLogoPreviewHeight(Math.min(height > 0 ? (maxWidth * height) / width : 160, 220));
+      },
+      () => setLogoPreviewHeight(160),
+    );
+  }, [selectedLogoUri, windowWidth]);
 
   const trimmedFirstName = firstName.trim();
   const trimmedLastName = lastName.trim();
@@ -827,6 +867,29 @@ export default function ConfiguracionScreen() {
                 placeholderTextColor="#94a3b8"
               />
 
+              <Text className="mt-4 text-sm" style={{ color: palette.primaryText }}>Logo del negocio</Text>
+
+              <TouchableOpacity
+                className="mt-2 overflow-hidden rounded-2xl border border-slate-200"
+                activeOpacity={0.85}
+                onPress={() => setShowLogoSheet(true)}
+                style={{ height: logoPreviewHeight }}
+              >
+                {selectedLogoUri ? (
+                  <Image
+                    source={{ uri: selectedLogoUri }}
+                    style={{ width: '100%', height: '100%' }}
+                    contentFit="contain"
+                    transition={220}
+                  />
+                ) : (
+                  <View className="flex-1 items-center justify-center bg-slate-50">
+                    <Camera size={28} color="#94a3b8" />
+                    <Text className="mt-2 text-sm font-semibold text-slate-400">Agregar logo</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
               {profileError ? (
                 <Text className="mt-3 text-sm font-medium text-rose-600">{profileError}</Text>
               ) : null}
@@ -869,6 +932,19 @@ export default function ConfiguracionScreen() {
           </View>
         </View>
       </Modal>
+
+      {showLogoSheet ? (
+        <AttachmentSheet
+          visible={showLogoSheet}
+          onClose={() => setShowLogoSheet(false)}
+          onAttach={(uris) => {
+            if (uris[0]) {
+              setSelectedLogoUri(uris[0]);
+            }
+            setShowLogoSheet(false);
+          }}
+        />
+      ) : null}
     </Animated.View>
   );
 }
