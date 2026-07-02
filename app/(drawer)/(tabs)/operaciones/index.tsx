@@ -25,6 +25,7 @@ import { fetchOperaciones, getReadableVentasError, type OperacionResumen } from 
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
@@ -39,6 +40,7 @@ export default function OperacionesScreen() {
   const insets = useSafeAreaInsets();
   const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -188,6 +190,7 @@ export default function OperacionesScreen() {
 
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
+          ref={mainScrollRef}
           data={filteredOperaciones}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}

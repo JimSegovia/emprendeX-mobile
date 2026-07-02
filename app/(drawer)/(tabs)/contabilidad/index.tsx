@@ -19,6 +19,7 @@ import { fetchRegistrosContables, fetchResumenContable, getReadableContabilidadE
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const tabs = ['Todas', 'Pagos', 'Gastos'];
 
@@ -36,6 +37,7 @@ export default function ContabilidadScreen() {
   const insets = useSafeAreaInsets();
   const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
 
@@ -181,6 +183,7 @@ export default function ContabilidadScreen() {
 
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
+          ref={mainScrollRef}
           data={filteredData}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}

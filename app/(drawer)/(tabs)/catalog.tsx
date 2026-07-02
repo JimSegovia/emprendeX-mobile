@@ -36,6 +36,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 export default function CatalogScreen() {
   const insets = useSafeAreaInsets();
@@ -49,6 +50,7 @@ export default function CatalogScreen() {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mainScrollRef = useScrollToTopOnFocus();
 
   const loadCatalog = useCallback(async () => {
     if (!accessToken) {
@@ -225,6 +227,7 @@ export default function CatalogScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <FlatList
+          ref={mainScrollRef}
           data={filteredItems}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
