@@ -21,6 +21,7 @@ type AccountPreferencesContextValue = {
   logoUrl: string | null;
   palette: ColorPalette;
   setColorPalette: (nextPaletteId: ColorPaletteId) => Promise<void>;
+  refreshPreferences: () => Promise<void>;
 };
 
 const AccountPreferencesContext = createContext<AccountPreferencesContextValue | null>(null);
@@ -130,6 +131,24 @@ export function AccountPreferencesProvider({ children }: { children: React.React
           throw error;
         } finally {
           setIsSaving(false);
+        }
+      },
+      refreshPreferences: async () => {
+        if (!accessToken) {
+          return;
+        }
+
+        try {
+          const serverPreferences = await fetchBusinessPreferences(accessToken);
+          const syncedPreferences: AccountPreferences = {
+            colorPaletteId: serverPreferences.colorPaletteId,
+            logoUrl: serverPreferences.logoUrl,
+          };
+
+          setPreferences(syncedPreferences);
+          await saveAccountPreferences(syncedPreferences);
+        } catch {
+          // Keep local cache when server is unavailable
         }
       },
     };
