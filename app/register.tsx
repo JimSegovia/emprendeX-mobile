@@ -115,7 +115,7 @@ export default function RegisterScreen() {
         try {
           await uploadBusinessLogo(session.accessToken, selectedLogoUri);
         } catch {
-          // Logo upload failure is non-blocking
+          // Logo upload failed — non-blocking; user can upload later from settings
         }
       }
 
