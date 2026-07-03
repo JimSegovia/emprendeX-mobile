@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from '@/lib/api-config';
+import { copyAssetToLocal } from '@/lib/asset-utils';
 import { DEFAULT_CURRENCY_SYMBOL, formatCurrencyAmount } from '@/lib/runtime-config';
 
 export type CatalogItemKind = 'Producto' | 'Servicio';
@@ -156,6 +157,14 @@ async function request<T>(
   }
 
   return payload as T;
+}
+
+function tryParseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 function getErrorMessage(payload: unknown): string {
@@ -318,13 +327,14 @@ export async function uploadCatalogImage(
   itemId: string,
   imageUri: string,
 ): Promise<CatalogItem> {
+  const localUri = await copyAssetToLocal(imageUri);
   const formData = new FormData();
-  const filename = imageUri.split('/').pop() || 'photo.jpg';
+  const filename = localUri.split('/').pop() || 'photo.jpg';
   const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 
   formData.append('image', {
-    uri: imageUri,
+    uri: localUri,
     name: `catalog-${itemId}-${Date.now()}.${ext}`,
     type: mimeType,
   } as unknown as Blob);
@@ -333,19 +343,21 @@ export async function uploadCatalogImage(
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      // Content-Type is omitted so fetch sets multipart/form-data with boundary
     },
     body: formData,
   });
 
-  if (!response.ok) {
-    const rawBody = await response.text();
-    const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
-    throw new CatalogApiError(getErrorMessage(payload), response.status);
+  const rawBody = await response.text();
+  const data = rawBody ? (tryParseJson(rawBody) as ApiItem | null) : null;
+
+  if (!response.ok || !data) {
+    const message =
+      (data as Record<string, unknown> | null)?.message ||
+      `Error al subir la imagen (${response.status})`;
+    throw new CatalogApiError(String(message), response.status);
   }
 
-  const rawBody = await response.text();
-  return mapCatalogItem(rawBody ? (JSON.parse(rawBody) as ApiItem) : ({} as ApiItem));
+  return mapCatalogItem(data);
 }
 
 export async function deleteCatalogImage(
@@ -364,7 +376,7 @@ export async function deleteCatalogImage(
 
   if (!response.ok) {
     const rawBody = await response.text();
-    const payload = rawBody ? (JSON.parse(rawBody) as unknown) : null;
+    const payload = rawBody ? tryParseJson(rawBody) : null;
     throw new CatalogApiError(getErrorMessage(payload), response.status);
   }
 }
