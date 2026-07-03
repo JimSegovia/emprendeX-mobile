@@ -507,9 +507,10 @@ export default function CatalogEntryScreen() {
       if (selectedImageUri) {
         try {
           await uploadCatalogImage(accessToken, savedItem.id, selectedImageUri);
-        } catch {
-          // Image upload failure is non-blocking; item was already saved
-          setSubmitError('Item guardado, pero no se pudo subir la imagen.');
+        } catch (uploadErr) {
+          setSubmitError(
+            `Item guardado, pero no se pudo subir la imagen: ${uploadErr instanceof Error ? uploadErr.message : 'error'}`,
+          );
           return;
         }
       }

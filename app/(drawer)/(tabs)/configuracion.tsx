@@ -803,10 +803,8 @@ export default function ConfiguracionScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => {
-          if (!isProfileSaving) {
-            setProfileError(null);
-            setIsEditingProfile(false);
-          }
+          setProfileError(null);
+          setIsEditingProfile(false);
         }}
       >
         <View className="flex-1 justify-center bg-black/45 px-5">
@@ -826,7 +824,6 @@ export default function ConfiguracionScreen() {
                   setProfileError(null);
                   setIsEditingProfile(false);
                 }}
-                disabled={isProfileSaving}
               >
                 <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>
                   Cerrar
@@ -917,7 +914,6 @@ export default function ConfiguracionScreen() {
                   setProfileError(null);
                   setIsEditingProfile(false);
                 }}
-                disabled={isProfileSaving}
               >
                 <Text className="text-center font-semibold" style={{ color: palette.primaryText }}>
                   Cancelar
