@@ -1,5 +1,6 @@
 import { apiRequest, getReadableApiError } from '@/lib/api-client';
 import { getApiBaseUrl } from '@/lib/api-config';
+import { copyAssetToLocal } from '@/lib/asset-utils';
 import type { ColorPaletteId } from '@/lib/account-preferences';
 
 export type BusinessPreferences = {
@@ -38,13 +39,14 @@ export async function uploadBusinessLogo(
   accessToken: string,
   imageUri: string,
 ): Promise<BusinessPreferences> {
-  const filename = imageUri.split('/').pop() || 'logo.jpg';
+  const localUri = await copyAssetToLocal(imageUri);
+  const filename = localUri.split('/').pop() || 'logo.jpg';
   const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 
   const formData = new FormData();
   formData.append('logo', {
-    uri: imageUri,
+    uri: localUri,
     name: `logo-${Date.now()}.${ext}`,
     type: mimeType,
   } as unknown as Blob);
@@ -55,12 +57,15 @@ export async function uploadBusinessLogo(
     body: formData,
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Error al subir el logo');
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok || !data) {
+    throw new Error(
+      data?.message || `Error al subir el logo (${response.status})`,
+    );
   }
 
-  return response.json() as Promise<BusinessPreferences>;
+  return data as BusinessPreferences;
 }
 
 export { getReadableApiError as getReadableBusinessPreferencesError };

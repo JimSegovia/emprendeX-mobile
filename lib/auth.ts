@@ -185,7 +185,7 @@ function parseResponseBody(rawBody: string): unknown {
   try {
     return JSON.parse(rawBody) as unknown;
   } catch {
-    throw new Error('El servidor respondio con un formato inválido.');
+    return null;
   }
 }
 
@@ -226,7 +226,15 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   const payload = parseResponseBody(rawBody);
 
   if (!response.ok) {
-    throw new ApiError(getErrorMessage(payload), response.status);
+    const message =
+      (payload as Record<string, unknown> | null)?.message ||
+      rawBody?.slice(0, 80) ||
+      `Error del servidor (${response.status})`;
+    throw new ApiError(String(message), response.status);
+  }
+
+  if (payload === null) {
+    throw new ApiError('El servidor respondio con un formato inválido.', response.status);
   }
 
   return payload as T;
