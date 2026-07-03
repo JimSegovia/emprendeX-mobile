@@ -1,4 +1,4 @@
-import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import Animated, { sectionEntering } from '@/components/ui/motion';
 import { COLOR_PALETTES } from '@/lib/account-preferences';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { getReadableAuthError, updateCurrentUserProfile } from '@/lib/auth';
@@ -183,20 +183,8 @@ export default function ConfiguracionScreen() {
     trimmedFirstName !== (authState?.user.firstNames.trim() ?? '') ||
     trimmedLastName !== (authState?.user.lastNames.trim() ?? '') ||
     trimmedBusinessName !== (businessProfile?.name?.trim() ?? '') ||
-    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '');
-
-  const handleLogoUpload = async (uri: string) => {
-    if (!accessToken) return;
-    setSelectedLogoUri(uri);
-
-    try {
-      const result = await uploadBusinessLogo(accessToken, uri);
-      await refreshPreferences();
-      setSelectedLogoUri(result.logoUrl);
-    } catch {
-      // Logo upload failure is non-blocking
-    }
-  };
+    trimmedBusinessCategory !== (businessProfile?.category?.trim() ?? '') ||
+    selectedLogoUri !== logoUrl;
 
   useEffect(() => {
     const loadCatalogSettings = async () => {
@@ -286,6 +274,19 @@ export default function ConfiguracionScreen() {
         businessCategory: trimmedBusinessCategory,
       });
 
+      if (
+        selectedLogoUri &&
+        selectedLogoUri !== logoUrl &&
+        !selectedLogoUri.startsWith('https://')
+      ) {
+        try {
+          await uploadBusinessLogo(accessToken, selectedLogoUri);
+          await refreshPreferences();
+        } catch {
+          // Logo upload failure is non-blocking
+        }
+      }
+
       updateAuthState(nextAuthState);
       setIsEditingProfile(false);
     } catch (saveError) {
@@ -328,7 +329,7 @@ export default function ConfiguracionScreen() {
   };
 
   return (
-    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+    <View className="flex-1 bg-white">
       <Animated.View
         className="px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
@@ -803,10 +804,8 @@ export default function ConfiguracionScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => {
-          if (!isProfileSaving) {
-            setProfileError(null);
-            setIsEditingProfile(false);
-          }
+          setProfileError(null);
+          setIsEditingProfile(false);
         }}
       >
         <View className="flex-1 justify-center bg-black/45 px-5">
@@ -826,7 +825,6 @@ export default function ConfiguracionScreen() {
                   setProfileError(null);
                   setIsEditingProfile(false);
                 }}
-                disabled={isProfileSaving}
               >
                 <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>
                   Cerrar
@@ -917,7 +915,6 @@ export default function ConfiguracionScreen() {
                   setProfileError(null);
                   setIsEditingProfile(false);
                 }}
-                disabled={isProfileSaving}
               >
                 <Text className="text-center font-semibold" style={{ color: palette.primaryText }}>
                   Cancelar
@@ -945,20 +942,20 @@ export default function ConfiguracionScreen() {
             </View>
           </View>
         </View>
-      </Modal>
 
-      {showLogoSheet ? (
-        <AttachmentSheet
-          visible={showLogoSheet}
-          onClose={() => setShowLogoSheet(false)}
-          onAttach={(uris) => {
-            if (uris[0]) {
-              void handleLogoUpload(uris[0]);
-            }
-            setShowLogoSheet(false);
-          }}
-        />
-      ) : null}
-    </Animated.View>
+        {showLogoSheet ? (
+          <AttachmentSheet
+            visible={showLogoSheet}
+            onClose={() => setShowLogoSheet(false)}
+            onAttach={(uris) => {
+              if (uris[0]) {
+                setSelectedLogoUri(uris[0]);
+              }
+              setShowLogoSheet(false);
+            }}
+          />
+        ) : null}
+      </Modal>
+    </View>
   );
 }
