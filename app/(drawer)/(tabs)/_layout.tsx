@@ -206,6 +206,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen name="plan-pro" options={{ href: null }} />
+        <Tabs.Screen name="configuracion-notificaciones" options={{ href: null }} />
       </Tabs>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <Animated.View
