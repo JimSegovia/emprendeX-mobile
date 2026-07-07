@@ -16,7 +16,7 @@ import {
 } from '@/lib/public-catalog';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation, useRouter } from 'expo-router';
-import { Briefcase, Camera, Crown, Globe, GripVertical, Link2, Menu, Paintbrush, Pencil } from 'lucide-react-native';
+import { Briefcase, Camera, Crown, Globe, GripVertical, Link2, Menu, Paintbrush, Pencil, Bell } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -544,6 +544,43 @@ export default function ConfiguracionScreen() {
               {preferencesError}
             </Text>
           ) : null}
+        </Animated.View>
+
+        <Animated.View
+          className="mb-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
+          entering={sectionEntering(7)}
+        >
+          <View className="mb-4 flex-row items-center">
+            <View
+              className="mr-3 h-12 w-12 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: palette.primarySoft }}
+            >
+              <Bell size={22} color={palette.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-semibold text-slate-800">Notificaciones</Text>
+              <Text className="mt-1 text-sm text-slate-500">Configura tus alertas y avisos de la app.</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            className="flex-row items-center justify-between rounded-2xl border bg-slate-50 p-4"
+            style={{ borderColor: palette.primaryBorder }}
+            onPress={() => router.push('/(drawer)/(tabs)/configuracion-notificaciones')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Gestionar notificaciones"
+          >
+            <View className="flex-row items-center">
+              <Bell size={18} color={palette.primary} className="mr-3" />
+              <Text className="text-sm font-semibold text-slate-700">Gestionar preferencias</Text>
+            </View>
+            <View
+              className="h-7 w-7 items-center justify-center rounded-full bg-white border border-slate-200"
+            >
+              <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>→</Text>
+            </View>
+          </TouchableOpacity>
         </Animated.View>
 
         <Animated.View

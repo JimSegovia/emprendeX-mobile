@@ -1,15 +1,50 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Notification, ToastMessage, NotificationType, NotificationCategory } from './types';
+
+export interface NotificationSettings {
+  general: boolean;
+  categories: {
+    pedidos: boolean;
+    pagos: boolean;
+    recordatorios: boolean;
+    promociones: boolean;
+    calendario: boolean;
+  };
+  channels: {
+    push: boolean;
+    email: boolean;
+  };
+}
+
+const DEFAULT_SETTINGS: NotificationSettings = {
+  general: true,
+  categories: {
+    pedidos: true,
+    pagos: true,
+    recordatorios: true,
+    promociones: false,
+    calendario: true,
+  },
+  channels: {
+    push: true,
+    email: false,
+  },
+};
+
+const SETTINGS_STORAGE_KEY = 'emprendex:notificationSettings:v1';
 
 interface NotificationContextValue {
   notifications: Notification[];
   unreadCount: number;
   activeToast: ToastMessage | null;
+  settings: NotificationSettings;
   showToast: (toast: Omit<ToastMessage, 'id'>) => void;
   hideToast: () => void;
   addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  updateSettings: (newSettings: NotificationSettings) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
@@ -76,6 +111,36 @@ const initialNotifications: Notification[] = [
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [activeToast, setActiveToast] = useState<ToastMessage | null>(null);
+  const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+
+  // Cargar configuración al iniciar
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setSettings({
+            general: parsed.general ?? DEFAULT_SETTINGS.general,
+            categories: { ...DEFAULT_SETTINGS.categories, ...parsed.categories },
+            channels: { ...DEFAULT_SETTINGS.channels, ...parsed.channels },
+          });
+        }
+      } catch (e) {
+        console.error('Error loading notification settings', e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const updateSettings = useCallback(async (newSettings: NotificationSettings) => {
+    try {
+      setSettings(newSettings);
+      await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    } catch (e) {
+      console.error('Error saving notification settings', e);
+    }
+  }, []);
 
   const unreadCount = useMemo(() => {
     return notifications.filter((n) => !n.isRead).length;
@@ -96,6 +161,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const addNotification = useCallback((data: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
+    // Si las notificaciones generales están desactivadas
+    if (!settings.general) {
+      return;
+    }
+
+    // Filtrar por categoría configurable
+    if (data.category !== 'sistema') {
+      const isCategoryEnabled = settings.categories[data.category as keyof typeof settings.categories];
+      if (isCategoryEnabled === false) {
+        return;
+      }
+    }
+
     const newNotification: Notification = {
       ...data,
       id: Math.random().toString(36).substr(2, 9),
@@ -104,13 +182,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
     setNotifications((prev) => [newNotification, ...prev]);
     
-    // Opcionalmente mostrar toast al recibir notificación
-    showToast({
-      type: data.type,
-      title: data.title,
-      message: data.message,
-    });
-  }, [showToast]);
+    // Solo mostrar Toast si la notificación push está activa como canal
+    if (settings.channels.push) {
+      showToast({
+        type: data.type,
+        title: data.title,
+        message: data.message,
+      });
+    }
+  }, [showToast, settings]);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
@@ -126,11 +206,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     notifications,
     unreadCount,
     activeToast,
+    settings,
     showToast,
     hideToast,
     addNotification,
     markAsRead,
     markAllAsRead,
+    updateSettings,
   };
 
   return (
