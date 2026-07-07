@@ -21,6 +21,8 @@ import Animated, {
   screenEntering,
   sectionEntering,
 } from '@/components/ui/motion';
+import { useNotifications } from '@/lib/notifications/NotificationContext';
+import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { fetchCalendarioEventos, getReadableCalendarioError, type CalendarioEvento } from '@/lib/calendario';
@@ -49,6 +51,7 @@ export default function DashboardScreen() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarioEvento[]>([]);
   const [deliveriesError, setDeliveriesError] = useState<string | null>(null);
   const mainScrollRef = useScrollToTopOnFocus();
+  const { unreadCount } = useNotifications();
 
   const firstName = authState?.user.firstNames.split(' ')[0] ?? 'Hola';
   const isOperationsEnabled = isModuleEnabled('operaciones');
@@ -236,13 +239,10 @@ export default function DashboardScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             className="relative"
-            onPress={() => router.push('/(drawer)/(tabs)/plan-pro')}
+            onPress={() => router.push('/notificaciones')}
           >
             <Bell size={22} color="#f59e0b" />
-            <View
-              className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 bg-amber-200"
-              style={{ borderColor: palette.primary }}
-            />
+            <NotificationBadge count={unreadCount} className="-top-1 -right-1" />
           </TouchableOpacity>
         </View>
       </View>

@@ -15,6 +15,8 @@ import {
   Users,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
+import { useNotifications } from '@/lib/notifications/NotificationContext';
+import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import {
   Animated,
   Pressable,
@@ -39,6 +41,7 @@ export default function TabLayout() {
 
   const isOperationsEnabled = isModuleEnabled('operaciones');
   const isClientsEnabled = isModuleEnabled('clientes');
+  const { unreadCount } = useNotifications();
 
   const [fabOpen, setFabOpen] = useState(false);
   const tabBarHeight = 54 + tabBarBottomPadding;
@@ -131,7 +134,12 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Inicio',
-            tabBarIcon: ({ color }) => <Home size={22} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <View>
+                <Home size={22} color={color} />
+                <NotificationBadge count={unreadCount} className="-top-1 -right-2" />
+              </View>
+            ),
           }}
           listeners={{
             tabPress: () => setFabOpen(false),
@@ -142,7 +150,12 @@ export default function TabLayout() {
           options={{
             title: 'Operaciones',
             href: isOperationsEnabled ? undefined : null,
-            tabBarIcon: ({ color }) => <FileText size={22} color={color} />,
+            tabBarIcon: ({ color }) => (
+              <View>
+                <FileText size={22} color={color} />
+                <NotificationBadge count={unreadCount} className="-top-1 -right-2" />
+              </View>
+            ),
           }}
           listeners={{
             tabPress: () => setFabOpen(false),

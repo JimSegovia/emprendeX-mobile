@@ -14,6 +14,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AccountPreferencesProvider } from '@/lib/account-preferences-context';
 import { AuthSessionProvider } from '@/lib/auth-session-context';
 import { ModulePreferencesProvider } from '@/lib/module-preferences-context';
+import { NotificationProvider } from '@/lib/notifications/NotificationContext';
+import { NotificationToast } from '@/components/ui/NotificationToast';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -46,35 +48,38 @@ export default function RootLayout() {
         <AuthSessionProvider>
           <AccountPreferencesProvider>
             <ModulePreferencesProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'simple_push',
-                  animationDuration: 260,
-                  animationMatchesGesture: true,
-                  contentStyle: { backgroundColor: '#ffffff' },
-                  gestureEnabled: true,
-                  fullScreenGestureEnabled: true,
-                }}
-              >
-                <Stack.Screen name="index" options={{ animation: 'fade' }} />
-                <Stack.Screen
-                  name="register"
-                  options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-                />
-                <Stack.Screen
-                  name="forgot-password"
-                  options={{ animation: 'slide_from_right' }}
-                />
-                <Stack.Screen
-                  name="reset-password"
-                  options={{ animation: 'slide_from_right' }}
-                />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="(drawer)" options={{ animation: 'fade' }} />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-              </Stack>
-              <StatusBar style="auto" />
+              <NotificationProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: 'simple_push',
+                    animationDuration: 260,
+                    animationMatchesGesture: true,
+                    contentStyle: { backgroundColor: '#ffffff' },
+                    gestureEnabled: true,
+                    fullScreenGestureEnabled: true,
+                  }}
+                >
+                  <Stack.Screen name="index" options={{ animation: 'fade' }} />
+                  <Stack.Screen
+                    name="register"
+                    options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+                  />
+                  <Stack.Screen
+                    name="forgot-password"
+                    options={{ animation: 'slide_from_right' }}
+                  />
+                  <Stack.Screen
+                    name="reset-password"
+                    options={{ animation: 'slide_from_right' }}
+                  />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(drawer)" options={{ animation: 'fade' }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </Stack>
+                <NotificationToast />
+                <StatusBar style="auto" />
+              </NotificationProvider>
             </ModulePreferencesProvider>
           </AccountPreferencesProvider>
         </AuthSessionProvider>
