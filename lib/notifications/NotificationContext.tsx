@@ -120,11 +120,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const stored = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          setSettings({
-            general: parsed.general ?? DEFAULT_SETTINGS.general,
-            categories: { ...DEFAULT_SETTINGS.categories, ...parsed.categories },
-            channels: { ...DEFAULT_SETTINGS.channels, ...parsed.channels },
-          });
+          if (parsed && typeof parsed === 'object') {
+            const categories = parsed.categories && typeof parsed.categories === 'object' ? parsed.categories : {};
+            const channels = parsed.channels && typeof parsed.channels === 'object' ? parsed.channels : {};
+            setSettings({
+              general: typeof parsed.general === 'boolean' ? parsed.general : DEFAULT_SETTINGS.general,
+              categories: {
+                ...DEFAULT_SETTINGS.categories,
+                ...categories,
+              },
+              channels: {
+                ...DEFAULT_SETTINGS.channels,
+                ...channels,
+              },
+            });
+          }
         }
       } catch (e) {
         console.error('Error loading notification settings', e);
@@ -142,9 +152,25 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
+  const visibleNotifications = useMemo(() => {
+    if (!settings || settings.general === false) {
+      return [];
+    }
+    return notifications.filter((n) => {
+      if (n.category === 'sistema') {
+        return true;
+      }
+      if (!settings.categories) {
+        return true;
+      }
+      const isEnabled = settings.categories[n.category as keyof typeof settings.categories];
+      return isEnabled !== false;
+    });
+  }, [notifications, settings]);
+
   const unreadCount = useMemo(() => {
-    return notifications.filter((n) => !n.isRead).length;
-  }, [notifications]);
+    return visibleNotifications.filter((n) => !n.isRead).length;
+  }, [visibleNotifications]);
 
   const showToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const newToast = { ...toast, id: Math.random().toString(36).substr(2, 9) };
@@ -203,7 +229,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const value = {
-    notifications,
+    notifications: visibleNotifications,
     unreadCount,
     activeToast,
     settings,

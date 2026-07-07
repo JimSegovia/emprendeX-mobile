@@ -1,18 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import { useNotifications } from '../lib/notifications/NotificationContext';
-import { NotificationItem } from '../components/notifications/NotificationItem';
-import { useAccountPreferences } from '../lib/account-preferences-context';
-import { NotificationBadge } from '../components/ui/NotificationBadge';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNotifications } from '@/lib/notifications/NotificationContext';
+import { NotificationItem } from '@/components/notifications/NotificationItem';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 
 type FilterType = 'all' | 'unread' | 'read';
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { palette } = useAccountPreferences();
-  const { notifications, unreadCount, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAllAsRead, settings } = useNotifications();
   const [filter, setFilter] = useState<FilterType>('all');
 
   const filteredNotifications = useMemo(() => {
@@ -28,7 +28,7 @@ export default function NotificationsScreen() {
   }, [notifications, filter]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{ paddingTop: Platform.OS === 'android' ? 24 : 0 }}>
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
@@ -47,33 +47,36 @@ export default function NotificationsScreen() {
       {/* Tabs */}
       <View className="flex-row items-center border-b border-slate-200">
         <TouchableOpacity 
-          className={`flex-1 items-center justify-center py-3 border-b-2 ${filter === 'all' ? 'border-indigo-600' : 'border-transparent'}`}
+          className="flex-1 items-center justify-center py-3 border-b-2"
+          style={{ borderBottomColor: filter === 'all' ? palette.primary : 'transparent' }}
           onPress={() => setFilter('all')}
         >
-          <Text className={`text-sm font-medium ${filter === 'all' ? 'text-indigo-600' : 'text-slate-500'}`}>
+          <Text className="text-sm font-medium" style={{ color: filter === 'all' ? palette.primaryText : '#64748b' }}>
             Todas
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          className={`flex-1 items-center justify-center py-3 border-b-2 flex-row gap-1 ${filter === 'unread' ? 'border-indigo-600' : 'border-transparent'}`}
+          className="flex-1 items-center justify-center py-3 border-b-2 flex-row gap-1"
+          style={{ borderBottomColor: filter === 'unread' ? palette.primary : 'transparent' }}
           onPress={() => setFilter('unread')}
         >
-          <Text className={`text-sm font-medium ${filter === 'unread' ? 'text-indigo-600' : 'text-slate-500'}`}>
+          <Text className="text-sm font-medium" style={{ color: filter === 'unread' ? palette.primaryText : '#64748b' }}>
             No leídas
           </Text>
           {unreadCount > 0 && (
-            <View className="bg-indigo-600 px-1.5 rounded-full items-center justify-center min-w-[20px] h-5">
+            <View className="px-1.5 rounded-full items-center justify-center min-w-[20px] h-5" style={{ backgroundColor: palette.primary }}>
               <Text className="text-white text-[10px] font-bold">{unreadCount}</Text>
             </View>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity 
-          className={`flex-1 items-center justify-center py-3 border-b-2 ${filter === 'read' ? 'border-indigo-600' : 'border-transparent'}`}
+          className="flex-1 items-center justify-center py-3 border-b-2"
+          style={{ borderBottomColor: filter === 'read' ? palette.primary : 'transparent' }}
           onPress={() => setFilter('read')}
         >
-          <Text className={`text-sm font-medium ${filter === 'read' ? 'text-indigo-600' : 'text-slate-500'}`}>
+          <Text className="text-sm font-medium" style={{ color: filter === 'read' ? palette.primaryText : '#64748b' }}>
             Leídas
           </Text>
         </TouchableOpacity>
@@ -87,7 +90,6 @@ export default function NotificationsScreen() {
               key={notification.id} 
               notification={notification} 
               onPress={(n) => {
-                // Posible navegación si hay un link
                 if (n.link) {
                   router.push(n.link as any);
                 }
@@ -95,8 +97,11 @@ export default function NotificationsScreen() {
             />
           ))
         ) : (
-          <View className="flex-1 items-center justify-center pt-20 pb-10">
+          <View className="flex-1 items-center justify-center pt-20 pb-10 px-4">
             <Text className="text-slate-400 text-base">No hay notificaciones</Text>
+            <Text className="text-slate-300 text-xs mt-4 text-center">
+              Debug info: general={String(settings?.general)} categories={JSON.stringify(settings?.categories)} count={notifications?.length}
+            </Text>
           </View>
         )}
       </ScrollView>

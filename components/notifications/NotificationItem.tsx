@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ShoppingBag, DollarSign, Bell, Calendar, Tag, Megaphone } from 'lucide-react-native';
-import { Notification, NotificationCategory } from '../../lib/notifications/types';
-import { useNotifications } from '../../lib/notifications/NotificationContext';
+import { Notification, NotificationCategory } from '@/lib/notifications/types';
+import { useNotifications } from '@/lib/notifications/NotificationContext';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
 
 const CategoryIcons: Record<NotificationCategory, typeof ShoppingBag> = {
   pedidos: ShoppingBag,
@@ -29,6 +30,7 @@ interface NotificationItemProps {
 
 export const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onPress }) => {
   const { markAsRead } = useNotifications();
+  const { palette } = useAccountPreferences();
 
   const handlePress = () => {
     if (!notification.isRead) {
@@ -66,7 +68,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
     >
       <View className="w-3 items-center justify-center mr-1">
         {!notification.isRead && (
-          <View className="w-2 h-2 rounded-full bg-indigo-600" />
+          <View className="w-2 h-2 rounded-full" style={{ backgroundColor: palette.primary }} />
         )}
       </View>
 

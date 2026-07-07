@@ -1,5 +1,6 @@
 import Animated, { sectionEntering } from '@/components/ui/motion';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
+import { useModulePreferences } from '@/lib/module-preferences-context';
 import { useNotifications } from '@/lib/notifications/NotificationContext';
 import { useRouter } from 'expo-router';
 import {
@@ -28,6 +29,7 @@ export default function ConfiguracionNotificacionesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { palette } = useAccountPreferences();
+  const { isModuleEnabled } = useModulePreferences();
   const { settings, updateSettings } = useNotifications();
 
   const handleToggleGeneral = (value: boolean) => {
@@ -57,8 +59,52 @@ export default function ConfiguracionNotificacionesScreen() {
     });
   };
 
+  // Mapear categorías según los módulos instalados/activos del usuario
+  const availableCategories = [
+    {
+      key: 'pedidos' as const,
+      label: 'Pedidos',
+      detail: 'Notificaciones sobre nuevos pedidos, cambios de estado y entregas',
+      icon: <ShoppingBag size={20} color="#10b981" />,
+      bg: 'bg-emerald-50',
+      module: 'operaciones' as const,
+    },
+    {
+      key: 'pagos' as const,
+      label: 'Pagos',
+      detail: 'Confirmaciones de pago, cobros recibidos y pagos vencidos',
+      icon: <Text className="text-lg font-bold text-[#10b981]">$</Text>,
+      bg: 'bg-emerald-50',
+      module: 'contabilidad' as const,
+    },
+    {
+      key: 'recordatorios' as const,
+      label: 'Recordatorios',
+      detail: 'Recordatorios de actividad, tareas pendientes y seguimientos',
+      icon: <Bell size={20} color="#f59e0b" />,
+      bg: 'bg-amber-50',
+      module: 'alertas-pro' as const,
+    },
+    {
+      key: 'promociones' as const,
+      label: 'Promociones',
+      detail: 'Ofertas, descuentos y novedades de la app',
+      icon: <Tag size={20} color={palette.primary} />,
+      bg: 'bg-indigo-50',
+      module: 'catalogo' as const,
+    },
+    {
+      key: 'calendario' as const,
+      label: 'Calendario',
+      detail: 'Eventos próximos, citas y reuniones programadas',
+      icon: <Calendar size={20} color="#3b82f6" />,
+      bg: 'bg-blue-50',
+      module: 'calendario' as const,
+    },
+  ].filter((cat) => isModuleEnabled(cat.module));
+
   return (
-    <View className="flex-1 bg-slate-50/50">
+    <View className="flex-1 bg-slate-50">
       {/* Header */}
       <Animated.View
         className="px-4 pb-6"
@@ -122,131 +168,44 @@ export default function ConfiguracionNotificacionesScreen() {
         </Animated.View>
 
         {/* Preferencias por categoría */}
-        <Animated.View className="mb-6" entering={sectionEntering(2)}>
-          <Text className="text-sm font-bold text-slate-500 mb-3 px-1">Preferencias por categoría</Text>
-          
-          <View className="rounded-[24px] border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/50">
-            {/* Pedidos */}
-            <View className="p-4 flex-row items-center border-b border-slate-100">
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
-                <ShoppingBag size={20} color="#10b981" />
-              </View>
-              <View className="flex-1 mr-2">
-                <Text className="text-sm font-bold text-slate-800">Pedidos</Text>
-                <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
-                  Notificaciones sobre nuevos pedidos, cambios de estado y entregas
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Switch
-                  value={settings.general && settings.categories.pedidos}
-                  disabled={!settings.general}
-                  onValueChange={(val) => handleToggleCategory('pedidos', val)}
-                  trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                  thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                  ios_backgroundColor="#e2e8f0"
-                />
-                <ChevronRight size={16} color="#94a3b8" />
-              </View>
+        {availableCategories.length > 0 && (
+          <Animated.View className="mb-6" entering={sectionEntering(2)}>
+            <Text className="text-sm font-bold text-slate-500 mb-3 px-1">Preferencias por categoría</Text>
+            
+            <View className="rounded-[24px] border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/50">
+              {availableCategories.map((cat, index) => {
+                const isLast = index === availableCategories.length - 1;
+                return (
+                  <View
+                    key={cat.key}
+                    className={`p-4 flex-row items-center ${isLast ? '' : 'border-b border-slate-100'}`}
+                  >
+                    <View className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${cat.bg}`}>
+                      {cat.icon}
+                    </View>
+                    <View className="flex-1 mr-2">
+                      <Text className="text-sm font-bold text-slate-800">{cat.label}</Text>
+                      <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
+                        {cat.detail}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                      <Switch
+                        value={settings.general && settings.categories[cat.key]}
+                        disabled={!settings.general}
+                        onValueChange={(val) => handleToggleCategory(cat.key, val)}
+                        trackColor={{ false: '#e2e8f0', true: palette.primary }}
+                        thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
+                        ios_backgroundColor="#e2e8f0"
+                      />
+                      <ChevronRight size={16} color="#94a3b8" />
+                    </View>
+                  </View>
+                );
+              })}
             </View>
-
-            {/* Pagos */}
-            <View className="p-4 flex-row items-center border-b border-slate-100">
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
-                <Text className="text-lg font-bold text-[#10b981]">$</Text>
-              </View>
-              <View className="flex-1 mr-2">
-                <Text className="text-sm font-bold text-slate-800">Pagos</Text>
-                <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
-                  Confirmaciones de pago, cobros recibidos y pagos vencidos
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Switch
-                  value={settings.general && settings.categories.pagos}
-                  disabled={!settings.general}
-                  onValueChange={(val) => handleToggleCategory('pagos', val)}
-                  trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                  thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                  ios_backgroundColor="#e2e8f0"
-                />
-                <ChevronRight size={16} color="#94a3b8" />
-              </View>
-            </View>
-
-            {/* Recordatorios */}
-            <View className="p-4 flex-row items-center border-b border-slate-100">
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
-                <Bell size={20} color="#f59e0b" />
-              </View>
-              <View className="flex-1 mr-2">
-                <Text className="text-sm font-bold text-slate-800">Recordatorios</Text>
-                <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
-                  Recordatorios de actividad, tareas pendientes y seguimientos
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Switch
-                  value={settings.general && settings.categories.recordatorios}
-                  disabled={!settings.general}
-                  onValueChange={(val) => handleToggleCategory('recordatorios', val)}
-                  trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                  thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                  ios_backgroundColor="#e2e8f0"
-                />
-                <ChevronRight size={16} color="#94a3b8" />
-              </View>
-            </View>
-
-            {/* Promociones */}
-            <View className="p-4 flex-row items-center border-b border-slate-100">
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
-                <Tag size={20} color={palette.primary} />
-              </View>
-              <View className="flex-1 mr-2">
-                <Text className="text-sm font-bold text-slate-800">Promociones</Text>
-                <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
-                  Ofertas, descuentos y novedades de la app
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Switch
-                  value={settings.general && settings.categories.promociones}
-                  disabled={!settings.general}
-                  onValueChange={(val) => handleToggleCategory('promociones', val)}
-                  trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                  thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                  ios_backgroundColor="#e2e8f0"
-                />
-                <ChevronRight size={16} color="#94a3b8" />
-              </View>
-            </View>
-
-            {/* Calendario */}
-            <View className="p-4 flex-row items-center">
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                <Calendar size={20} color="#3b82f6" />
-              </View>
-              <View className="flex-1 mr-2">
-                <Text className="text-sm font-bold text-slate-800">Calendario</Text>
-                <Text className="text-[11px] text-slate-500 leading-4 mt-0.5">
-                  Eventos próximos, citas y reuniones programadas
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Switch
-                  value={settings.general && settings.categories.calendario}
-                  disabled={!settings.general}
-                  onValueChange={(val) => handleToggleCategory('calendario', val)}
-                  trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                  thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                  ios_backgroundColor="#e2e8f0"
-                />
-                <ChevronRight size={16} color="#94a3b8" />
-              </View>
-            </View>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        )}
 
         {/* Canales de notificación */}
         <Animated.View className="mb-6" entering={sectionEntering(3)}>
