@@ -114,35 +114,35 @@ export default function CotizacionDetalleScreen() {
 
         <Animated.View className="mb-8" entering={sectionEntering(2)}>
           <Text className="text-lg font-semibold text-slate-800 mb-4">Información</Text>
-          <View className="space-y-4">
-            <View className="flex-row justify-between">
-              <Text className="text-slate-500">Cliente</Text>
-              <Text className="text-slate-800 font-medium">{quotation.customer.fullName}</Text>
+          <View className="gap-4">
+            <View>
+              <Text className="text-xs font-medium text-slate-500">Cliente</Text>
+              <Text className="mt-1 text-slate-800 font-medium">{quotation.customer.fullName}</Text>
             </View>
-            <View className="flex-row justify-between mt-3">
-              <Text className="text-slate-500">Entrega</Text>
-              <Text className="text-slate-800 font-medium">
+            <View>
+              <Text className="text-xs font-medium text-slate-500">Entrega</Text>
+              <Text className="mt-1 text-slate-800 font-medium">
                 {new Date(quotation.deliveryDate).toLocaleDateString()}
               </Text>
             </View>
-            <View className="flex-row justify-between mt-3">
-              <Text className="text-slate-500">Método</Text>
-              <Text className="text-slate-800 font-medium">{quotation.deliveryMethod}</Text>
+            <View>
+              <Text className="text-xs font-medium text-slate-500">Método</Text>
+              <Text className="mt-1 text-slate-800 font-medium">{quotation.deliveryMethod}</Text>
             </View>
-            <View className="flex-row justify-between mt-3">
-              <Text className="text-slate-500">Dirección</Text>
-              <Text className="text-slate-800 font-medium">
+            <View>
+              <Text className="text-xs font-medium text-slate-500">Dirección</Text>
+              <Text className="mt-1 text-slate-800 font-medium">
                 {quotation.customer.address ?? 'Sin dirección'}
               </Text>
             </View>
-            <View className="flex-row justify-between mt-3">
-              <Text className="text-slate-500">Observaciones</Text>
-              <Text className="text-slate-800 font-medium">
+            <View>
+              <Text className="text-xs font-medium text-slate-500">Observaciones</Text>
+              <Text className="mt-1 text-slate-800 font-medium">
                 {quotation.description ?? 'Sin observaciones'}
               </Text>
             </View>
             {quotation.sourceLabel ? (
-              <View className="mt-3 rounded-2xl px-4 py-3" style={{ backgroundColor: palette.primarySoft }}>
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: palette.primarySoft }}>
                 <Text className="text-sm font-medium" style={{ color: palette.primaryText }}>
                   {quotation.sourceLabel}
                 </Text>
