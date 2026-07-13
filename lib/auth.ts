@@ -208,36 +208,51 @@ function isLikelyNetworkErrorMessage(message: string): boolean {
     normalizedMessage.includes('network request failed') ||
     normalizedMessage.includes('failed to fetch') ||
     normalizedMessage.includes('load failed') ||
-    normalizedMessage.includes('networkerror')
+    normalizedMessage.includes('networkerror') ||
+    normalizedMessage.includes('abort')
   );
 }
 
 async function request<T>(path: string, options: RequestInit): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15_000);
 
-  const rawBody = await response.text();
-  const payload = parseResponseBody(rawBody);
+  try {
+    const response = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(options.headers ?? {}),
+      },
+    });
 
-  if (!response.ok) {
-    const message =
-      (payload as Record<string, unknown> | null)?.message ||
-      rawBody?.slice(0, 80) ||
-      `Error del servidor (${response.status})`;
-    throw new ApiError(String(message), response.status);
+    const rawBody = await response.text();
+    const payload = parseResponseBody(rawBody);
+
+    if (!response.ok) {
+      const message =
+        (payload as Record<string, unknown> | null)?.message ||
+        rawBody?.slice(0, 80) ||
+        `Error del servidor (${response.status})`;
+      throw new ApiError(String(message), response.status);
+    }
+
+    if (payload === null) {
+      throw new ApiError('El servidor respondio con un formato inválido.', response.status);
+    }
+
+    return payload as T;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError('La solicitud tardó demasiado. Verifica tu conexión a internet.', 0);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (payload === null) {
-    throw new ApiError('El servidor respondio con un formato inválido.', response.status);
-  }
-
-  return payload as T;
 }
 
 function getErrorMessage(payload: unknown): string {
