@@ -76,4 +76,6 @@ export function getBadgeTextColor(status: string): string {
 
 const BADGE_DEFAULTS = { className: getBadgeClass('Pendiente'), label: getBadgeLabel('Pendiente') };
 
+export const PEDIDO_STATUS_OPTIONS = Object.keys(BADGE_MAP);
+
 export { BADGE_DEFAULTS };

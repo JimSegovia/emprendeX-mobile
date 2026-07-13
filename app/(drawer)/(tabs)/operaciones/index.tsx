@@ -9,9 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Modal,
 } from 'react-native';
-import { Search, Menu, X } from 'lucide-react-native';
+import { Search, Menu } from 'lucide-react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DrawerActions, useFocusEffect } from '@react-navigation/native';
@@ -31,19 +30,12 @@ import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
 
-const statusOptions = [
-  { label: 'Pendiente', color: '#fef3c7', textColor: '#b45309' },
-  { label: 'En camino', color: '#fed7aa', textColor: '#c2410c' },
-  { label: 'Entregado', color: '#6ee7b7', textColor: '#047857' },
-];
-
 export default function OperacionesScreen() {
   const [activeTab, setActiveTab] = useState('Todas');
   const [query, setQuery] = useState('');
   const [operaciones, setOperaciones] = useState<OperacionResumen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOperation, setSelectedOperation] = useState<OperacionResumen | null>(null);
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -97,17 +89,6 @@ export default function OperacionesScreen() {
     };
   };
 
-  const handleStatusChange = (newStatus: string) => {
-    if (!selectedOperation) return;
-
-    setOperaciones((prev) =>
-      prev.map((op) =>
-        op.id === selectedOperation.id ? { ...op, status: newStatus } : op,
-      ),
-    );
-    setSelectedOperation(null);
-  };
-
   const renderItem = ({ item, index }: { item: OperacionResumen; index: number }) => (
     <AnimatedTouchableOpacity
       className="bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm"
@@ -120,7 +101,10 @@ export default function OperacionesScreen() {
           return;
         }
 
-        setSelectedOperation(item);
+        router.push({
+          pathname: '/(drawer)/(tabs)/pedidos/[id]',
+          params: { id: item.id, srcCustomer: item.customerName, srcCreatedAt: item.createdAt },
+        });
       }}
       entering={itemEntering(index)}
       layout={smoothLayout}
@@ -232,55 +216,6 @@ export default function OperacionesScreen() {
           }
         />
       </KeyboardAvoidingView>
-
-      <Modal
-        visible={selectedOperation !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelectedOperation(null)}
-      >
-        <View className="flex-1 bg-black/50 items-center justify-center">
-          <View className="bg-white rounded-3xl p-6 w-[85%] max-w-sm">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-semibold text-slate-800">
-                {selectedOperation?.referenceCode}
-              </Text>
-              <TouchableOpacity onPress={() => setSelectedOperation(null)}>
-                <X size={20} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <Text className="text-sm text-slate-500 mb-4">
-              Cliente: {selectedOperation?.customerName}
-            </Text>
-
-            <Text className="text-base font-semibold text-slate-800 mb-3">
-              Estado actual: {getBadgeLabel(selectedOperation?.status ?? '')}
-            </Text>
-
-            <View className="space-y-8">
-              {statusOptions.map((option) => {
-                const isActive = selectedOperation?.status === option.label;
-                return (
-                  <TouchableOpacity
-                    key={option.label}
-                    className="rounded-2xl py-5 items-center"
-                    style={{
-                      backgroundColor: option.color,
-                      opacity: isActive ? 1 : 0.6,
-                      borderWidth: isActive ? 2 : 0,
-                      borderColor: isActive ? palette.primary : 'transparent',
-                    }}
-                    onPress={() => handleStatusChange(option.label)}
-                  >
-                    <Text className="font-semibold text-slate-800">{option.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-      </Modal>
     </Animated.View>
   );
 }
