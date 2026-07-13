@@ -115,7 +115,7 @@ export default function LoginScreen() {
             </Animated.View>
 
             <Animated.View
-              className="items-center justify-center my-6"
+              className="items-center justify-center my-3"
               entering={sectionEntering(1)}
             >
               <Image
@@ -206,7 +206,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               {/* Divider with circle */}
-              <View className="flex-row items-center my-6">
+              <View className="flex-row items-center my-3">
                 <View className="flex-1 h-[1px] bg-slate-100" />
                 <View className="mx-4 w-2 h-2 rounded-full border border-slate-300 bg-white" />
                 <View className="flex-1 h-[1px] bg-slate-100" />
@@ -214,7 +214,7 @@ export default function LoginScreen() {
 
               {/* Google Sign In Button */}
               <TouchableOpacity
-                className="flex-row items-center justify-center border border-slate-200 rounded-xl py-4 bg-white active:bg-slate-50 mb-6"
+                className="flex-row items-center justify-center border border-slate-200 rounded-xl py-4 bg-white active:bg-slate-50 mb-2"
                 onPress={() => {
                   // Social login placeholder/trigger
                 }}
