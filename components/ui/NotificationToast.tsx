@@ -10,7 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle, Info, AlertTriangle, AlertCircle, X } from 'lucide-react-native';
 import { useNotifications } from '../../lib/notifications/NotificationContext';
-import { NotificationType } from '../../lib/notifications/types';
+import type { NotificationType } from '../../lib/notifications/types';
 
 const ToastIcons: Record<NotificationType, React.FC<any>> = {
   success: CheckCircle,

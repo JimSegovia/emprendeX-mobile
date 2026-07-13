@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { ShoppingBag, DollarSign, Bell, Calendar, Tag, Megaphone } from 'lucide-react-native';
-import { Notification, NotificationCategory } from '@/lib/notifications/types';
+import type { Notification, NotificationCategory } from '@/lib/notifications/types';
 import { useNotifications } from '@/lib/notifications/NotificationContext';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 
