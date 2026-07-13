@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Pencil } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
@@ -91,6 +91,12 @@ export default function CotizacionDetalleScreen() {
           </TouchableOpacity>
           <Text className="text-white text-xl font-semibold">{quotation.referenceCode}</Text>
         </View>
+        <TouchableOpacity
+          onPress={() => router.push({ pathname: '/(drawer)/(tabs)/operaciones/editar-cotizacion', params: { id: quotation.id } })}
+          className="p-2"
+        >
+          <Pencil color="white" size={20} />
+        </TouchableOpacity>
       </Animated.View>
 
       <ScrollView
