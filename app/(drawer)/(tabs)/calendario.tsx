@@ -195,11 +195,17 @@ export default function CalendarioScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center justify-between px-5 py-4">
-          <TouchableOpacity onPress={openDrawer} className="p-2 -ml-2">
-            <Menu color="white" size={24} />
-          </TouchableOpacity>
-          <Text className="text-white text-lg font-semibold">Calendario</Text>
-          <View className="w-10" />
+          <View className="flex-row items-center flex-1">
+            <TouchableOpacity onPress={openDrawer} className="p-2 -ml-2 mr-2">
+              <Menu color="white" size={24} />
+            </TouchableOpacity>
+            <View className="flex-row items-center">
+              <Text className="text-white text-xl font-bold mr-2">Calendario</Text>
+              <View className="border border-white/40 rounded-full px-2 py-0.5">
+                <Text className="text-white text-[10px] font-bold">PRO</Text>
+              </View>
+            </View>
+          </View>
         </View>
       </Animated.View>
 
