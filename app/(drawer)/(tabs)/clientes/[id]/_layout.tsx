@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-export default function ClientesLayout() {
+export default function ClienteDetalleLayout() {
   return (
     <Stack
       screenOptions={{
@@ -13,9 +13,7 @@ export default function ClientesLayout() {
         fullScreenGestureEnabled: true,
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="form" />
+      <Stack.Screen name="historial" />
     </Stack>
   );
 }
