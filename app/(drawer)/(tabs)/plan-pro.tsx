@@ -1,8 +1,9 @@
 ﻿import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, RotateCw, Pause, ArrowLeftRight, Info, Crown, TrendingUp } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, RotateCw, Pause, ArrowLeftRight, Info, Crown, TrendingUp, Menu } from 'lucide-react-native';
+import { useRouter, useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { upgradeToPro } from '@/lib/subscriptions';
@@ -73,6 +74,9 @@ export default function PlanProScreen() {
     ]);
   };
 
+  const navigation = useNavigation();
+  const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
+
   const handleBack = async () => {
     if (currentStep === 'MANAGEMENT' || currentStep === 'SELECTION') {
       router.back();
@@ -121,13 +125,13 @@ export default function PlanProScreen() {
     <Animated.View className="flex-1" entering={screenEntering} key="management">
       <View style={{ paddingTop: Math.max(insets.top, 16), backgroundColor: topBarColor, paddingBottom: 20 }}>
         <View className="flex-row items-center px-4">
-          <TouchableOpacity onPress={handleBack} className="p-2 -ml-2 mr-2">
-            <ArrowLeft color="white" size={24} />
+          <TouchableOpacity onPress={openDrawer} className="p-2 -ml-2 mr-2">
+            <Menu color="white" size={24} />
           </TouchableOpacity>
-          <View className="flex-1 flex-row items-center">
-            <Text className="text-white text-xl font-bold">Mi Plan</Text>
-            <View className="ml-3 rounded-full bg-amber-100 px-2 py-0.5">
-              <Text className="text-xs font-bold text-amber-800">PRO</Text>
+          <View className="flex-row items-center">
+            <Text className="text-white text-xl font-bold mr-2">Mi Plan</Text>
+            <View className="border border-white/40 rounded-full px-2 py-0.5">
+              <Text className="text-white text-[10px] font-bold">PRO</Text>
             </View>
           </View>
         </View>
