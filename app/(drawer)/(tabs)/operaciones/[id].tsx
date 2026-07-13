@@ -74,16 +74,14 @@ export default function OperacionDetalleScreen() {
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
-        className="px-4 pb-4 flex-row items-center justify-between"
+        className="px-4 pb-4 flex-row items-center"
         style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
         entering={sectionEntering(0)}
       >
-        <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft color="white" size={24} />
-          </TouchableOpacity>
-          <Text className="text-white text-xl font-semibold">{operation.referenceCode}</Text>
-        </View>
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <ArrowLeft color="white" size={24} />
+        </TouchableOpacity>
+        <Text className="text-white text-xl font-semibold">{operation.referenceCode}</Text>
       </Animated.View>
 
       <Animated.ScrollView
