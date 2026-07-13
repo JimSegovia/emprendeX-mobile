@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,25 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, MessageCircle, Phone } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  MessageCircle,
+  Phone,
+  TrendingUp,
+  Clock,
+  Package,
+  ChevronRight,
+} from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { PedidoCard } from '@/components/PedidoCard';
 import {
   deleteCliente,
   fetchClienteById,
+  fetchHistorialComercial,
   getReadableClientesError,
   type ClienteDetalle,
+  type HistorialComercial,
 } from '@/lib/clientes';
 import { useAuthSession } from '@/lib/auth-session-context';
 import {
@@ -26,7 +37,8 @@ import {
 } from '@/lib/public-catalog';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
-import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
+
+const MAX_VISIBLE_PEDIDOS = 3;
 
 export default function ClienteDetalleScreen() {
   const insets = useSafeAreaInsets();
@@ -35,6 +47,7 @@ export default function ClienteDetalleScreen() {
   const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
   const [client, setClient] = useState<ClienteDetalle | null>(null);
+  const [historial, setHistorial] = useState<HistorialComercial | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSharingCatalog, setIsSharingCatalog] = useState(false);
@@ -45,7 +58,7 @@ export default function ClienteDetalleScreen() {
   };
 
   useEffect(() => {
-    const loadClient = async () => {
+    const loadData = async () => {
       if (!id || !accessToken) {
         return;
       }
@@ -54,7 +67,12 @@ export default function ClienteDetalleScreen() {
       setError(null);
 
       try {
-        setClient(await fetchClienteById(accessToken, id));
+        const [clientData, historialData] = await Promise.all([
+          fetchClienteById(accessToken, id),
+          fetchHistorialComercial(accessToken, id),
+        ]);
+        setClient(clientData);
+        setHistorial(historialData);
       } catch (loadError) {
         setError(getReadableClientesError(loadError));
       } finally {
@@ -62,10 +80,8 @@ export default function ClienteDetalleScreen() {
       }
     };
 
-    void loadClient();
+    void loadData();
   }, [accessToken, id]);
-
-  const lastOperationTotal = useMemo(() => client?.operations[0]?.total ?? null, [client]);
 
   const handleDelete = () => {
     if (!accessToken || !id) {
@@ -167,6 +183,9 @@ export default function ClienteDetalleScreen() {
     );
   }
 
+  const visiblePedidos = historial?.pedidos.slice(0, MAX_VISIBLE_PEDIDOS) ?? [];
+  const hasMorePedidos = (historial?.pedidos.length ?? 0) > MAX_VISIBLE_PEDIDOS;
+
   return (
     <Animated.View className="flex-1 bg-white" entering={screenEntering}>
       <Animated.View
@@ -258,78 +277,78 @@ export default function ClienteDetalleScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View
-          className="mt-6 rounded-[28px] border border-slate-100 bg-slate-50 p-5"
-          entering={sectionEntering(2)}
-        >
-          <Text className="text-lg font-semibold text-slate-800">Resumen comercial</Text>
-          <View className="mt-4 flex-row flex-wrap justify-between">
-            <View className="mb-3 w-[48%] rounded-2xl border border-slate-100 bg-white p-4">
-              <Text className="text-xs font-medium text-slate-500">Operaciones</Text>
-              <Text className="mt-2 text-2xl font-semibold text-slate-800">
-                {client.operations.length}
-              </Text>
-            </View>
-            <View className="mb-3 w-[48%] rounded-2xl border border-slate-100 bg-white p-4">
-              <Text className="text-xs font-medium text-slate-500">Último total</Text>
-              <Text className="mt-2 text-2xl font-semibold text-slate-800">
-                {formatCurrencyValue(lastOperationTotal)}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        <Animated.View className="mt-6" entering={sectionEntering(3)}>
-          <View className="mb-4 flex-row items-end justify-between">
-            <Text className="text-lg font-semibold text-slate-800">Operaciones asociadas</Text>
-            <Text className="text-sm font-medium" style={{ color: palette.primaryText }}>
-              Historial comercial
-            </Text>
-          </View>
-
-          {client.operations.map((operation) => {
-            const badgeBg = getBadgeBgColor(operation.status);
-            const badgeText = getBadgeTextColor(operation.status);
-            const badgeLabel = getBadgeLabel(operation.status);
-
-            const handleOperationPress = () => {
-              const targetScreen =
-                operation.type === 'Cotización'
-                  ? `/(drawer)/(tabs)/cotizaciones/${operation.id}`
-                  : `/(drawer)/(tabs)/operaciones/${operation.id}`;
-              router.push(targetScreen);
-            };
-
-            return (
-              <TouchableOpacity
-                key={operation.id}
-                activeOpacity={0.7}
-                className="mb-3 rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100"
-                onPress={handleOperationPress}
-              >
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-base font-semibold text-slate-800">
-                      {operation.referenceCode}
-                    </Text>
-                    <Text className="mt-1 text-sm text-slate-500">{operation.type}</Text>
-                  </View>
-                  <View
-                    className="rounded-full px-3 py-1.5"
-                    style={{ backgroundColor: badgeBg }}
-                  >
-                    <Text className="text-xs font-semibold" style={{ color: badgeText }}>
-                      {badgeLabel}
+        {historial && (
+          <>
+            <Animated.View className="mt-6" entering={sectionEntering(2)}>
+              <Text className="mb-4 text-lg font-semibold text-slate-800">Historial comercial</Text>
+              <View className="flex-row gap-3">
+                <View className="flex-1 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                  <View className="flex-row items-center gap-1.5">
+                    <TrendingUp size={14} color="#059669" />
+                    <Text className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                      Total vendido
                     </Text>
                   </View>
+                  <Text className="mt-2 text-xl font-bold text-emerald-700">
+                    {formatCurrencyValue(historial.kpis.totalVendido)}
+                  </Text>
                 </View>
-                <Text className="mt-4 text-lg font-semibold text-slate-800">
-                  {formatCurrencyValue(operation.total)}
+                <View className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <View className="flex-row items-center gap-1.5">
+                    <Package size={14} color="#475569" />
+                    <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                      Operaciones
+                    </Text>
+                  </View>
+                  <Text className="mt-2 text-xl font-bold text-slate-700">
+                    {historial.kpis.totalOperaciones}
+                  </Text>
+                </View>
+              </View>
+              <View className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                <View className="flex-row items-center gap-1.5">
+                  <Clock size={14} color="#d97706" />
+                  <Text className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">
+                    Saldo pendiente de cobro
+                  </Text>
+                </View>
+                <Text className="mt-2 text-xl font-bold text-amber-700">
+                  {formatCurrencyValue(historial.kpis.saldoPendiente)}
                 </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </Animated.View>
+              </View>
+            </Animated.View>
+
+            <Animated.View className="mt-6" entering={sectionEntering(3)}>
+              <View className="mb-4 flex-row items-center justify-between">
+                <Text className="text-lg font-semibold text-slate-800">Últimos pedidos</Text>
+                <Text className="text-sm font-medium text-slate-400">
+                  {historial.pedidos.length} en total
+                </Text>
+              </View>
+
+              {visiblePedidos.map((pedido, index) => (
+                <PedidoCard key={pedido.id} pedido={pedido} index={index} />
+              ))}
+
+              {hasMorePedidos && (
+                <TouchableOpacity
+                  className="mt-2 flex-row items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(drawer)/(tabs)/clientes/[id]/historial',
+                      params: { id: client.id },
+                    })
+                  }
+                >
+                  <Text className="text-sm font-semibold" style={{ color: palette.primaryText }}>
+                    Ver todos los pedidos
+                  </Text>
+                  <ChevronRight size={16} color={palette.primaryText} />
+                </TouchableOpacity>
+              )}
+            </Animated.View>
+          </>
+        )}
       </ScrollView>
     </Animated.View>
   );
