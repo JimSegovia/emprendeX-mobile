@@ -19,6 +19,7 @@ import { fetchRegistrosContables, fetchResumenContable, getReadableContabilidadE
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const tabs = ['Todas', 'Pagos', 'Gastos'];
@@ -71,16 +72,12 @@ export default function ContabilidadScreen() {
     });
   }, [activeTab, query, records]);
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'Pendiente': return 'bg-amber-50 text-amber-700';
-      case 'Adelanto': return 'bg-amber-50 text-amber-700';
-      case 'Aprobada': return 'bg-emerald-50 text-emerald-700';
-      case 'Cancelado': return 'bg-rose-50 text-rose-700';
-      case 'Entregado': return 'bg-emerald-50 text-emerald-700';
-      case 'Pagado': return 'bg-emerald-50 text-emerald-700';
-      default: return 'bg-slate-50 text-slate-700';
-    }
+  const getTypeColor = (type: string) => {
+    return type === 'Pago' ? { color: '#047857' } : { color: '#be123c' };
+  };
+
+  const getTypeLabel = (type: string) => {
+    return type === 'Pago' ? 'Pago' : 'Gasto';
   };
 
   const togglePaymentDetails = async (item: RegistroContable) => {
@@ -119,11 +116,24 @@ export default function ContabilidadScreen() {
       >
         <View className="flex-row justify-between items-center mb-1">
           <Text className="font-semibold text-slate-800">{item.referenceCode}</Text>
-          <View className={`px-3 py-1 rounded-full ${getStatusStyle(item.status).split(' ')[0]}`}>
-            <Text className={`text-xs font-semibold ${getStatusStyle(item.status).split(' ')[1]}`}>{item.status}</Text>
+          <View
+            className="px-3 py-1 rounded-full"
+            style={{ backgroundColor: getBadgeBgColor(item.status) }}
+          >
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: getBadgeTextColor(item.status) }}
+            >
+              {getBadgeLabel(item.status)}
+            </Text>
           </View>
         </View>
-        <Text className={`text-xs mb-2 font-medium ${item.type === 'Pago' ? 'text-emerald-700' : 'text-rose-700'}`}>{item.type} • {new Date(item.createdAt).toLocaleDateString()}</Text>
+        <Text
+          className="text-xs mb-2 font-medium"
+          style={getTypeColor(item.type)}
+        >
+          {getTypeLabel(item.type)} • {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
         <View className="flex-row justify-between items-center mt-2">
           <View className="flex-1 mr-2">
             <Text className="text-slate-500 text-sm font-medium" numberOfLines={1}>{item.sourceReferenceCode}</Text>

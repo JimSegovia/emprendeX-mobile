@@ -8,6 +8,7 @@ import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } from '@/lib/ventas';
 import { formatCurrencyAmount, formatCurrencyValue } from '@/lib/runtime-config';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
 export default function CotizacionDetalleScreen() {
   const { id, source } = useLocalSearchParams<{ id?: string; source?: string }>();
@@ -53,17 +54,11 @@ export default function CotizacionDetalleScreen() {
       return { backgroundColor: '#f3f4f6', color: '#4b5563' };
     }
 
-    switch (quotation.status) {
-      case 'Pendiente':
-        return { backgroundColor: '#fffbeb', color: '#b45309' };
-      case 'Aprobada':
-        return { backgroundColor: '#ecfdf5', color: '#047857' };
-      case 'Borrador':
-        return { backgroundColor: '#f1f5f9', color: '#475569' };
-      default:
-        return { backgroundColor: palette.primarySoft, color: palette.primaryText };
-    }
-  }, [palette.primarySoft, palette.primaryText, quotation]);
+    return {
+      backgroundColor: getBadgeBgColor(quotation.status),
+      color: getBadgeTextColor(quotation.status),
+    };
+  }, [quotation]);
 
   if (isLoading || !quotation) {
     return (
@@ -106,7 +101,7 @@ export default function CotizacionDetalleScreen() {
         <Animated.View className="items-end mb-6" entering={sectionEntering(1)}>
           <View className="rounded-full px-4 py-1.5" style={{ backgroundColor: statusTone.backgroundColor }}>
             <Text className="font-medium text-sm" style={{ color: statusTone.color }}>
-              {quotation.status}
+              {getBadgeLabel(quotation.status)}
             </Text>
           </View>
         </Animated.View>
