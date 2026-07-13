@@ -40,9 +40,7 @@ export type ModuleDefinition = {
   id: ModuleId;
   label: string;
   icon: LucideIcon;
-  // expo-router tab/screen name inside /(drawer)/(tabs)
   tab: TabRoute;
-  // pathname prefixes used to detect active item
   match: string[];
   premium?: boolean;
   detail?: string;
