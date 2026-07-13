@@ -194,6 +194,8 @@ export default function TabLayout() {
         <Tabs.Screen name="calendario" options={{ href: null }} />
         <Tabs.Screen name="cotizaciones" options={{ href: null }} />
         <Tabs.Screen name="cotizaciones/[id]" options={{ href: null }} />
+
+        <Tabs.Screen name="pedidos/[id]" options={{ href: null }} />
         <Tabs.Screen name="contabilidad" options={{ href: null }} />
         <Tabs.Screen name="reportes" options={{ href: null }} />
         <Tabs.Screen name="alertas-pro" options={{ href: null }} />

@@ -46,6 +46,9 @@ export type PedidoHistorial = {
   createdAt: string;
   itemsCount: number;
   items: PedidoHistorialItem[];
+  customerName: string;
+  deliveryMethod: string;
+  description: string | null;
 };
 
 export type HistorialComercial = {

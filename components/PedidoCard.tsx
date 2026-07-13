@@ -117,8 +117,8 @@ export function PedidoCard({ pedido, index }: PedidoCardProps) {
             style={{ backgroundColor: palette.primary }}
             onPress={() =>
               router.push({
-                pathname: '/(drawer)/(tabs)/operaciones/[id]',
-                params: { id: pedido.id },
+                pathname: '/(drawer)/(tabs)/pedidos/[id]',
+                params: { id: pedido.id, srcCreatedAt: pedido.createdAt },
               })
             }
           >
