@@ -29,6 +29,7 @@ import { fetchCalendarioEventos, getReadableCalendarioError, type CalendarioEven
 import { useModulePreferences } from '@/lib/module-preferences-context';
 import { fetchBusinessKpis, getReadableReportesError, type BusinessKpis } from '@/lib/reportes';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 type QuickAction = {
@@ -100,20 +101,10 @@ export default function DashboardScreen() {
   };
 
   const getDeliveryStatusStyle = (status: string) => {
-    switch (status) {
-      case 'Pendiente':
-        return { backgroundColor: '#dbeafe', color: '#1d4ed8' };
-      case 'Reserva':
-        return { backgroundColor: '#fffbeb', color: '#b45309' };
-      case 'En camino':
-        return { backgroundColor: '#ffedd5', color: '#c2410c' };
-      case 'Entregado':
-        return { backgroundColor: '#ecfdf5', color: '#047857' };
-      case 'Activo':
-        return { backgroundColor: palette.primarySoft, color: palette.primaryText };
-      default:
-        return { backgroundColor: '#f3f4f6', color: '#4b5563' };
-    }
+    return {
+      backgroundColor: getBadgeBgColor(status),
+      color: getBadgeTextColor(status),
+    };
   };
 
   const loadKpis = useCallback(async () => {
@@ -362,7 +353,7 @@ export default function DashboardScreen() {
                     <View className="flex-row items-start justify-between gap-4">
                       <View className="flex-1">
                         <Text className="text-sm font-semibold text-slate-800">{event.referenceCode}</Text>
-                        <Text className="mt-1 text-sm text-slate-500">{event.title}</Text>
+                        <Text className="mt-1 text-sm text-slate-500">{event.customerFullName}</Text>
                         <Text className="mt-2 text-xs text-slate-400">
                           {new Date(event.date).toLocaleDateString()}
                         </Text>
@@ -375,7 +366,7 @@ export default function DashboardScreen() {
                           className="text-xs font-semibold"
                           style={{ color: statusStyle.color }}
                         >
-                          {event.status}
+                          {getBadgeLabel(event.status)}
                         </Text>
                       </View>
                     </View>

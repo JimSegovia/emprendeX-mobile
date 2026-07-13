@@ -25,6 +25,7 @@ import { fetchOperaciones, getReadableVentasError, type OperacionResumen } from 
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 
 const tabs = ['Todas', 'Pedidos', 'Cotizaciones'];
@@ -81,34 +82,11 @@ export default function OperacionesScreen() {
     });
   }, [activeTab, operaciones, query]);
 
-  const getStatusStyle = (type: OperacionResumen['type'], status: string) => {
-    if (type === 'Cotización') {
-      switch (status) {
-        case 'Pendiente':
-          return { backgroundColor: '#fffbeb', color: '#b45309' };
-        case 'Aprobada':
-          return { backgroundColor: '#ecfdf5', color: '#047857' };
-        case 'Borrador':
-          return { backgroundColor: '#f1f5f9', color: '#475569' };
-        default:
-          return { backgroundColor: palette.primarySoft, color: palette.primaryText };
-      }
-    }
-
-    switch (status) {
-      case 'Pendiente':
-        return { backgroundColor: '#dbeafe', color: '#1d4ed8' };
-      case 'Reserva':
-        return { backgroundColor: '#fffbeb', color: '#b45309' };
-      case 'En camino':
-        return { backgroundColor: '#ffedd5', color: '#c2410c' };
-      case 'Entregado':
-        return { backgroundColor: '#ecfdf5', color: '#047857' };
-      case 'Activo':
-        return { backgroundColor: palette.primarySoft, color: palette.primaryText };
-      default:
-        return { backgroundColor: '#f3f4f6', color: '#4b5563' };
-    }
+  const getStatusStyle = (_type: OperacionResumen['type'], status: string) => {
+    return {
+      backgroundColor: getBadgeBgColor(status),
+      color: getBadgeTextColor(status),
+    };
   };
 
   const renderItem = ({ item, index }: { item: OperacionResumen; index: number }) => (
@@ -138,7 +116,7 @@ export default function OperacionesScreen() {
             className="text-xs font-semibold"
             style={{ color: getStatusStyle(item.type, item.status).color }}
           >
-            {item.status}
+            {getBadgeLabel(item.status)}
           </Text>
         </View>
       </View>

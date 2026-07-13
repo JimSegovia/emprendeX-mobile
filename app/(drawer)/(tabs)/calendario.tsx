@@ -1,73 +1,49 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu, Filter, Box, Calendar as CalendarIcon, Plus } from 'lucide-react-native';
-import { useNavigation } from 'expo-router';
+import { Menu, Box, ChevronLeft, ChevronRight, Truck, Store, CreditCard, CalendarDays } from 'lucide-react-native';
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
+import { useAuthSession } from '@/lib/auth-session-context';
+import { fetchCalendarioEventos, type CalendarioEvento, getReadableCalendarioError } from '@/lib/calendario';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
-type EventStatus = 'en_camino' | 'reservado' | 'pendiente';
+const MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
-interface MockEvent {
-  id: string;
-  type: 'pedido' | 'alquiler';
-  title: string;
-  customer: string;
-  time: string;
-  status: EventStatus;
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
 }
 
-const mockEvents: MockEvent[] = [
-  {
-    id: '1',
-    type: 'pedido',
-    title: 'Pedido #1023',
-    customer: 'Maria L+¶pez',
-    time: '2:00 p.m',
-    status: 'en_camino',
-  },
-  {
-    id: '2',
-    type: 'alquiler',
-    title: 'Alquiler #2001',
-    customer: 'Carlos Ram+°rez',
-    time: '3:00 p.m',
-    status: 'reservado',
-  },
-  {
-    id: '3',
-    type: 'pedido',
-    title: 'Pedido #1024',
-    customer: 'Juan P+Ærez',
-    time: '4:00 p.m',
-    status: 'pendiente',
-  },
-];
+function getFirstDayOfWeek(year: number, month: number): number {
+  const firstDay = new Date(year, month, 1).getDay();
+  return firstDay === 0 ? 6 : firstDay - 1;
+}
 
-export default function CalendarioScreen() {
-  const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-  const mainScrollRef = useScrollToTopOnFocus();
-  const { palette } = useAccountPreferences();
-
-  const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
-
-  // Static calendar for May
-  const daysOfWeek = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
-  const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
-
-  // Group days into weeks (7 days per week)
+function buildWeeks(year: number, month: number): (number | null)[][] {
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfWeek(year, month);
   const weeks: (number | null)[][] = [];
   let currentWeek: (number | null)[] = [];
-  for (let i = 0; i < calendarDays.length; i++) {
-    currentWeek.push(calendarDays[i]);
+
+  for (let i = 0; i < firstDay; i++) {
+    currentWeek.push(null);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    currentWeek.push(day);
     if (currentWeek.length === 7) {
       weeks.push(currentWeek);
       currentWeek = [];
     }
   }
+
   if (currentWeek.length > 0) {
     while (currentWeek.length < 7) {
       currentWeek.push(null);
@@ -75,28 +51,141 @@ export default function CalendarioScreen() {
     weeks.push(currentWeek);
   }
 
-  const renderBadge = (status: EventStatus) => {
-    switch (status) {
-      case 'en_camino':
-        return (
-          <View className="rounded-full bg-orange-100/80 px-3 py-1">
-            <Text className="text-xs font-semibold text-orange-500">En camino</Text>
-          </View>
-        );
-      case 'reservado':
-        return (
-          <View className="rounded-full bg-emerald-100/80 px-3 py-1">
-            <Text className="text-xs font-semibold text-emerald-500">Reservado</Text>
-          </View>
-        );
-      case 'pendiente':
-        return (
-          <View className="rounded-full bg-amber-100/80 px-3 py-1">
-            <Text className="text-xs font-semibold text-amber-500">Pendiente</Text>
-          </View>
-        );
+  return weeks;
+}
+
+function formatDateKey(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function parseEventDate(event: CalendarioEvento): Date {
+  return new Date(event.date);
+}
+
+function eventsByDate(events: CalendarioEvento[]): Map<string, CalendarioEvento[]> {
+  const map = new Map<string, CalendarioEvento[]>();
+  for (const event of events) {
+    const d = parseEventDate(event);
+    const key = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const bucket = map.get(key) ?? [];
+    bucket.push(event);
+    map.set(key, bucket);
+  }
+  return map;
+}
+
+function formatTime(isoString: string): string {
+  const d = new Date(isoString);
+  return d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function formatCurrency(value: string): string {
+  const num = parseFloat(value);
+  if (Number.isNaN(num)) return 'S/ 0.00';
+  return `S/ ${num.toFixed(2)}`;
+}
+
+export default function CalendarioScreen() {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const router = useRouter();
+  const mainScrollRef = useScrollToTopOnFocus();
+  const { palette } = useAccountPreferences();
+  const { accessToken } = useAuthSession();
+
+  const [events, setEvents] = useState<CalendarioEvento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+  const loadEvents = useCallback(async () => {
+    if (!accessToken) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchCalendarioEventos(accessToken);
+      setEvents(data);
+    } catch (err: unknown) {
+      setError(getReadableCalendarioError(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadEvents();
+    }, [loadEvents]),
+  );
+
+  const eventsByDay = useMemo(() => eventsByDate(events), [events]);
+  const weeks = useMemo(() => buildWeeks(currentYear, currentMonth), [currentYear, currentMonth]);
+
+  const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const selectedEvents = selectedDate ? (eventsByDay.get(selectedDate) ?? []) : [];
+  const hasEventsInMonth = useMemo(() => {
+    for (let day = 1; day <= getDaysInMonth(currentYear, currentMonth); day++) {
+      const key = formatDateKey(currentYear, currentMonth, day);
+      if (eventsByDay.has(key)) return true;
+    }
+    return false;
+  }, [currentYear, currentMonth, eventsByDay]);
+
+  const goToPrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear((y) => y - 1);
+    } else {
+      setCurrentMonth((m) => m - 1);
     }
   };
+
+  const goToNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear((y) => y + 1);
+    } else {
+      setCurrentMonth((m) => m + 1);
+    }
+  };
+
+  const handleDayPress = (day: number) => {
+    const key = formatDateKey(currentYear, currentMonth, day);
+    setSelectedDate((prev) => (prev === key ? null : key));
+  };
+
+  const handleEventPress = (event: CalendarioEvento) => {
+    router.push(`/(drawer)/(tabs)/operaciones/${event.id}`);
+  };
+
+  const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
+
+  const renderBadge = (status: string) => (
+    <View
+      className="rounded-full px-2.5 py-0.5"
+      style={{ backgroundColor: getBadgeBgColor(status) }}
+    >
+      <Text
+        className="text-xs font-semibold"
+        style={{ color: getBadgeTextColor(status) }}
+      >
+        {getBadgeLabel(status)}
+      </Text>
+    </View>
+  );
+
+  const selectedDateLabel = useMemo(() => {
+    if (!selectedDate) return null;
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    const dayName = date.toLocaleDateString('es-PE', { weekday: 'long' });
+    return `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} ${d} de ${MONTHS[m - 1]}`;
+  }, [selectedDate]);
 
   return (
     <Animated.View className="flex-1 bg-slate-50" entering={screenEntering}>
@@ -110,9 +199,7 @@ export default function CalendarioScreen() {
             <Menu color="white" size={24} />
           </TouchableOpacity>
           <Text className="text-white text-lg font-semibold">Calendario</Text>
-          <TouchableOpacity className="p-2 -mr-2">
-            <Filter color="white" size={22} />
-          </TouchableOpacity>
+          <View className="w-10" />
         </View>
       </Animated.View>
 
@@ -122,34 +209,68 @@ export default function CalendarioScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 100) }}
       >
-        {/* Calendar Section */}
-        <Animated.View className="pt-6 px-4" entering={sectionEntering(1)}>
-          <View className="items-center mb-6">
-            <Text className="text-sm font-semibold text-slate-800">Mayo</Text>
+        {/* Month Navigation */}
+        <Animated.View className="pt-4 px-5" entering={sectionEntering(1)}>
+          <View className="flex-row items-center justify-between mb-4">
+            <TouchableOpacity onPress={goToPrevMonth} className="p-2">
+              <ChevronLeft size={20} color="#475569" />
+            </TouchableOpacity>
+            <Text className="text-base font-bold text-slate-800">
+              {MONTHS[currentMonth]} {currentYear}
+            </Text>
+            <TouchableOpacity onPress={goToNextMonth} className="p-2">
+              <ChevronRight size={20} color="#475569" />
+            </TouchableOpacity>
           </View>
 
           {/* Days of week */}
-          <View className="flex-row justify-between mb-4 px-2">
-            {daysOfWeek.map((day) => (
-              <Text key={day} className="text-xs font-medium text-slate-800 w-8 text-center">
+          <View className="flex-row justify-between mb-3 px-1">
+            {DAYS_OF_WEEK.map((day) => (
+              <Text key={day} className="text-xs font-medium text-slate-400 w-9 text-center">
                 {day}
               </Text>
             ))}
           </View>
 
-          {/* Dates Grid */}
-          <View className="px-2">
+          {/* Calendar Grid */}
+          <View className="px-1">
             {weeks.map((week, weekIndex) => (
-              <View key={weekIndex} className="flex-row justify-between mb-4">
-                {week.map((day, dayIndex) => (
-                  <View key={dayIndex} className="w-8 items-center justify-center">
-                    {day ? (
-                      <Text className="text-sm font-medium text-slate-800">
+              <View key={weekIndex} className="flex-row justify-between mb-2.5">
+                {week.map((day, dayIndex) => {
+                  if (day === null) {
+                    return <View key={`empty-${dayIndex}`} className="w-9 h-9" />;
+                  }
+
+                  const key = formatDateKey(currentYear, currentMonth, day);
+                  const hasEvents = eventsByDay.has(key);
+                  const isSelected = selectedDate === key;
+                  const isToday = key === todayKey;
+
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      onPress={() => handleDayPress(day)}
+                      className={`w-9 h-9 items-center justify-center rounded-full ${
+                        isSelected
+                          ? 'bg-slate-800'
+                          : isToday
+                            ? 'border border-slate-800'
+                            : ''
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${
+                          isSelected ? 'text-white' : isToday ? 'text-slate-800' : 'text-slate-600'
+                        }`}
+                      >
                         {day}
                       </Text>
-                    ) : null}
-                  </View>
-                ))}
+                      {hasEvents && !isSelected && (
+                        <View className="absolute bottom-0.5 h-1 w-1 rounded-full bg-amber-400" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ))}
           </View>
@@ -157,59 +278,106 @@ export default function CalendarioScreen() {
 
         <View className="h-[1px] bg-slate-200 mx-5 my-4" />
 
-        {/* Selected Date & Events Section */}
+        {/* Events Section */}
         <Animated.View className="px-5" entering={sectionEntering(2)}>
-          <Text className="text-sm font-medium mb-4" style={{ color: palette.primary }}>
-            Lunes 20 de mayo
-          </Text>
-
-          {mockEvents.map((event) => (
-            <View
-              key={event.id}
-              className="mb-4 flex-row items-center justify-between rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm shadow-slate-100"
-            >
-              <View className="flex-row items-center" style={{ flex: 1, paddingRight: 12 }}>
-                <View
-                  className="h-12 w-12 items-center justify-center rounded-xl mr-4"
-                  style={{ borderWidth: 1, borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
-                >
-                  {event.type === 'pedido' ? (
-                    <Box size={22} color={palette.primary} />
-                  ) : (
-                    <CalendarIcon size={22} color={palette.primary} />
-                  )}
-                </View>
-                <View>
-                  <Text className="text-sm font-semibold text-slate-800 mb-1">{event.title}</Text>
-                  <Text className="text-xs text-slate-500">{event.customer}</Text>
-                </View>
-              </View>
-              <View className="items-end justify-center">
-                <Text className="text-xs font-medium text-slate-500 mb-2">{event.time}</Text>
-                {renderBadge(event.status)}
-              </View>
+          {loading ? (
+            <View className="items-center py-16">
+              <ActivityIndicator size="large" color={palette.primary} />
+              <Text className="text-slate-500 mt-4 font-medium">Cargando eventos...</Text>
             </View>
-          ))}
+          ) : error ? (
+            <View className="items-center py-16 px-4">
+              <CalendarDays size={40} color="#94a3b8" />
+              <Text className="text-slate-500 mt-4 text-center font-medium">{error}</Text>
+              <TouchableOpacity
+                className="mt-4 px-6 py-2.5 rounded-xl"
+                style={{ backgroundColor: palette.primarySoft }}
+                onPress={() => { void loadEvents(); }}
+              >
+                <Text className="font-semibold text-sm" style={{ color: palette.primary }}>Reintentar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : !hasEventsInMonth ? (
+            <View className="items-center py-16 mt-4">
+              <CalendarDays size={40} color="#cbd5e1" />
+              <Text className="text-slate-400 mt-4 text-center font-medium">
+                No hay eventos en {MONTHS[currentMonth]}
+              </Text>
+              <Text className="text-slate-400 text-center text-sm mt-1">
+                Crea pedidos o cotizaciones para verlos aqu√≠
+              </Text>
+            </View>
+          ) : (
+            <>
+              {selectedDateLabel ? (
+                <Text className="text-sm font-medium mb-3" style={{ color: palette.primary }}>
+                  {selectedDateLabel}
+                </Text>
+              ) : (
+                <Text className="text-sm text-slate-400 mb-3">
+                  Selecciona un d√≠a para ver sus eventos
+                </Text>
+              )}
+
+              {selectedEvents.length === 0 && selectedDate ? (
+                <View className="items-center py-8">
+                  <Text className="text-slate-400 font-medium">Sin eventos para esta fecha</Text>
+                </View>
+              ) : (
+                selectedEvents.map((event) => (
+                  <TouchableOpacity
+                    key={event.id}
+                    activeOpacity={0.7}
+                    className="mb-3 flex-row items-center rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm shadow-slate-100"
+                    onPress={() => handleEventPress(event)}
+                  >
+                    <View
+                      className="h-11 w-11 items-center justify-center rounded-xl mr-3.5"
+                      style={{ borderWidth: 1, borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
+                    >
+                      <Box size={20} color={palette.primary} />
+                    </View>
+
+                    <View className="flex-1 mr-3">
+                      <View className="flex-row items-center mb-1">
+                        <Text className="text-sm font-semibold text-slate-800">{event.referenceCode}</Text>
+                        {event.deliveryMethod && (
+                          <View className="ml-2">
+                            {event.deliveryMethod === 'Entrega a domicilio' ? (
+                              <Truck size={12} color="#64748b" />
+                            ) : (
+                              <Store size={12} color="#64748b" />
+                            )}
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-xs text-slate-500 mb-1.5">{event.customerFullName}</Text>
+                      <View className="flex-row items-center space-x-3">
+                        <View className="flex-row items-center">
+                          <CreditCard size={11} color="#94a3b8" />
+                          <Text className="text-xs text-slate-500 ml-1">{formatCurrency(event.total)}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="items-end">
+                      <Text className="text-xs font-medium text-slate-400 mb-1.5">
+                        {formatTime(event.time)}
+                      </Text>
+                      {renderBadge(event.status)}
+                      {event.paymentStatus && event.type === 'Pedido' && (
+                        <View className="mt-1">
+                          {renderBadge(event.paymentStatus)}
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </>
+          )}
         </Animated.View>
       </ScrollView>
-
-      {/* Custom FAB */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        className="absolute h-14 w-14 items-center justify-center rounded-full shadow-lg"
-        style={{
-          bottom: 24,
-          right: 24,
-          backgroundColor: palette.primary,
-          shadowColor: palette.shadow,
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 6,
-        }}
-      >
-        <Plus color="white" size={28} />
-      </TouchableOpacity>
     </Animated.View>
   );
 }

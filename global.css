@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  /* Status badges — colores normalizados para todos los módulos */
+
+  .badge-pendiente  { @apply bg-amber-50 text-amber-700; }
+  .badge-reserva    { @apply bg-amber-50 text-amber-700; }
+  .badge-activo     { @apply bg-blue-50 text-blue-700; }
+  .badge-en-camino  { @apply bg-orange-50 text-orange-700; }
+  .badge-entregado  { @apply bg-emerald-50 text-emerald-700; }
+  .badge-cancelado { @apply bg-emerald-50 text-emerald-700; }
+  .badge-aprobada   { @apply bg-emerald-50 text-emerald-700; }
+  .badge-adelanto   { @apply bg-amber-50 text-amber-700; }
+  .badge-no-cancelado { @apply bg-rose-50 text-rose-700; }
+}

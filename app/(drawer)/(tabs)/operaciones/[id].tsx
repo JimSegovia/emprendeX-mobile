@@ -8,6 +8,7 @@ import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } fro
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyAmount, formatCurrencyValue } from '@/lib/runtime-config';
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
 export default function OperacionDetalleScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -49,21 +50,11 @@ export default function OperacionDetalleScreen() {
       return { backgroundColor: '#f3f4f6', color: '#4b5563' };
     }
 
-    switch (operation.status) {
-      case 'Pendiente':
-        return { backgroundColor: '#dbeafe', color: '#1d4ed8' };
-      case 'Reserva':
-        return { backgroundColor: '#fffbeb', color: '#b45309' };
-      case 'En camino':
-        return { backgroundColor: '#ffedd5', color: '#c2410c' };
-      case 'Entregado':
-        return { backgroundColor: '#ecfdf5', color: '#047857' };
-      case 'Activo':
-        return { backgroundColor: palette.primarySoft, color: palette.primaryText };
-      default:
-        return { backgroundColor: '#f3f4f6', color: '#4b5563' };
-    }
-  }, [operation, palette.primarySoft, palette.primaryText]);
+    return {
+      backgroundColor: getBadgeBgColor(operation.status),
+      color: getBadgeTextColor(operation.status),
+    };
+  }, [operation]);
 
   if (isLoading || !operation) {
     return (
@@ -104,7 +95,7 @@ export default function OperacionDetalleScreen() {
         <Animated.View className="items-end mb-6" entering={sectionEntering(2)}>
           <View className="px-4 py-1.5 rounded-full" style={{ backgroundColor: statusTone.backgroundColor }}>
             <Text className="font-medium text-sm" style={{ color: statusTone.color }}>
-              {operation.status}
+              {getBadgeLabel(operation.status)}
             </Text>
           </View>
         </Animated.View>

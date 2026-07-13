@@ -23,12 +23,7 @@ import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
 import { useScrollToTopOnFocus } from '@/hooks/use-scroll-to-top';
-
-const badgeStyles = {
-  Pendiente: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  Aprobada: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  Borrador: { bg: 'bg-slate-100', text: 'text-slate-700' },
-} as const;
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
 type QuoteCardProps = {
   quote: Cotizacion;
@@ -40,10 +35,9 @@ type QuoteCardProps = {
 
 function QuoteCard({ quote, index, onPress, onConvert, onDelete }: QuoteCardProps) {
   const { palette } = useAccountPreferences();
-  const styles = badgeStyles[quote.status as keyof typeof badgeStyles] ?? {
-    bg: 'bg-slate-50',
-    text: 'text-slate-700',
-  };
+  const badgeBg = getBadgeBgColor(quote.status);
+  const badgeText = getBadgeTextColor(quote.status);
+  const badgeLabel = getBadgeLabel(quote.status);
   const canConvert = quote.status !== 'Aprobada';
   const canDelete = quote.status === 'Pendiente';
 
@@ -66,9 +60,12 @@ function QuoteCard({ quote, index, onPress, onConvert, onDelete }: QuoteCardProp
             </View>
           ) : null}
         </View>
-        <View className={`rounded-full px-3 py-1.5 ${styles.bg}`}>
-          <Text className={`text-xs font-semibold ${styles.text}`}>
-            {quote.status}
+        <View
+          className="rounded-full px-3 py-1.5"
+          style={{ backgroundColor: badgeBg }}
+        >
+          <Text className="text-xs font-semibold" style={{ color: badgeText }}>
+            {badgeLabel}
           </Text>
         </View>
       </View>
@@ -167,8 +164,7 @@ export default function CotizacionesScreen() {
   const sortedQuotes = useMemo(() => {
     const statusPriority: Record<string, number> = {
       Pendiente: 0,
-      Borrador: 1,
-      Aprobada: 2,
+      Aprobada: 1,
     };
 
     return [...quotes].sort((left, right) => {

@@ -26,14 +26,7 @@ import {
 } from '@/lib/public-catalog';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
-
-const statusStyles = {
-  Pendiente: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  Aprobada: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  Activo: { bg: 'themed', text: 'themed' },
-  Entregado: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  'En camino': { bg: 'bg-orange-50', text: 'text-orange-600' },
-} as const;
+import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
 export default function ClienteDetalleScreen() {
   const insets = useSafeAreaInsets();
@@ -295,15 +288,24 @@ export default function ClienteDetalleScreen() {
           </View>
 
           {client.operations.map((operation) => {
-            const styles = statusStyles[operation.status as keyof typeof statusStyles] ?? {
-              bg: 'bg-slate-100',
-              text: 'text-slate-700',
+            const badgeBg = getBadgeBgColor(operation.status);
+            const badgeText = getBadgeTextColor(operation.status);
+            const badgeLabel = getBadgeLabel(operation.status);
+
+            const handleOperationPress = () => {
+              const targetScreen =
+                operation.type === 'Cotización'
+                  ? `/(drawer)/(tabs)/cotizaciones/${operation.id}`
+                  : `/(drawer)/(tabs)/operaciones/${operation.id}`;
+              router.push(targetScreen);
             };
 
             return (
-              <View
+              <TouchableOpacity
                 key={operation.id}
+                activeOpacity={0.7}
                 className="mb-3 rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100"
+                onPress={handleOperationPress}
               >
                 <View className="flex-row items-center justify-between">
                   <View>
@@ -313,19 +315,18 @@ export default function ClienteDetalleScreen() {
                     <Text className="mt-1 text-sm text-slate-500">{operation.type}</Text>
                   </View>
                   <View
-                    className={`rounded-full px-3 py-1.5 ${styles.bg === 'themed' ? '' : styles.bg}`}
-                    style={{ backgroundColor: styles.bg === 'themed' ? palette.primarySoft : undefined }}
+                    className="rounded-full px-3 py-1.5"
+                    style={{ backgroundColor: badgeBg }}
                   >
-                    <Text
-                      className={`text-xs font-semibold ${styles.text === 'themed' ? '' : styles.text}`}
-                      style={{ color: styles.text === 'themed' ? palette.primaryText : undefined }}
-                    >
-                      {operation.status}
+                    <Text className="text-xs font-semibold" style={{ color: badgeText }}>
+                      {badgeLabel}
                     </Text>
                   </View>
                 </View>
-                <Text className="mt-4 text-lg font-semibold text-slate-800">{formatCurrencyValue(operation.total)}</Text>
-              </View>
+                <Text className="mt-4 text-lg font-semibold text-slate-800">
+                  {formatCurrencyValue(operation.total)}
+                </Text>
+              </TouchableOpacity>
             );
           })}
         </Animated.View>

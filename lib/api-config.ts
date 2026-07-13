@@ -39,7 +39,7 @@ function buildConfiguredLocalBaseUrl(): string | null {
   }
 
   const protocol = process.env.EXPO_PUBLIC_API_SCHEME?.trim() || 'http';
-  const port = process.env.EXPO_PUBLIC_API_PORT?.trim();
+  const port = process.env.EXPO_PUBLIC_API_PORT?.trim() || '3000';
   const path = normalizeApiPath(process.env.EXPO_PUBLIC_API_PATH || DEFAULT_API_PATH);
   const hostWithPort = port ? `${configuredHost}:${port}` : configuredHost;
 

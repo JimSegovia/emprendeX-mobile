@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, X, RotateCw } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
-import type { ModuleId } from '@/lib/modules';
+import { upgradeToPro } from '@/lib/subscriptions';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
 import { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
@@ -14,11 +14,21 @@ type FlowStep = 'SELECTION' | 'CONFIRMATION' | 'MERCADOPAGO' | 'SUCCESS';
 export default function PlanProScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { authState, updateAuthState } = useAuthSession();
+  const { authState, accessToken, updateAuthState, refreshAuthState } = useAuthSession();
   const { palette } = useAccountPreferences();
   const [currentStep, setCurrentStep] = useState<FlowStep>('SELECTION');
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
-  const handleBack = () => {
+  const isAlreadyPremium = authState?.user.activeSubscription?.isPremium === true;
+
+  useEffect(() => {
+    if (isAlreadyPremium) {
+      router.replace('/(drawer)/(tabs)/');
+    }
+  }, [isAlreadyPremium, router]);
+
+  const handleBack = async () => {
     if (currentStep === 'SELECTION') {
       router.back();
     } else if (currentStep === 'CONFIRMATION') {
@@ -26,16 +36,38 @@ export default function PlanProScreen() {
     } else if (currentStep === 'MERCADOPAGO') {
       setCurrentStep('CONFIRMATION');
     } else if (currentStep === 'SUCCESS') {
+      await refreshAuthState();
+      router.replace('/(drawer)/(tabs)/');
+    }
+  };
+
+  const handleUpgrade = async () => {
+    if (!accessToken || isUpgrading) {
+      return;
+    }
+
+    setIsUpgrading(true);
+    setUpgradeError(null);
+
+    try {
+      const updatedUser = await upgradeToPro(accessToken);
+
       if (authState) {
         updateAuthState({
           ...authState,
-          user: {
-            ...authState.user,
-            enabledModuleIds: Array.from(new Set([...authState.user.enabledModuleIds, 'calendario', 'reportes', 'alertas-pro'] as ModuleId[]))
-          }
+          user: updatedUser,
         });
       }
-      router.replace('/(drawer)/(tabs)/');
+
+      setCurrentStep('SUCCESS');
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No se pudo completar la actualizaciÃ³n. Intenta de nuevo.';
+      setUpgradeError(message);
+    } finally {
+      setIsUpgrading(false);
     }
   };
 
@@ -50,7 +82,7 @@ export default function PlanProScreen() {
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
           <View className="flex-1 items-center mr-10">
-            <Text className="text-white text-lg font-semibold">Mi suscripci+¦n</Text>
+            <Text className="text-white text-lg font-semibold">Mi suscripci+ï¿½n</Text>
           </View>
         </View>
       </View>
@@ -59,7 +91,7 @@ export default function PlanProScreen() {
         <View className="items-center mb-8 pt-4">
           <Text className="text-xl font-bold text-slate-800 text-center mb-2">Elige el plan ideal para tu negocio</Text>
           <Text className="text-slate-500 text-center text-sm px-4">
-            Actualiza a Pro y accede a herramientas avanzadas para crecer m+ís.
+            Actualiza a Pro y accede a herramientas avanzadas para crecer m+ï¿½s.
           </Text>
         </View>
 
@@ -79,8 +111,8 @@ export default function PlanProScreen() {
                 <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Cotizaciones</Text></View>
                 <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Pedidos</Text></View>
                 <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Pagos</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Inventario b+ísico</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Reportes b+ísicos</Text></View>
+                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Inventario b+ï¿½sico</Text></View>
+                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Reportes b+ï¿½sicos</Text></View>
               </View>
             </View>
             <View className="bg-slate-100 py-3 rounded-2xl items-center mt-4">
@@ -91,7 +123,7 @@ export default function PlanProScreen() {
           {/* Plan Pro */}
           <View className="w-[48%] bg-white rounded-3xl border-2  p-4 shadow-md flex-col justify-between relative overflow-hidden" style={{ borderColor: palette.primary }}>
             <View className="absolute top-0 inset-x-0 items-center  py-1 rounded-b-lg mx-6" style={{ backgroundColor: palette.primary }}>
-              <Text className="text-white text-[9px] font-bold">M+üS POPULAR</Text>
+              <Text className="text-white text-[9px] font-bold">M+ï¿½S POPULAR</Text>
             </View>
             <View className="mt-4">
               <View className="items-center mb-4 mt-2">
@@ -101,13 +133,13 @@ export default function PlanProScreen() {
                 <Text className="text-lg font-bold text-slate-800">Pro</Text>
                 <Text className="text-xs text-slate-500 font-medium mt-1"><Text className="text-lg font-bold" style={{ color: palette.primary }}>S/ 29.90</Text> / mes</Text>
               </View>
-              <Text className="text-[10px] font-semibold text-slate-800 mb-3 text-center">Todo lo del plan Gratis, m+ís:</Text>
+              <Text className="text-[10px] font-semibold text-slate-800 mb-3 text-center">Todo lo del plan Gratis, m+ï¿½s:</Text>
               <View className="space-y-3">
                 <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Calendario</Text></View>
                 <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Reportes avanzados</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">An+ílisis e IA</Text></View>
+                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">An+ï¿½lisis e IA</Text></View>
                 <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Exportar a Excel</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Estad+¡sticas avanzadas</Text></View>
+                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Estad+ï¿½sticas avanzadas</Text></View>
                 <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Soporte prioritario</Text></View>
               </View>
             </View>
@@ -124,12 +156,12 @@ export default function PlanProScreen() {
           <Shield color={palette.primary} size={24} className="mr-4" />
           <View className="flex-1">
             <Text className="text-slate-800 font-bold text-sm mb-1">Sin contratos. Cancela cuando quieras.</Text>
-            <Text className="text-slate-500 text-xs">Tu plan se renueva autom+íticamente cada mes.</Text>
+            <Text className="text-slate-500 text-xs">Tu plan se renueva autom+ï¿½ticamente cada mes.</Text>
           </View>
         </View>
 
         <TouchableOpacity className="items-center">
-          <Text className=" font-semibold text-sm" style={{ color: palette.primary }}>-+Tienes un c+¦digo de promoci+¦n?</Text>
+          <Text className=" font-semibold text-sm" style={{ color: palette.primary }}>-+Tienes un c+ï¿½digo de promoci+ï¿½n?</Text>
         </TouchableOpacity>
       </ScrollView>
     </Animated.View>
@@ -171,7 +203,7 @@ export default function PlanProScreen() {
           <View className="flex-row justify-between items-center mb-4">
             <View className="flex-row items-center">
               <Calendar color="#64748b" size={18} />
-              <Text className="text-slate-600 ml-3 font-medium text-sm">Duraci+¦n</Text>
+              <Text className="text-slate-600 ml-3 font-medium text-sm">Duraci+ï¿½n</Text>
             </View>
             <Text className="font-semibold text-slate-800">Mensual</Text>
           </View>
@@ -189,8 +221,8 @@ export default function PlanProScreen() {
           </View>
         </View>
 
-        {/* M+®todo de pago */}
-        <Text className="font-bold text-slate-800 text-base mb-4 ml-1">M+®todo de pago</Text>
+        {/* M+ï¿½todo de pago */}
+        <Text className="font-bold text-slate-800 text-base mb-4 ml-1">M+ï¿½todo de pago</Text>
         <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-8 flex-row items-center justify-between">
           <View className="flex-row items-center">
             <View className="h-10 w-10 bg-blue-50 rounded-full items-center justify-center mr-4">
@@ -211,8 +243,8 @@ export default function PlanProScreen() {
           <View className="flex-row items-start">
             <View className="mt-0.5 mr-4  p-1.5 rounded-lg" style={{ backgroundColor: palette.primarySoft }}><Sparkles size={16} color={palette.primary} /></View>
             <View>
-              <Text className="font-semibold text-slate-800 text-sm">Accede a m+¦dulos premium</Text>
-              <Text className="text-xs text-slate-500 mt-1">Calendario, Reportes, IA y m+ís.</Text>
+              <Text className="font-semibold text-slate-800 text-sm">Accede a m+ï¿½dulos premium</Text>
+              <Text className="text-xs text-slate-500 mt-1">Calendario, Reportes, IA y m+ï¿½s.</Text>
             </View>
           </View>
           <View className="flex-row items-start">
@@ -240,7 +272,7 @@ export default function PlanProScreen() {
         </TouchableOpacity>
         
         <Text className="text-center text-xs text-slate-500 mt-4 px-6">
-          Ser+ís redirigido al checkout seguro de MercadoPago.
+          Ser+ï¿½s redirigido al checkout seguro de MercadoPago.
         </Text>
 
       </ScrollView>
@@ -252,7 +284,7 @@ export default function PlanProScreen() {
       {/* Mock Browser Header */}
       <View style={{ paddingTop: Math.max(insets.top, 10), backgroundColor: '#ffffff', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#e5e5e5' }}>
         <View className="flex-row items-center px-4">
-          <TouchableOpacity onPress={handleBack}><Text className="text-blue-500 font-medium text-sm">Cancelar</Text></TouchableOpacity>
+          <TouchableOpacity onPress={handleBack} disabled={isUpgrading}><Text className="text-blue-500 font-medium text-sm">Cancelar</Text></TouchableOpacity>
           <View className="flex-1 flex-row items-center justify-center">
             <Lock size={10} color="#333" className="mr-1" />
             <Text className="text-slate-800 text-[11px] font-medium">checkout.mercadopago.com</Text>
@@ -277,13 +309,27 @@ export default function PlanProScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+        {isUpgrading ? (
+          <View className="items-center justify-center py-20">
+            <ActivityIndicator size="large" color={palette.primary} />
+            <Text className="text-slate-600 font-medium mt-4 text-base">Procesando tu suscripciÃ³n Pro...</Text>
+            <Text className="text-slate-400 text-sm mt-1">Esto tomarÃ¡ solo un momento</Text>
+          </View>
+        ) : (
+          <>
+
+        {upgradeError ? (
+          <View className="mb-6 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
+            <Text className="text-sm font-medium text-rose-600">{upgradeError}</Text>
+          </View>
+        ) : null}
         {/* Order details */}
         <View className="bg-white rounded-lg p-5 shadow-sm mb-6 border border-slate-100">
           <View className="flex-row justify-between mb-2">
             <Text className="font-semibold text-slate-800 text-base">Plan Pro - Mensual</Text>
             <Text className="font-bold text-slate-800 text-base">S/ 29.90</Text>
           </View>
-          <Text className="text-slate-500 text-sm mb-6">Suscripci+¦n mensual</Text>
+          <Text className="text-slate-500 text-sm mb-6">Suscripci+ï¿½n mensual</Text>
           
           <View className="h-[1px] bg-slate-200 mb-4" />
           
@@ -293,18 +339,18 @@ export default function PlanProScreen() {
           </View>
         </View>
 
-        <Text className="font-semibold text-slate-800 text-base mb-4 ml-1">Elige c+¦mo pagar</Text>
+        <Text className="font-semibold text-slate-800 text-base mb-4 ml-1">Elige c+ï¿½mo pagar</Text>
         
         {/* Payment Options */}
         <View className="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden">
           <TouchableOpacity 
             className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => setCurrentStep('SUCCESS')}
+            onPress={() => { void handleUpgrade(); }}
           >
             <View className="flex-row items-center flex-1">
               <View className="h-8 w-8 items-center justify-center mr-3"><CreditCard color="#009ee3" size={24} /></View>
               <View className="flex-1">
-                <Text className="font-medium text-slate-800">Tarjeta de cr+®dito</Text>
+                <Text className="font-medium text-slate-800">Tarjeta de cr+ï¿½dito</Text>
                 <Text className="text-xs text-slate-500 mt-0.5">Visa, Mastercard, American Express</Text>
               </View>
             </View>
@@ -313,13 +359,13 @@ export default function PlanProScreen() {
 
           <TouchableOpacity 
             className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => setCurrentStep('SUCCESS')}
+            onPress={() => { void handleUpgrade(); }}
           >
             <View className="flex-row items-center flex-1">
               <View className="h-8 w-8 items-center justify-center mr-3"><CreditCard color="#009ee3" size={24} /></View>
               <View className="flex-1">
-                <Text className="font-medium text-slate-800">Tarjeta de d+®bito</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Visa D+®bito, Mastercard D+®bito</Text>
+                <Text className="font-medium text-slate-800">Tarjeta de d+ï¿½bito</Text>
+                <Text className="text-xs text-slate-500 mt-0.5">Visa D+ï¿½bito, Mastercard D+ï¿½bito</Text>
               </View>
             </View>
             <Text className="text-slate-400 font-bold text-lg">{'>'}</Text>
@@ -327,7 +373,7 @@ export default function PlanProScreen() {
 
           <TouchableOpacity 
             className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => setCurrentStep('SUCCESS')}
+            onPress={() => { void handleUpgrade(); }}
           >
             <View className="flex-row items-center flex-1">
               <View className="h-8 w-8 bg-blue-50 items-center justify-center mr-3 rounded-full"><View className="h-4 w-4 bg-[#009ee3] rounded-sm" /></View>
@@ -341,7 +387,7 @@ export default function PlanProScreen() {
 
           <TouchableOpacity 
             className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => setCurrentStep('SUCCESS')}
+            onPress={() => { void handleUpgrade(); }}
           >
             <View className="flex-row items-center flex-1">
               <View className="h-8 w-8 items-center justify-center mr-3"><View className="h-5 w-6 border-2 border-[#009ee3] rounded-sm" /></View>
@@ -356,8 +402,10 @@ export default function PlanProScreen() {
 
         <View className="flex-row items-center justify-center mt-6 mb-10">
           <Lock size={12} color="#94a3b8" />
-          <Text className="text-xs text-slate-400 ml-2">Tus datos est+ín protegidos con encriptaci+¦n SSL</Text>
+          <Text className="text-xs text-slate-400 ml-2">Tus datos est+ï¿½n protegidos con encriptaci+ï¿½n SSL</Text>
         </View>
+          </>
+        )}
       </ScrollView>
     </Animated.View>
   );
@@ -367,7 +415,7 @@ export default function PlanProScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: Math.max(insets.top, 40), paddingHorizontal: 24, paddingBottom: 40 }}>
         
         <View className="items-center mb-10 mt-10">
-          <Text className="text-white/80 font-medium mb-10">-íPago exitoso!</Text>
+          <Text className="text-white/80 font-medium mb-10">-ï¿½Pago exitoso!</Text>
           
           <View className="h-28 w-28 bg-white rounded-full items-center justify-center mb-8 shadow-lg relative">
             <Check size={56} color="#10b981" strokeWidth={3} />
@@ -380,9 +428,9 @@ export default function PlanProScreen() {
             <View className="absolute -bottom-4 right-0 h-2 w-2 rounded-full bg-purple-400" />
           </View>
           
-          <Text className="text-white text-3xl font-bold mb-4">-íBienvenido a PRO!</Text>
+          <Text className="text-white text-3xl font-bold mb-4">-ï¿½Bienvenido a PRO!</Text>
           <Text className="text-white/90 text-center text-sm px-4 mb-2">
-            Tu pago fue realizado con +®xito.
+            Tu pago fue realizado con +ï¿½xito.
           </Text>
           <Text className="text-white/90 text-center text-sm px-4">
             Ya puedes disfrutar de todas las herramientas premium.
@@ -390,7 +438,7 @@ export default function PlanProScreen() {
         </View>
 
         <View className="bg-white rounded-3xl p-6 shadow-xl mb-10">
-          <Text className="font-semibold text-slate-800 mb-6">M+¦dulos desbloqueados</Text>
+          <Text className="font-semibold text-slate-800 mb-6">M+ï¿½dulos desbloqueados</Text>
           
           <View className="space-y-4">
             <View className="flex-row items-center justify-between">
@@ -412,7 +460,7 @@ export default function PlanProScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Sparkles size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">An+ílisis e IA</Text>
+                <Text className="font-medium text-slate-700">An+ï¿½lisis e IA</Text>
               </View>
               <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
             </View>
@@ -428,7 +476,7 @@ export default function PlanProScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><BarChart2 size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Estad+¡sticas avanzadas</Text>
+                <Text className="font-medium text-slate-700">Estad+ï¿½sticas avanzadas</Text>
               </View>
               <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
             </View>
