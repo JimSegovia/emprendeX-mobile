@@ -1,0 +1,490 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ArrowLeft, Calendar } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DropDownPicker from 'react-native-dropdown-picker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import {
+  fetchCatalogItems,
+  getReadableCatalogError,
+  type CatalogItem,
+  type CatalogItemKind,
+} from '@/lib/catalog';
+import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } from '@/lib/ventas';
+import { useAccountPreferences } from '@/lib/account-preferences-context';
+import { useAuthSession } from '@/lib/auth-session-context';
+import { formatCurrencyAmount } from '@/lib/runtime-config';
+
+export default function EditarCotizacionScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { palette } = useAccountPreferences();
+  const { accessToken } = useAuthSession();
+
+  const methodOptions = [
+    { label: 'Entrega a domicilio', value: 'Entrega a domicilio' },
+    { label: 'Recojo en tienda', value: 'Recojo en tienda' },
+  ] as const;
+
+  const [cotizacion, setCotizacion] = useState<OperacionDetalle | null>(null);
+  const [clientName, setClientName] = useState<string>('');
+  const [itemKind, setItemKind] = useState<CatalogItemKind>('Producto');
+  const [product, setProduct] = useState<string[]>([]);
+  const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
+  const [productOpen, setProductOpen] = useState(false);
+  const [productItems, setProductItems] = useState<{ label: string; value: string }[]>([]);
+  const [method, setMethod] = useState<'Entrega a domicilio' | 'Recojo en tienda' | null>(null);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [methodItems, setMethodItems] = useState([...methodOptions]);
+  const [description, setDescription] = useState('');
+  const [address, setAddress] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [showDate, setShowDate] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
+  const [catalogItemsById, setCatalogItemsById] = useState<Record<string, { name: string; price: number; kind: CatalogItemKind; stock: number | null }>>({});
+  const dropdownSpacing = 220;
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!id || !accessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const data = await fetchOperacionById(accessToken, id);
+        setCotizacion(data);
+        setClientName(data.customer.fullName);
+        setDescription(data.description ?? '');
+        setAddress(data.customer.address ?? '');
+        setDate(new Date(data.deliveryDate));
+        setMethod(data.deliveryMethod as 'Entrega a domicilio' | 'Recojo en tienda');
+
+        const existingItems = data.items.map((item) => item.itemId);
+        setProduct(existingItems);
+        
+        const quantities: Record<string, number> = {};
+        data.items.forEach((item) => {
+          quantities[item.itemId] = item.quantity;
+        });
+        setProductQuantities(quantities);
+
+        if (data.items.length > 0) {
+          setItemKind(data.items[0].kind);
+        }
+      } catch (error) {
+        console.error('Error loading cotizacion:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadData();
+  }, [id, accessToken]);
+
+  useEffect(() => {
+    const loadDependencies = async () => {
+      if (!accessToken) {
+        return;
+      }
+
+      setIsLoadingProducts(true);
+      setProductsError(null);
+
+      try {
+        const items = await fetchCatalogItems(accessToken);
+
+        setCatalogItems(items);
+        setCatalogItemsById(
+          Object.fromEntries(
+            items.map((item) => [
+              item.id,
+              { name: item.name, price: item.price, kind: item.kind, stock: item.stock },
+            ]),
+          ),
+        );
+      } catch (dependencyError) {
+        setProductsError(getReadableCatalogError(dependencyError));
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    void loadDependencies();
+  }, [accessToken]);
+
+  useEffect(() => {
+    const filteredItems = catalogItems.filter(
+      (item) =>
+        item.kind === itemKind &&
+        (item.kind !== 'Producto' || (typeof item.stock === 'number' && item.stock > 0)),
+    );
+    setProductItems(
+      filteredItems.map((item) => ({
+        label: `${item.name} - ${formatCurrencyAmount(item.price)}${item.kind === 'Producto' ? ` · Stock: ${item.stock ?? 0}` : ''}`,
+        value: item.id,
+      })),
+    );
+  }, [catalogItems, itemKind]);
+
+  useEffect(() => {
+    setProductQuantities((previousQuantities) => {
+      const nextQuantities: Record<string, number> = {};
+
+      for (const itemId of product) {
+        nextQuantities[itemId] = Math.max(previousQuantities[itemId] ?? 1, 1);
+      }
+
+      return nextQuantities;
+    });
+  }, [product]);
+
+  const selectedProducts = useMemo(() => {
+    return product
+      .map((productId) => {
+        const item = catalogItemsById[productId];
+
+        if (!item || item.kind !== itemKind) {
+          return null;
+        }
+
+        const maxQuantity = item.kind === 'Producto' ? item.stock ?? 0 : null;
+        const quantity = Math.max(
+          Math.min(productQuantities[productId] ?? 1, maxQuantity ?? Number.MAX_SAFE_INTEGER),
+          1,
+        );
+
+        return {
+          id: productId,
+          name: item.name,
+          price: item.price,
+          kind: item.kind,
+          stock: item.stock,
+          quantity,
+          subtotal: item.price * quantity,
+        };
+      })
+      .filter(Boolean) as {
+      id: string;
+      name: string;
+      price: number;
+      kind: CatalogItemKind;
+      stock: number | null;
+      quantity: number;
+      subtotal: number;
+    }[];
+  }, [catalogItemsById, itemKind, product, productQuantities]);
+
+  const totalQuote = useMemo(
+    () => selectedProducts.reduce((sum, item) => sum + item.subtotal, 0),
+    [selectedProducts],
+  );
+
+  const handleItemKindChange = (nextKind: CatalogItemKind) => {
+    if (nextKind === itemKind) return;
+    setItemKind(nextKind);
+    setProduct([]);
+    setProductQuantities({});
+    setProductOpen(false);
+  };
+
+  const updateProductQuantity = (itemId: string, nextQuantity: number) => {
+    const item = catalogItemsById[itemId];
+    const maxQuantity = item?.kind === 'Producto' ? item.stock ?? 0 : null;
+
+    setProductQuantities((previousQuantities) => ({
+      ...previousQuantities,
+      [itemId]: Math.max(
+        Math.min(nextQuantity, maxQuantity ?? Number.MAX_SAFE_INTEGER),
+        1,
+      ),
+    }));
+  };
+
+  function handleDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
+    setShowDate(false);
+    if (selectedDate) setDate(selectedDate);
+  }
+
+  const handleEliminar = () => {
+    router.back();
+  };
+
+  const handleConfirmarPedido = async () => {
+    if (product.length === 0) {
+      setSubmitError('Selecciona al menos un item.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      setTimeout(() => {
+        router.back();
+      }, 500);
+    } catch (saveError) {
+      setSubmitError(getReadableVentasError(saveError));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Animated.View className="flex-1 bg-white items-center justify-center" entering={screenEntering}>
+        <ActivityIndicator color={palette.primary} />
+        <Text className="mt-3 text-slate-500">Cargando cotización...</Text>
+      </Animated.View>
+    );
+  }
+
+  return (
+    <Animated.View className="flex-1 bg-white" entering={screenEntering}>
+      <Animated.View
+        className="px-4 pb-4 flex-row items-center"
+        style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
+        entering={sectionEntering(0)}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <ArrowLeft color="white" size={24} />
+        </TouchableOpacity>
+        <Text className="text-white text-xl font-semibold">Modificar cotización</Text>
+      </Animated.View>
+
+      <Animated.ScrollView
+        className="flex-1 p-4"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        entering={sectionEntering(2)}
+      >
+        <Animated.View className="mb-6" entering={sectionEntering(3)}>
+          <Text className="font-semibold text-slate-800 mb-2">Cliente</Text>
+          <View className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            <Text className="text-base text-slate-600">
+              {clientName || 'Cliente no disponible'}
+            </Text>
+          </View>
+          <Text className="mt-2 text-xs text-slate-400">
+            El cliente no se puede modificar en esta cotización.
+          </Text>
+        </Animated.View>
+
+        <Animated.View className="mb-6" entering={sectionEntering(4)}>
+          <Text className="text-sm font-semibold text-slate-700 mb-2">Tipo de items</Text>
+          <View className="flex-row">
+            <TouchableOpacity
+              className="mr-3 flex-1 items-center rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: itemKind === 'Producto' ? palette.primaryBorder : '#e2e8f0',
+                backgroundColor: itemKind === 'Producto' ? palette.primarySoft : '#ffffff',
+              }}
+              onPress={() => handleItemKindChange('Producto')}
+            >
+              <Text
+                className="font-semibold"
+                style={{ color: itemKind === 'Producto' ? palette.primaryText : '#475569' }}
+              >
+                Productos
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity className={`flex-1 items-center rounded-2xl border px-4 py-3 ${itemKind === 'Servicio' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`} onPress={() => handleItemKindChange('Servicio')}>
+              <Text className={`font-semibold ${itemKind === 'Servicio' ? 'text-emerald-700' : 'text-slate-600'}`}>Servicios</Text>
+            </TouchableOpacity>
+          </View>
+          <Text className="font-semibold text-slate-800 mb-2 mt-4">{itemKind === 'Producto' ? 'Productos' : 'Servicios'}</Text>
+            <DropDownPicker
+             open={productOpen}
+             value={product}
+             items={productItems}
+             setOpen={setProductOpen}
+             setValue={setProduct}
+             setItems={setProductItems}
+             multiple
+             min={0}
+             max={10}
+            placeholder={`Seleccionar ${itemKind === 'Producto' ? 'productos' : 'servicios'}`}
+            listMode="SCROLLVIEW"
+            maxHeight={dropdownSpacing}
+            zIndex={2500}
+            zIndexInverse={1500}
+            style={{ borderColor: '#e5e7eb', backgroundColor: 'white', marginBottom: 8 }}
+            dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
+            textStyle={{ color: product.length > 0 ? '#0f172a' : '#94a3b8' }}
+          />
+          <View style={{ height: productOpen ? dropdownSpacing : 0 }} />
+          {isLoadingProducts ? (
+            <View className="mt-2 flex-row items-center">
+              <ActivityIndicator color={palette.primary} />
+              <Text className="ml-3 text-sm text-slate-500">Cargando items...</Text>
+            </View>
+          ) : null}
+          {productsError ? <Text className="mt-2 text-sm font-medium text-rose-600">{productsError}</Text> : null}
+          <TouchableOpacity className="items-end mt-2" onPress={() => router.push('/(drawer)/(tabs)/catalog')}>
+            <Text className="font-medium" style={{ color: palette.primaryText }}>+ Agregar item</Text>
+          </TouchableOpacity>
+          <Text className="mt-2 text-xs text-slate-400">
+            Selecciona cada item una vez y ajusta la cantidad abajo.
+          </Text>
+        </Animated.View>
+
+        {selectedProducts.length > 0 ? (
+          <Animated.View className="mb-6 rounded-2xl border border-slate-100 bg-slate-50 p-4" entering={sectionEntering(5)}>
+            <Text className="text-sm font-semibold text-slate-800">Items seleccionados</Text>
+            {selectedProducts.map((selectedItem, index) => (
+              <View key={`${selectedItem.id}-${index}`} className="mt-3 rounded-2xl bg-white px-4 py-3">
+                <View className="flex-row items-center justify-between">
+                  <View className="mr-3 flex-1">
+                    <Text className="text-sm font-semibold text-slate-800">{selectedItem.name}</Text>
+                    <Text className="mt-1 text-xs text-slate-500">
+                      {formatCurrencyAmount(selectedItem.price)} c/u
+                      {selectedItem.kind === 'Producto' ? ` · Stock: ${selectedItem.stock ?? 0}` : ''}
+                    </Text>
+                  </View>
+                  <Text className="text-sm font-semibold text-slate-800">
+                    {formatCurrencyAmount(selectedItem.subtotal)}
+                  </Text>
+                </View>
+
+                <View className="mt-3 flex-row items-center justify-between">
+                  <Text className="text-xs font-medium text-slate-500">Cantidad</Text>
+                  <View className="flex-row items-center rounded-full bg-slate-100 px-2 py-1">
+                    <TouchableOpacity
+                      className="h-8 w-8 items-center justify-center rounded-full bg-white"
+                      onPress={() => updateProductQuantity(selectedItem.id, selectedItem.quantity - 1)}
+                    >
+                      <Text className="text-lg font-semibold text-slate-700">-</Text>
+                    </TouchableOpacity>
+                    <Text className="mx-4 min-w-[20px] text-center text-sm font-semibold text-slate-800">
+                      {selectedItem.quantity}
+                    </Text>
+                    <TouchableOpacity
+                      className="h-8 w-8 items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor:
+                          selectedItem.kind === 'Producto' &&
+                          typeof selectedItem.stock === 'number' &&
+                          selectedItem.quantity >= selectedItem.stock
+                            ? '#cbd5e1'
+                            : palette.primary,
+                      }}
+                      disabled={
+                        selectedItem.kind === 'Producto' &&
+                        typeof selectedItem.stock === 'number' &&
+                        selectedItem.quantity >= selectedItem.stock
+                      }
+                      onPress={() => updateProductQuantity(selectedItem.id, selectedItem.quantity + 1)}
+                    >
+                      <Text className="text-lg font-semibold text-white">+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </Animated.View>
+        ) : null}
+
+        <Animated.View className="mb-6" entering={sectionEntering(6)}>
+          <Text className="font-semibold text-slate-800 mb-2">Observación</Text>
+          <TextInput
+            className="min-h-[112px] rounded-2xl border border-slate-200 bg-white px-4 py-4 text-slate-800"
+            placeholder="Agrega detalles para el cliente, condiciones o notas de entrega"
+            placeholderTextColor="#94a3b8"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            textAlignVertical="top"
+            maxLength={280}
+          />
+          <Text className="mt-2 text-xs text-slate-400">{description.trim().length}/280</Text>
+        </Animated.View>
+
+        <Animated.View className="mb-6" entering={sectionEntering(7)}>
+          <Text className="font-semibold text-slate-800 mb-2">Dirección</Text>
+          <TextInput
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-slate-800"
+            placeholder="Ej. Jr. Hermanda, Avenida Ejemplo"
+            placeholderTextColor="#94a3b8"
+            value={address}
+            onChangeText={setAddress}
+          />
+        </Animated.View>
+
+        <Animated.View className="mb-6" entering={sectionEntering(8)}>
+          <Text className="font-semibold text-slate-800 mb-2">Fecha de entrega estimada</Text>
+          <TouchableOpacity className="flex-row items-center justify-between border border-slate-200 rounded-xl p-4 bg-white" onPress={() => setShowDate(true)}>
+            <Text className="text-slate-800">{date.toLocaleDateString()}</Text>
+            <Calendar color="#94a3b8" size={20} />
+          </TouchableOpacity>
+          {showDate ? <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} /> : null}
+        </Animated.View>
+
+        <Animated.View className="mb-6" entering={sectionEntering(9)}>
+          <Text className="font-semibold text-slate-800 mb-2">Método de entrega</Text>
+          <DropDownPicker
+            open={methodOpen}
+            value={method}
+            items={methodItems}
+            setOpen={setMethodOpen}
+            setValue={setMethod}
+            setItems={setMethodItems}
+            placeholder="Seleccionar método de entrega"
+            listMode="SCROLLVIEW"
+            maxHeight={dropdownSpacing}
+            zIndex={2000}
+            zIndexInverse={2000}
+            style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}
+            dropDownContainerStyle={{ borderColor: '#e5e7eb' }}
+            textStyle={{ color: method ? '#0f172a' : '#94a3b8' }}
+          />
+          <View style={{ height: methodOpen ? dropdownSpacing : 0 }} />
+        </Animated.View>
+
+        {submitError ? <Text className="mb-4 text-sm font-medium text-rose-600">{submitError}</Text> : null}
+      </Animated.ScrollView>
+
+      <Animated.View className="border-t border-slate-100 bg-white px-4 pt-4" style={{ paddingBottom: Math.max(insets.bottom, 16) }} entering={sectionEntering(10)}>
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className="text-slate-500 font-medium">Total cotizado</Text>
+            <Text className="text-lg font-semibold text-slate-800">{formatCurrencyAmount(totalQuote)}</Text>
+          </View>
+        </View>
+
+        <View className="flex-row">
+          <TouchableOpacity
+            className="flex-1 mr-2 rounded-2xl py-4 items-center"
+            style={{ backgroundColor: '#fca5a5' }}
+            onPress={handleEliminar}
+          >
+            <Text className="font-semibold text-slate-800">Eliminar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 ml-2 rounded-2xl py-4 items-center"
+            style={{
+              backgroundColor:
+                product.length > 0 && !isSubmitting ? '#86efac' : '#e2e8f0',
+            }}
+            disabled={product.length === 0 || isSubmitting}
+            onPress={() => {
+              void handleConfirmarPedido();
+            }}
+          >
+            <Text className={`font-semibold ${product.length > 0 ? 'text-slate-800' : 'text-slate-400'}`}>
+              {isSubmitting ? 'Guardando...' : 'Confirmar pedido'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
