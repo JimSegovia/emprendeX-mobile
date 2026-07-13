@@ -28,6 +28,10 @@ function CustomDrawerContent(props: any) {
   const navigateFromDrawer = (item: (typeof DRAWER_ITEMS)[number]) => {
     navigation.closeDrawer();
     requestAnimationFrame(() => {
+      if (item.id === 'alertas-pro') {
+        navigation.navigate('notificaciones');
+        return;
+      }
       if (item.tab) {
         navigation.navigate('(tabs)', { screen: item.tab });
         return;
@@ -178,6 +182,7 @@ export default function DrawerLayout() {
       }}
     >
       <Drawer.Screen name="(tabs)" />
+      <Drawer.Screen name="notificaciones" />
     </Drawer>
   );
 }
