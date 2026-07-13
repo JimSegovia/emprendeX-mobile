@@ -167,19 +167,6 @@ export default function TabLayout() {
             title: '',
             href: isOperationsEnabled ? undefined : null,
             tabBarIcon: () => <View className="h-14 w-14" />,
-            tabBarButton: isOperationsEnabled
-              ? (props: any) => (
-                  <TouchableOpacity
-                    {...props}
-                    activeOpacity={0.8}
-                    style={[
-                      props.style,
-                      { flex: 1, alignItems: 'center', justifyContent: 'center' },
-                    ]}
-                    onPress={() => setFabOpen((prev) => !prev)}
-                  />
-                )
-              : () => null,
           }}
           listeners={{
             tabPress: (event) => {
