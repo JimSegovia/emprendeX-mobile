@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, RotateCw, HelpCircle, Pause, ArrowLeftRight, Info, Crown, TrendingUp } from 'lucide-react-native';
+import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, RotateCw, Pause, ArrowLeftRight, Info, Crown, TrendingUp } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
@@ -10,8 +10,6 @@ import Animated, { screenEntering } from '@/components/ui/motion';
 import { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 type FlowStep = 'MANAGEMENT' | 'SELECTION' | 'CONFIRMATION' | 'MERCADOPAGO' | 'SUCCESS';
-
-const MOCK_PAYMENT_METHOD = { name: 'MercadoPago', last4: '1234' };
 
 const MOCK_PAYMENT_HISTORY = [
   { id: '1', date: '15 May 2025', label: 'Plan PRO - Mensual', amount: 'S/ 29.90', status: 'Pagado' },
@@ -58,6 +56,23 @@ export default function PlanProScreen() {
   const renewalDays = subscription?.endsAt ? daysUntil(subscription.endsAt) : 0;
   const renewalDateFormatted = subscription?.endsAt ? formatEndsAt(subscription.endsAt) : '';
 
+  const [renewSuccess, setRenewSuccess] = useState(false);
+  const [cancelStep, setCancelStep] = useState<'idle' | 'done'>('idle');
+
+  const handleRenew = () => {
+    Alert.alert('Renovar suscripción', '¿Deseas renovar tu suscripción de manera anticipada?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Renovar ahora', onPress: () => setRenewSuccess(true) },
+    ]);
+  };
+
+  const handleCancel = () => {
+    Alert.alert('Cancelar suscripción', `¿Estás seguro de que deseas cancelar? Seguirás disfrutando de PRO hasta el ${renewalDateFormatted}.`, [
+      { text: 'Mantener plan', style: 'cancel' },
+      { text: 'Confirmar cancelación', style: 'destructive', onPress: () => setCancelStep('done') },
+    ]);
+  };
+
   const handleBack = async () => {
     if (currentStep === 'MANAGEMENT' || currentStep === 'SELECTION') {
       router.back();
@@ -66,8 +81,7 @@ export default function PlanProScreen() {
     } else if (currentStep === 'MERCADOPAGO') {
       setCurrentStep('CONFIRMATION');
     } else if (currentStep === 'SUCCESS') {
-      await refreshAuthState();
-      router.replace('/(drawer)/(tabs)/');
+      setCurrentStep('MANAGEMENT');
     }
   };
 
@@ -110,13 +124,12 @@ export default function PlanProScreen() {
           <TouchableOpacity onPress={handleBack} className="p-2 -ml-2 mr-2">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
-          <View className="flex-1">
+          <View className="flex-1 flex-row items-center">
             <Text className="text-white text-xl font-bold">Mi Plan</Text>
-            <Text className="text-white/80 text-xs mt-0.5">Administra tu suscripción y pagos</Text>
+            <View className="ml-3 rounded-full bg-amber-100 px-2 py-0.5">
+              <Text className="text-xs font-bold text-amber-800">PRO</Text>
+            </View>
           </View>
-          <TouchableOpacity className="p-2">
-            <HelpCircle color="white" size={22} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -126,7 +139,7 @@ export default function PlanProScreen() {
           <View className="flex-row items-start justify-between mb-4">
             <View className="flex-row items-center flex-1">
               <View className="h-14 w-14 rounded-2xl items-center justify-center mr-4" style={{ backgroundColor: palette.primary }}>
-                <Star size={28} color="white" fill="white" />
+                <Crown size={28} color="white" />
               </View>
               <View className="flex-1">
                 <Text className="text-sm text-slate-500 font-medium">Plan actual</Text>
@@ -138,11 +151,6 @@ export default function PlanProScreen() {
                 </View>
                 <Text className="text-sm text-slate-500 mt-1 leading-5">Disfruta de todas las funcionalidades premium de tu negocio.</Text>
               </View>
-            </View>
-            <View className="h-20 w-20 items-center justify-center rounded-full" style={{ backgroundColor: palette.primarySoft }}>
-              <Crown size={40} color={palette.primary} />
-              <Sparkles size={14} color={palette.primary} style={{ position: 'absolute', top: 4, right: 8 }} />
-              <Sparkles size={10} color={palette.primary} style={{ position: 'absolute', bottom: 8, left: 4 }} />
             </View>
           </View>
 
@@ -159,20 +167,12 @@ export default function PlanProScreen() {
                 <Text className="text-xs font-semibold mt-0.5" style={{ color: palette.primary }}>(en {renewalDays} días)</Text>
               </View>
             </View>
-            <View className="flex-1 flex-row items-start">
-              <View className="h-10 w-10 rounded-xl items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}>
-                <CreditCard size={20} color={palette.primary} />
-              </View>
-              <View>
-                <Text className="text-xs text-slate-500">Método de pago</Text>
-                <Text className="text-sm font-bold text-slate-800 mt-0.5">{MOCK_PAYMENT_METHOD.name}</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">•••• {MOCK_PAYMENT_METHOD.last4}</Text>
-              </View>
-            </View>
           </View>
 
           <View className="mt-4 rounded-2xl px-4 py-3 flex-row items-center" style={{ backgroundColor: palette.primarySoft }}>
-            <Info size={18} color={palette.primary} className="mr-2" />
+            <View style={{ marginRight: 10 }}>
+              <Info size={18} color={palette.primary} />
+            </View>
             <Text className="text-sm font-medium flex-1" style={{ color: palette.primaryText }}>
               Tu plan se renovará automáticamente por S/ {subscription?.price ?? '29.90'}.
             </Text>
@@ -183,39 +183,53 @@ export default function PlanProScreen() {
         <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
           <Text className="text-base font-bold text-slate-800 mb-4">Acciones</Text>
 
-          <TouchableOpacity
-            className="flex-row items-center justify-between py-3 border-b border-slate-100"
-            onPress={() => Alert.alert('Renovar ahora', 'Tu suscripción se renovará de manera anticipada.')}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-emerald-50">
-                <RotateCw size={20} color="#10b981" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-slate-800">Renovar ahora</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Renueva tu suscripción de manera anticipada.</Text>
-              </View>
+          {renewSuccess ? (
+            <View className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex-row items-center mb-3">
+              <Check size={18} color="#10b981" style={{ marginRight: 8 }} />
+              <Text className="text-sm font-semibold text-emerald-800 flex-1">Suscripción renovada exitosamente</Text>
             </View>
-            <Text className="text-slate-400 text-lg ml-2">›</Text>
-          </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              className="flex-row items-center justify-between py-3 border-b border-slate-100"
+              onPress={handleRenew}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1">
+                <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-emerald-50">
+                  <RotateCw size={20} color="#10b981" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-slate-800">Renovar ahora</Text>
+                  <Text className="text-xs text-slate-500 mt-0.5">Renueva tu suscripción de manera anticipada.</Text>
+                </View>
+              </View>
+              <Text className="text-slate-400 text-lg ml-2">›</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            className="flex-row items-center justify-between py-3 border-b border-slate-100"
-            onPress={() => Alert.alert('Cancelar suscripción', `Seguirás disfrutando de tu plan PRO hasta el ${renewalDateFormatted}. Después de esa fecha, tu cuenta se cambiará automáticamente al plan FREE.`)}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-amber-50">
-                <Pause size={20} color="#f59e0b" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-slate-800">Cancelar suscripción</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Cancelar al finalizar el período actual.</Text>
-              </View>
+          {cancelStep === 'done' ? (
+            <View className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex-row items-center mb-3">
+              <Info size={18} color="#d97706" style={{ marginRight: 8 }} />
+              <Text className="text-sm font-semibold text-amber-800 flex-1">Cancelación programada para el {renewalDateFormatted}</Text>
             </View>
-            <Text className="text-slate-400 text-lg ml-2">›</Text>
-          </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              className="flex-row items-center justify-between py-3 border-b border-slate-100"
+              onPress={handleCancel}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1">
+                <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-amber-50">
+                  <Pause size={20} color="#f59e0b" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-slate-800">Cancelar suscripción</Text>
+                  <Text className="text-xs text-slate-500 mt-0.5">Cancelar al finalizar el período actual.</Text>
+                </View>
+              </View>
+              <Text className="text-slate-400 text-lg ml-2">›</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             className="flex-row items-center justify-between py-3"
@@ -324,8 +338,8 @@ export default function PlanProScreen() {
           <View className="w-[48%] bg-white rounded-3xl border border-slate-200 p-4 shadow-sm flex-col justify-between">
             <View>
               <View className="items-center mb-4">
-                <View className="h-12 w-12 rounded-full  items-center justify-center mb-2" style={{ backgroundColor: palette.primarySoft }}>
-                  <View className="h-6 w-6 border-2  rounded-sm" style={{ borderColor: palette.primary }} />
+                <View className="h-12 w-12 rounded-full items-center justify-center mb-2" style={{ backgroundColor: palette.primarySoft }}>
+                  <View className="h-6 w-6 border-2 rounded-sm" style={{ borderColor: palette.primary }} />
                 </View>
                 <Text className="text-lg font-bold text-slate-800">Gratis</Text>
                 <Text className="text-xs text-slate-500 font-medium mt-1"><Text className="text-lg font-bold" style={{ color: palette.primary }}>S/ 0</Text> / mes</Text>
@@ -339,9 +353,23 @@ export default function PlanProScreen() {
                 <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Reportes básicos</Text></View>
               </View>
             </View>
-            <View className="bg-slate-100 py-3 rounded-2xl items-center mt-4">
-              <Text className="text-slate-500 font-semibold text-sm">Plan actual</Text>
-            </View>
+            {isPremium ? (
+              <TouchableOpacity
+                className="rounded-2xl border border-slate-200 py-3 items-center mt-4"
+                onPress={() => {
+                  Alert.alert('Cambiar a plan Gratis', 'Si cambias a Gratis, perderás acceso a los módulos premium al finalizar tu período actual.', [
+                    { text: 'Mantenerme en PRO', style: 'cancel' },
+                    { text: 'Cambiar a Gratis', style: 'destructive', onPress: () => setCurrentStep('MANAGEMENT') },
+                  ]);
+                }}
+              >
+                <Text className="text-slate-600 font-semibold text-sm">Cambiar a Gratis</Text>
+              </TouchableOpacity>
+            ) : (
+              <View className="bg-slate-100 py-3 rounded-2xl items-center mt-4">
+                <Text className="text-slate-500 font-semibold text-sm">Plan actual</Text>
+              </View>
+            )}
           </View>
 
           {/* Plan Pro */}
