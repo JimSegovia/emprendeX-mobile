@@ -116,6 +116,7 @@ export default function ConfiguracionScreen() {
     ? [authState.user.firstNames, authState.user.lastNames].filter(Boolean).join(' ')
     : 'Pendiente';
   const planName = authState?.user.activeSubscription?.planName ?? 'Sin plan';
+  const isPremium = authState?.user.activeSubscription?.isPremium === true;
   const businessDetails = [
     { label: 'Nombre', value: businessProfile?.name ?? 'Pendiente' },
     { label: 'Rubro', value: businessProfile?.category ?? 'Pendiente' },
@@ -564,22 +565,25 @@ export default function ConfiguracionScreen() {
           </View>
 
           <TouchableOpacity
-            className="flex-row items-center justify-between rounded-2xl border bg-slate-50 p-4"
-            style={{ borderColor: palette.primaryBorder }}
-            onPress={() => router.push('/(drawer)/(tabs)/configuracion-notificaciones')}
+            className="flex-row items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5"
+            onPress={() => {
+              if (isPremium) {
+                router.push('/(drawer)/(tabs)/configuracion-notificaciones');
+              } else {
+                router.push('/(drawer)/(tabs)/plan-pro');
+              }
+            }}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Gestionar notificaciones"
           >
             <View className="flex-row items-center">
-              <Bell size={18} color={palette.primary} className="mr-3" />
+              <View className="h-8 w-8 items-center justify-center rounded-xl bg-white mr-3.5">
+                <Bell size={17} color={palette.primary} />
+              </View>
               <Text className="text-sm font-semibold text-slate-700">Gestionar preferencias</Text>
             </View>
-            <View
-              className="h-7 w-7 items-center justify-center rounded-full bg-white border border-slate-200"
-            >
-              <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>→</Text>
-            </View>
+            <Text className="text-sm font-semibold" style={{ color: palette.primaryText }}>→</Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -794,7 +798,9 @@ export default function ConfiguracionScreen() {
               <Crown size={22} color="#d97706" />
             </View>
             <View>
-              <Text className="text-lg font-semibold text-amber-900">Módulos premium bloqueados</Text>
+              <Text className="text-lg font-semibold text-amber-900">
+                {isPremium ? 'Módulos premium desbloqueados' : 'Módulos premium bloqueados'}
+              </Text>
             </View>
           </View>
 
@@ -820,7 +826,9 @@ export default function ConfiguracionScreen() {
             style={{ backgroundColor: palette.primary }}
             onPress={() => router.push('/(drawer)/(tabs)/plan-pro')}
           >
-            <Text className="text-lg font-semibold text-white">Gestionar plan Pro</Text>
+            <Text className="text-lg font-semibold text-white">
+              {isPremium ? 'Gestionar plan Pro' : 'Gestionar plan Básico'}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -848,7 +856,7 @@ export default function ConfiguracionScreen() {
         <View className="flex-1 justify-center bg-black/45 px-5">
           <View
             className="rounded-[28px] border bg-white p-5"
-            style={{ borderColor: palette.primaryBorder, shadowColor: palette.shadow }}
+            style={{ borderColor: palette.primaryBorder }}
           >
             <View className="flex-row items-center justify-between">
               <View>
@@ -863,17 +871,15 @@ export default function ConfiguracionScreen() {
                   setIsEditingProfile(false);
                 }}
               >
-                <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>
-                  Cerrar
-                </Text>
+                <Text className="text-xs font-semibold" style={{ color: palette.primaryText }}>Cerrar</Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView className="mt-5" showsVerticalScrollIndicator={false}>
-              <Text className="text-sm" style={{ color: palette.primaryText }}>Nombres</Text>
+              <Text className="text-sm text-slate-600">Nombres</Text>
               <TextInput
-                className="mt-2 rounded-2xl border px-4 py-3 text-base font-semibold text-slate-800"
-                style={{ borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
+                className="mt-2 rounded-2xl border bg-slate-50 px-4 py-3 text-base font-semibold text-slate-800"
+                style={{ borderColor: palette.primaryBorder }}
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
@@ -881,10 +887,10 @@ export default function ConfiguracionScreen() {
                 placeholderTextColor="#94a3b8"
               />
 
-              <Text className="mt-4 text-sm" style={{ color: palette.primaryText }}>Apellidos</Text>
+              <Text className="mt-4 text-sm text-slate-600">Apellidos</Text>
               <TextInput
-                className="mt-2 rounded-2xl border px-4 py-3 text-base font-semibold text-slate-800"
-                style={{ borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
+                className="mt-2 rounded-2xl border bg-slate-50 px-4 py-3 text-base font-semibold text-slate-800"
+                style={{ borderColor: palette.primaryBorder }}
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
@@ -892,12 +898,10 @@ export default function ConfiguracionScreen() {
                 placeholderTextColor="#94a3b8"
               />
 
-              <Text className="mt-4 text-sm" style={{ color: palette.primaryText }}>
-                Nombre del negocio
-              </Text>
+              <Text className="mt-4 text-sm text-slate-600">Nombre del negocio</Text>
               <TextInput
-                className="mt-2 rounded-2xl border px-4 py-3 text-base font-semibold text-slate-800"
-                style={{ borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
+                className="mt-2 rounded-2xl border bg-slate-50 px-4 py-3 text-base font-semibold text-slate-800"
+                style={{ borderColor: palette.primaryBorder }}
                 value={businessName}
                 onChangeText={setBusinessName}
                 autoCapitalize="words"
@@ -905,10 +909,10 @@ export default function ConfiguracionScreen() {
                 placeholderTextColor="#94a3b8"
               />
 
-              <Text className="mt-4 text-sm" style={{ color: palette.primaryText }}>Rubro</Text>
+              <Text className="mt-4 text-sm text-slate-600">Rubro</Text>
               <TextInput
-                className="mt-2 rounded-2xl border px-4 py-3 text-base font-semibold text-slate-800"
-                style={{ borderColor: palette.primaryBorder, backgroundColor: palette.primarySoft }}
+                className="mt-2 rounded-2xl border bg-slate-50 px-4 py-3 text-base font-semibold text-slate-800"
+                style={{ borderColor: palette.primaryBorder }}
                 value={businessCategory}
                 onChangeText={setBusinessCategory}
                 autoCapitalize="sentences"
@@ -916,7 +920,7 @@ export default function ConfiguracionScreen() {
                 placeholderTextColor="#94a3b8"
               />
 
-              <Text className="mt-4 text-sm" style={{ color: palette.primaryText }}>Logo del negocio</Text>
+              <Text className="mt-4 text-sm text-slate-600">Logo del negocio</Text>
 
               <TouchableOpacity
                 className="mt-2 overflow-hidden rounded-2xl border border-slate-200"
@@ -953,9 +957,7 @@ export default function ConfiguracionScreen() {
                   setIsEditingProfile(false);
                 }}
               >
-                <Text className="text-center font-semibold" style={{ color: palette.primaryText }}>
-                  Cancelar
-                </Text>
+                <Text className="text-center font-semibold" style={{ color: palette.primaryText }}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 rounded-2xl px-4 py-3"

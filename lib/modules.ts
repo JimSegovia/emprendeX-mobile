@@ -50,6 +50,7 @@ export const ALWAYS_VISIBLE_MODULE_IDS: ModuleId[] = [
   'index',
   'calendario',
   'reportes',
+  'alertas-pro',
   'configuracion',
 ];
 

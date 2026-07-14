@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Bell,
   Calendar,
-  ChevronRight,
   Info,
   Mail,
   ShoppingBag,
@@ -104,33 +103,20 @@ export default function ConfiguracionNotificacionesScreen() {
   ].filter((cat) => isModuleEnabled(cat.module));
 
   return (
-    <View className="flex-1 bg-slate-50">
-      {/* Header */}
+    <View className="flex-1 bg-white">
       <Animated.View
-        className="px-4 pb-6"
+        className="px-5 pb-4"
         style={{
           paddingTop: Math.max(insets.top, 16) + 16,
           backgroundColor: palette.primary,
-          borderBottomLeftRadius: 28,
-          borderBottomRightRadius: 28,
         }}
         entering={sectionEntering(0)}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity onPress={() => router.back()} className="mr-4 p-1">
-              <ArrowLeft color="white" size={24} />
-            </TouchableOpacity>
-            <View className="flex-1">
-              <Text className="text-white text-xl font-bold">Configuración de notificaciones</Text>
-              <Text className="text-white/80 text-xs mt-1">Elige qué notificaciones quieres recibir</Text>
-            </View>
-          </View>
-          <View
-            className="h-10 w-10 items-center justify-center rounded-full bg-white/20"
-          >
-            <Bell size={20} color="white" />
-          </View>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/configuracion')} className="p-2 -ml-2 mr-2">
+            <ArrowLeft color="white" size={24} />
+          </TouchableOpacity>
+          <Text className="text-white text-xl font-bold">Configuración de notificaciones</Text>
         </View>
       </Animated.View>
 
@@ -189,17 +175,14 @@ export default function ConfiguracionNotificacionesScreen() {
                         {cat.detail}
                       </Text>
                     </View>
-                    <View className="flex-row items-center gap-2">
-                      <Switch
-                        value={settings.general && settings.categories[cat.key]}
-                        disabled={!settings.general}
-                        onValueChange={(val) => handleToggleCategory(cat.key, val)}
-                        trackColor={{ false: '#e2e8f0', true: palette.primary }}
-                        thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
-                        ios_backgroundColor="#e2e8f0"
-                      />
-                      <ChevronRight size={16} color="#94a3b8" />
-                    </View>
+                    <Switch
+                      value={settings.general && settings.categories[cat.key]}
+                      disabled={!settings.general}
+                      onValueChange={(val) => handleToggleCategory(cat.key, val)}
+                      trackColor={{ false: '#e2e8f0', true: palette.primary }}
+                      thumbColor={Platform.OS === 'ios' ? undefined : '#ffffff'}
+                      ios_backgroundColor="#e2e8f0"
+                    />
                   </View>
                 );
               })}
@@ -258,11 +241,13 @@ export default function ConfiguracionNotificacionesScreen() {
 
         {/* Footer Info */}
         <Animated.View
-          className="rounded-2xl flex-row items-start p-4"
+          className="mb-6 rounded-2xl flex-row items-start p-4"
           style={{ backgroundColor: palette.primarySoft }}
           entering={sectionEntering(4)}
         >
-          <Info size={18} color={palette.primary} className="mr-3 mt-0.5" />
+          <View className="mr-3 mt-0.5">
+            <Info size={18} color={palette.primary} />
+          </View>
           <View className="flex-1">
             <Text className="text-xs font-semibold leading-5" style={{ color: palette.primaryText }}>
               Los cambios se guardan automáticamente.

@@ -34,7 +34,7 @@ export default function NotificationsScreen() {
     <View className="flex-1 bg-white">
       <View
         className="px-5 pb-4"
-        style={{ paddingTop: Math.max(insets.top, 16), backgroundColor: palette.primary }}
+        style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
