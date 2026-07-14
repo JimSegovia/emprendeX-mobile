@@ -1,31 +1,15 @@
-﻿import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+﻿import React, { useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Animated as RNAnimated, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Check, Lock, Shield, Sparkles, CreditCard, Star, Calendar, PieChart, Download, BarChart2, Bell, Headset, RotateCw, Pause, ArrowLeftRight, Info, Crown, TrendingUp, Menu } from 'lucide-react-native';
-import { useRouter, useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { ArrowLeft, Check, Lock, Shield, Star, RotateCw, Pause, ArrowLeftRight, Info, Crown, CreditCard, Banknote } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
-import { upgradeToPro } from '@/lib/subscriptions';
+import { upgradeToPro, downgradeToBasic } from '@/lib/subscriptions';
 import Animated, { screenEntering } from '@/components/ui/motion';
 import { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 type FlowStep = 'MANAGEMENT' | 'SELECTION' | 'CONFIRMATION' | 'MERCADOPAGO' | 'SUCCESS';
-
-const MOCK_PAYMENT_HISTORY = [
-  { id: '1', date: '15 May 2025', label: 'Plan PRO - Mensual', amount: 'S/ 29.90', status: 'Pagado' },
-  { id: '2', date: '15 Abr 2025', label: 'Plan PRO - Mensual', amount: 'S/ 29.90', status: 'Pagado' },
-  { id: '3', date: '15 Mar 2025', label: 'Plan PRO - Mensual', amount: 'S/ 29.90', status: 'Pagado' },
-];
-
-const PRO_FEATURES = [
-  { icon: TrendingUp, label: 'Reportes\navanzados' },
-  { icon: Calendar, label: 'Calendario' },
-  { icon: Sparkles, label: 'Análisis con\nIA' },
-  { icon: Download, label: 'Exportar a\nExcel' },
-  { icon: Bell, label: 'Recordatorios\nilimitados' },
-  { icon: Headset, label: 'Soporte\nprioritario' },
-];
 
 function formatEndsAt(isoDate: string): string {
   const date = new Date(isoDate);
@@ -58,6 +42,13 @@ export default function PlanProScreen() {
   const renewalDateFormatted = subscription?.endsAt ? formatEndsAt(subscription.endsAt) : '';
 
   const [renewSuccess, setRenewSuccess] = useState(false);
+  const { width: screenWidth } = useWindowDimensions();
+  const confettiPieces = useMemo(() => Array.from({ length: 40 }, (_, i) => ({
+    color: ['#fbbf24', '#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fb923c', '#f87171', '#2dd4bf'][i % 8],
+    x: Math.random() * screenWidth,
+    delay: Math.random() * 3000,
+    size: 6 + Math.random() * 10,
+  })), [screenWidth]);
   const [cancelStep, setCancelStep] = useState<'idle' | 'done'>('idle');
 
   const handleRenew = () => {
@@ -68,20 +59,21 @@ export default function PlanProScreen() {
   };
 
   const handleCancel = () => {
-    Alert.alert('Cancelar suscripción', `¿Estás seguro de que deseas cancelar? Seguirás disfrutando de PRO hasta el ${renewalDateFormatted}.`, [
+    Alert.alert('Cancelar suscripción', `¿Estás seguro de que deseas cancelar? Seguirás disfrutando de ${isPremium ? 'PRO' : 'tu plan actual'} hasta el ${renewalDateFormatted}.`, [
       { text: 'Mantener plan', style: 'cancel' },
       { text: 'Confirmar cancelación', style: 'destructive', onPress: () => setCancelStep('done') },
     ]);
   };
 
-  const navigation = useNavigation();
-  const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
+
 
   const handleBack = async () => {
-    if (currentStep === 'MANAGEMENT' || currentStep === 'SELECTION') {
-      router.back();
+    if (currentStep === 'MANAGEMENT') {
+      router.replace('/(drawer)/(tabs)/configuracion');
+    } else if (currentStep === 'SELECTION') {
+      setCurrentStep('MANAGEMENT');
     } else if (currentStep === 'CONFIRMATION') {
-      setCurrentStep(isPremium ? 'MANAGEMENT' : 'SELECTION');
+      setCurrentStep('SELECTION');
     } else if (currentStep === 'MERCADOPAGO') {
       setCurrentStep('CONFIRMATION');
     } else if (currentStep === 'SUCCESS') {
@@ -119,197 +111,129 @@ export default function PlanProScreen() {
     }
   };
 
-  const topBarColor = palette.primaryDark;
+  const handleDowngrade = async () => {
+    if (!accessToken || isUpgrading) return;
+
+    setIsUpgrading(true);
+    setUpgradeError(null);
+
+    try {
+      const updatedUser = await downgradeToBasic(accessToken);
+
+      if (authState) {
+        updateAuthState({
+          ...authState,
+          user: updatedUser,
+        });
+      }
+
+      setCurrentStep('MANAGEMENT');
+    } catch (error: unknown) {
+      setUpgradeError(error instanceof Error ? error.message : 'No se pudo completar la operación.');
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const topBarColor = palette.primary;
 
   const renderManagement = () => (
     <Animated.View className="flex-1" entering={screenEntering} key="management">
-      <View style={{ paddingTop: Math.max(insets.top, 16), backgroundColor: topBarColor, paddingBottom: 20 }}>
-        <View className="flex-row items-center px-4">
-          <TouchableOpacity onPress={openDrawer} className="p-2 -ml-2 mr-2">
-            <Menu color="white" size={24} />
+      <View className="px-5 pb-4" style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: topBarColor }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={handleBack} className="p-2 -ml-2 mr-2">
+            <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
           <View className="flex-row items-center">
             <Text className="text-white text-xl font-bold mr-2">Mi Plan</Text>
             <View className="border border-white/40 rounded-full px-2 py-0.5">
-              <Text className="text-white text-[10px] font-bold">PRO</Text>
+              <Text className="text-white text-[10px] font-bold">{isPremium ? 'PRO' : 'BÁSICO'}</Text>
             </View>
           </View>
         </View>
       </View>
 
-      <ScrollView className="flex-1 bg-[#f8fafc]" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        {/* Plan actual card */}
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
-          <View className="flex-row items-start justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <View className="h-14 w-14 rounded-2xl items-center justify-center mr-4" style={{ backgroundColor: palette.primary }}>
-                <Crown size={28} color="white" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm text-slate-500 font-medium">Plan actual</Text>
-                <View className="flex-row items-center mt-1">
-                  <Text className="text-2xl font-bold text-slate-800">PRO</Text>
-                  <View className="ml-2 rounded-full px-2.5 py-0.5" style={{ backgroundColor: palette.primary }}>
-                    <Text className="text-white text-xs font-bold">Activo</Text>
-                  </View>
-                </View>
-                <Text className="text-sm text-slate-500 mt-1 leading-5">Disfruta de todas las funcionalidades premium de tu negocio.</Text>
-              </View>
-            </View>
-          </View>
-
-          <View className="h-[1px] bg-slate-100 mb-4" />
-
-          <View className="flex-row">
-            <View className="flex-1 flex-row items-start">
-              <View className="h-10 w-10 rounded-xl items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}>
-                <Calendar size={20} color={palette.primary} />
+      <ScrollView className="flex-1 bg-slate-50" contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View className="rounded-[28px] border-2 bg-white p-6 mb-4" style={{ borderColor: palette.primary }}>
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center">
+              <View className="h-12 w-12 rounded-2xl items-center justify-center mr-3" style={{ backgroundColor: palette.primary }}>
+                <Crown size={22} color="white" />
               </View>
               <View>
-                <Text className="text-xs text-slate-500">Próxima renovación</Text>
-                <Text className="text-sm font-bold text-slate-800 mt-0.5">{renewalDateFormatted}</Text>
-                <Text className="text-xs font-semibold mt-0.5" style={{ color: palette.primary }}>(en {renewalDays} días)</Text>
+                <Text className="text-sm text-slate-500">Plan actual</Text>
+                <Text className="text-xl font-bold text-slate-800">{isPremium ? 'PRO' : 'Básico'}</Text>
               </View>
+            </View>
+            <View className="rounded-full px-3 py-1" style={{ backgroundColor: palette.primary }}>
+              <Text className="text-white text-xs font-bold">Activo</Text>
             </View>
           </View>
 
-          <View className="mt-4 rounded-2xl px-4 py-3 flex-row items-center" style={{ backgroundColor: palette.primarySoft }}>
-            <View style={{ marginRight: 10 }}>
-              <Info size={18} color={palette.primary} />
+          <View className="flex-row">
+            <View className="flex-1 rounded-2xl bg-slate-50 p-3 mr-2">
+              <Text className="text-xs text-slate-500">Precio</Text>
+              <Text className="text-base font-bold text-slate-800">S/ {isPremium ? subscription?.price ?? '29.90' : '0'}</Text>
+              <Text className="text-xs text-slate-400">/ mes</Text>
             </View>
-            <Text className="text-sm font-medium flex-1" style={{ color: palette.primaryText }}>
-              Tu plan se renovará automáticamente por S/ {subscription?.price ?? '29.90'}.
-            </Text>
+            <View className="flex-1 rounded-2xl bg-slate-50 p-3 ml-2">
+              <Text className="text-xs text-slate-500">Renovación</Text>
+              <Text className="text-base font-bold text-slate-800">{renewalDateFormatted}</Text>
+              <Text className="text-xs text-slate-400">en {renewalDays} días</Text>
+            </View>
           </View>
         </View>
 
-        {/* Acciones */}
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
-          <Text className="text-base font-bold text-slate-800 mb-4">Acciones</Text>
-
+        <View className="rounded-[28px] border border-slate-200 bg-white p-5 mb-4">
           {renewSuccess ? (
-            <View className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex-row items-center mb-3">
-              <Check size={18} color="#10b981" style={{ marginRight: 8 }} />
-              <Text className="text-sm font-semibold text-emerald-800 flex-1">Suscripción renovada exitosamente</Text>
+            <View className="rounded-2xl bg-emerald-50 p-4 flex-row items-center">
+              <Check size={18} color="#10b981" />
+              <Text className="text-sm font-semibold text-emerald-800 ml-2">Suscripción renovada</Text>
             </View>
           ) : (
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-slate-100"
+              className="flex-row items-center py-2"
               onPress={handleRenew}
               activeOpacity={0.7}
             >
-              <View className="flex-row items-center flex-1">
-                <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-emerald-50">
-                  <RotateCw size={20} color="#10b981" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold text-slate-800">Renovar ahora</Text>
-                  <Text className="text-xs text-slate-500 mt-0.5">Renueva tu suscripción de manera anticipada.</Text>
-                </View>
+              <View className="h-10 w-10 rounded-xl items-center justify-center bg-emerald-50 mr-3">
+                <RotateCw size={20} color="#10b981" />
               </View>
-              <Text className="text-slate-400 text-lg ml-2">›</Text>
+              <Text className="text-sm font-semibold text-slate-800 flex-1">Renovar ahora</Text>
+              <Text className="text-slate-400 text-lg">›</Text>
             </TouchableOpacity>
           )}
 
           {cancelStep === 'done' ? (
-            <View className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex-row items-center mb-3">
-              <Info size={18} color="#d97706" style={{ marginRight: 8 }} />
-              <Text className="text-sm font-semibold text-amber-800 flex-1">Cancelación programada para el {renewalDateFormatted}</Text>
+            <View className="rounded-2xl bg-amber-50 p-4 flex-row items-center mt-2">
+              <Info size={18} color="#d97706" />
+              <Text className="text-sm font-semibold text-amber-800 ml-2 flex-1">Cancelación programada</Text>
             </View>
           ) : (
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-slate-100"
+              className="flex-row items-center py-2 border-t border-slate-50"
               onPress={handleCancel}
               activeOpacity={0.7}
             >
-              <View className="flex-row items-center flex-1">
-                <View className="h-10 w-10 rounded-xl items-center justify-center mr-3 bg-amber-50">
-                  <Pause size={20} color="#f59e0b" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold text-slate-800">Cancelar suscripción</Text>
-                  <Text className="text-xs text-slate-500 mt-0.5">Cancelar al finalizar el período actual.</Text>
-                </View>
+              <View className="h-10 w-10 rounded-xl items-center justify-center bg-amber-50 mr-3">
+                <Pause size={20} color="#f59e0b" />
               </View>
-              <Text className="text-slate-400 text-lg ml-2">›</Text>
+              <Text className="text-sm font-semibold text-slate-800 flex-1">Cancelar suscripción</Text>
+              <Text className="text-slate-400 text-lg">›</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            className="flex-row items-center justify-between py-3"
+            className="flex-row items-center py-2 border-t border-slate-50"
             onPress={() => setCurrentStep('SELECTION')}
             activeOpacity={0.7}
           >
-            <View className="flex-row items-center flex-1">
-              <View className="h-10 w-10 rounded-xl items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}>
-                <ArrowLeftRight size={20} color={palette.primary} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-slate-800">Cambiar de plan</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Ver otros planes disponibles.</Text>
-              </View>
+            <View className="h-10 w-10 rounded-xl items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}>
+              <ArrowLeftRight size={20} color={palette.primary} />
             </View>
-            <Text className="text-slate-400 text-lg ml-2">›</Text>
+            <Text className="text-sm font-semibold text-slate-800 flex-1">Cambiar de plan</Text>
+            <Text className="text-slate-400 text-lg">›</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Incluido en tu plan PRO */}
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
-          <Text className="text-base font-bold text-slate-800 mb-4">Incluido en tu plan PRO</Text>
-          <View className="flex-row flex-wrap justify-between">
-            {PRO_FEATURES.map((feature, index) => (
-              <View key={feature.label} className="items-center mb-4" style={{ width: '30%' }}>
-                <View className="h-12 w-12 rounded-2xl items-center justify-center mb-2" style={{ backgroundColor: palette.primarySoft }}>
-                  <feature.icon size={22} color={palette.primary} />
-                </View>
-                <Text className="text-[11px] font-semibold text-slate-700 text-center leading-4">{feature.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Historial de pagos */}
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-base font-bold text-slate-800">Historial de pagos</Text>
-            <TouchableOpacity activeOpacity={0.7}>
-              <Text className="text-sm font-semibold" style={{ color: palette.primary }}>Ver todos</Text>
-            </TouchableOpacity>
-          </View>
-
-          {MOCK_PAYMENT_HISTORY.map((payment, index) => (
-            <View key={payment.id} className={`flex-row items-center justify-between py-3 ${index < MOCK_PAYMENT_HISTORY.length - 1 ? 'border-b border-slate-100' : ''}`}>
-              <View className="flex-row items-center flex-1">
-                <View className="h-9 w-9 rounded-full bg-emerald-50 items-center justify-center mr-3">
-                  <Check size={16} color="#10b981" />
-                </View>
-                <View>
-                  <Text className="text-sm font-semibold text-slate-800">{payment.date}</Text>
-                  <Text className="text-xs text-slate-500">{payment.label}</Text>
-                </View>
-              </View>
-              <View className="items-end">
-                <Text className="text-sm font-bold text-slate-800">{payment.amount}</Text>
-                <Text className="text-xs font-semibold text-emerald-600">{payment.status}</Text>
-              </View>
-              <Text className="text-slate-400 text-lg ml-3">›</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ¿Qué sucede si cancelas? */}
-        <View className="rounded-3xl p-5 border border-amber-200 bg-amber-50">
-          <View className="flex-row items-start">
-            <View className="h-8 w-8 rounded-full bg-amber-100 items-center justify-center mr-3 mt-0.5">
-              <Info size={18} color="#d97706" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm font-bold text-amber-900 mb-1">¿Qué sucede si cancelas?</Text>
-              <Text className="text-sm text-amber-800 leading-5">
-                Seguirás disfrutando de tu plan PRO hasta el {renewalDateFormatted}. Después de esa fecha, tu cuenta se cambiará automáticamente al plan FREE.
-              </Text>
-            </View>
-          </View>
         </View>
       </ScrollView>
     </Animated.View>
@@ -317,254 +241,190 @@ export default function PlanProScreen() {
 
   const renderSelection = () => (
     <Animated.View className="flex-1" entering={SlideInRight} exiting={SlideOutLeft} key="selection">
-      {/* Header */}
-      <View style={{ paddingTop: Math.max(insets.top, 16), backgroundColor: topBarColor, paddingBottom: 16 }}>
-        <View className="flex-row items-center px-4">
+      <View className="px-5 pb-4" style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: topBarColor }}>
+        <View className="flex-row items-center">
           <TouchableOpacity onPress={handleBack} className="p-2 -ml-2 mr-2">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
-          <View className="flex-1 items-center mr-10">
-            <Text className="text-white text-lg font-semibold">Mi Plan</Text>
-          </View>
+          <Text className="text-white text-xl font-bold">Elegir plan</Text>
         </View>
       </View>
 
-      <ScrollView className="flex-1 bg-[#f8fafc]" contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        <View className="items-center mb-8 pt-4">
-          <Text className="text-xl font-bold text-slate-800 text-center mb-2">Elige el plan ideal para tu negocio</Text>
-          <Text className="text-slate-500 text-center text-sm px-4">
-            Actualiza a Pro y accede a herramientas avanzadas para crecer más.
-          </Text>
-        </View>
+      <ScrollView className="flex-1 bg-slate-50" contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
+        <Text className="text-xl font-bold text-slate-800 text-center mb-2">Elige el plan ideal</Text>
+        <Text className="text-slate-500 text-center text-sm mb-6">Herramientas avanzadas para hacer crecer tu negocio</Text>
 
-        <View className="flex-row justify-between mb-8 h-[440px]">
-          {/* Plan Gratis */}
-          <View className="w-[48%] bg-white rounded-3xl border border-slate-200 p-4 shadow-sm flex-col justify-between">
-            <View>
-              <View className="items-center mb-4">
-                <View className="h-12 w-12 rounded-full items-center justify-center mb-2" style={{ backgroundColor: palette.primarySoft }}>
-                  <View className="h-6 w-6 border-2 rounded-sm" style={{ borderColor: palette.primary }} />
-                </View>
-                <Text className="text-lg font-bold text-slate-800">Gratis</Text>
-                <Text className="text-xs text-slate-500 font-medium mt-1"><Text className="text-lg font-bold" style={{ color: palette.primary }}>S/ 0</Text> / mes</Text>
-              </View>
-              <View className="space-y-3">
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Clientes</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Cotizaciones</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Pedidos</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Pagos</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Inventario básico</Text></View>
-                <View className="flex-row items-center"><Check size={14} color={palette.primary} /><Text className="text-[11px] text-slate-700 ml-2">Reportes básicos</Text></View>
-              </View>
+        <View className="rounded-[28px] border border-slate-200 bg-white p-5 mb-4">
+          <View className="items-center mb-4">
+            <View className="h-14 w-14 rounded-2xl items-center justify-center mb-3" style={{ backgroundColor: palette.primarySoft }}>
+              <View className="h-7 w-7 border-2 rounded-md" style={{ borderColor: palette.primary }} />
             </View>
-            {isPremium ? (
-              <TouchableOpacity
-                className="rounded-2xl border border-slate-200 py-3 items-center mt-4"
-                onPress={() => {
-                  Alert.alert('Cambiar a plan Gratis', 'Si cambias a Gratis, perderás acceso a los módulos premium al finalizar tu período actual.', [
-                    { text: 'Mantenerme en PRO', style: 'cancel' },
-                    { text: 'Cambiar a Gratis', style: 'destructive', onPress: () => setCurrentStep('MANAGEMENT') },
-                  ]);
-                }}
-              >
-                <Text className="text-slate-600 font-semibold text-sm">Cambiar a Gratis</Text>
-              </TouchableOpacity>
-            ) : (
-              <View className="bg-slate-100 py-3 rounded-2xl items-center mt-4">
-                <Text className="text-slate-500 font-semibold text-sm">Plan actual</Text>
-              </View>
-            )}
+            <Text className="text-xl font-bold text-slate-800">Plan Gratis</Text>
+            <Text className="text-sm text-slate-500 mt-1">S/ 0 / mes</Text>
           </View>
 
-          {/* Plan Pro */}
-          <View className="w-[48%] bg-white rounded-3xl border-2  p-4 shadow-md flex-col justify-between relative overflow-hidden" style={{ borderColor: palette.primary }}>
-            <View className="absolute top-0 inset-x-0 items-center  py-1 rounded-b-lg mx-6" style={{ backgroundColor: palette.primary }}>
-              <Text className="text-white text-[9px] font-bold">MÁS POPULAR</Text>
-            </View>
-            <View className="mt-4">
-              <View className="items-center mb-4 mt-2">
-                <View className="h-12 w-12 rounded-full bg-orange-50 items-center justify-center mb-2">
-                  <Star size={24} color="#f59e0b" />
+          <View className="rounded-2xl bg-slate-50 p-4 mb-4">
+            <View className="flex-row flex-wrap">
+              {['Clientes', 'Cotizaciones', 'Pedidos', 'Pagos', 'Inventario básico', 'Reportes básicos'].map((item, i) => (
+                <View key={item} className="flex-row items-center w-1/2 mb-2">
+                  <Check size={14} color={palette.primary} />
+                  <Text className="text-xs text-slate-600 ml-2">{item}</Text>
                 </View>
-                <Text className="text-lg font-bold text-slate-800">Pro</Text>
-                <Text className="text-xs text-slate-500 font-medium mt-1"><Text className="text-lg font-bold" style={{ color: palette.primary }}>S/ 29.90</Text> / mes</Text>
-              </View>
-              <Text className="text-[10px] font-semibold text-slate-800 mb-3 text-center">Todo lo del plan Gratis, más:</Text>
-              <View className="space-y-3">
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Calendario</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Reportes avanzados</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Análisis e IA</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Exportar a Excel</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Estadísticas avanzadas</Text></View>
-                <View className="flex-row items-center"><Check size={14} color="#10b981" /><Text className="text-[11px] font-medium text-slate-800 ml-2">Soporte prioritario</Text></View>
-              </View>
+              ))}
             </View>
-            <TouchableOpacity 
-              className=" py-3 rounded-2xl items-center mt-4" style={{ backgroundColor: palette.primary }}
-              onPress={() => setCurrentStep('CONFIRMATION')}
+          </View>
+
+          {isPremium ? (
+            <TouchableOpacity
+              className="rounded-2xl border border-slate-200 bg-white py-3.5 items-center"
+              onPress={() => {
+                Alert.alert('Cambiar a plan Gratis', 'Si cambias a Gratis, perderás acceso a los módulos premium al finalizar tu período actual.', [
+                  { text: 'Mantenerme en PRO', style: 'cancel' },
+                  { text: 'Cambiar a Gratis', style: 'destructive', onPress: () => { void handleDowngrade(); } },
+                ]);
+              }}
             >
-              <Text className="text-white font-bold text-sm">Actualizar a Pro</Text>
+              <Text className="text-slate-600 font-semibold text-sm">Cambiar a Gratis</Text>
             </TouchableOpacity>
-          </View>
+          ) : (
+            <View className="rounded-2xl bg-slate-100 py-3.5 items-center">
+              <Text className="text-slate-500 font-semibold text-sm">Plan actual</Text>
+            </View>
+          )}
         </View>
 
-        <View className=" rounded-2xl p-4 flex-row items-center mb-6" style={{ backgroundColor: palette.primarySoft }}>
-          <Shield color={palette.primary} size={24} className="mr-4" />
-          <View className="flex-1">
-            <Text className="text-slate-800 font-bold text-sm mb-1">Sin contratos. Cancela cuando quieras.</Text>
-            <Text className="text-slate-500 text-xs">Tu plan se renueva automáticamente cada mes.</Text>
+        <View className="rounded-[28px] border-2 bg-white p-5 mb-4 relative overflow-hidden" style={{ borderColor: palette.primary }}>
+          <View className="absolute top-4 right-4">
+            <View className="rounded-full px-3 py-1" style={{ backgroundColor: palette.primary }}>
+              <Text className="text-white text-[10px] font-bold">Recomendado</Text>
+            </View>
           </View>
+
+          <View className="items-center mb-4 mt-2">
+            <View className="h-14 w-14 rounded-2xl items-center justify-center mb-3 bg-amber-50">
+              <Star size={26} color="#f59e0b" />
+            </View>
+            <Text className="text-xl font-bold text-slate-800">Plan Pro</Text>
+            <Text className="text-sm text-slate-500 mt-1">S/ 29.90 / mes</Text>
+          </View>
+
+          <Text className="text-xs font-semibold text-slate-500 mb-3">Todo del plan Gratis, más:</Text>
+          <View className="rounded-2xl bg-slate-50 p-4 mb-4">
+            <View className="flex-row flex-wrap">
+              {['Calendario', 'Reportes avanzados', 'Análisis e IA', 'Exportar a Excel', 'Estadísticas', 'Soporte prioritario'].map((item, i) => (
+                <View key={item} className="flex-row items-center w-1/2 mb-2">
+                  <Check size={14} color="#10b981" />
+                  <Text className="text-xs text-slate-700 font-medium ml-2">{item}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            className="rounded-2xl py-3.5 items-center"
+            style={{ backgroundColor: palette.primary }}
+            onPress={() => setCurrentStep('CONFIRMATION')}
+          >
+            <Text className="text-white font-bold text-sm">Actualizar a Pro</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity className="items-center">
-          <Text className=" font-semibold text-sm" style={{ color: palette.primary }}>¿Tienes un código de promoción?</Text>
-        </TouchableOpacity>
+        <View className="rounded-2xl p-4 flex-row items-center" style={{ backgroundColor: palette.primarySoft }}>
+          <Shield size={22} color={palette.primary} />
+          <View className="ml-3 flex-1">
+            <Text className="text-slate-800 font-semibold text-sm">Sin contratos</Text>
+            <Text className="text-slate-500 text-xs">Cancela cuando quieras. Se renueva automáticamente.</Text>
+          </View>
+        </View>
       </ScrollView>
     </Animated.View>
   );
 
   const renderConfirmation = () => (
     <Animated.View className="flex-1" entering={SlideInRight} exiting={SlideOutLeft} key="confirmation">
-      {/* Header */}
-      <View style={{ paddingTop: Math.max(insets.top, 16), backgroundColor: topBarColor, paddingBottom: 16 }}>
-        <View className="flex-row items-center px-4">
+      <View className="px-5 pb-4" style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: topBarColor }}>
+        <View className="flex-row items-center">
           <TouchableOpacity onPress={handleBack} className="p-2 -ml-2 mr-2">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
-          <View className="flex-1 items-center mr-10">
-            <Text className="text-white text-lg font-semibold">Confirmar compra</Text>
-          </View>
+          <Text className="text-white text-xl font-bold">Confirmar plan</Text>
         </View>
       </View>
 
-      <ScrollView className="flex-1 bg-[#f8fafc]" contentContainerStyle={{ padding: 20 }}>
-        
-        {/* Resumen del plan */}
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="font-bold text-slate-800 text-base">Resumen del plan</Text>
-            <View className=" rounded-lg px-2 py-1" style={{ backgroundColor: palette.primary }}>
+      <ScrollView className="flex-1 bg-slate-50" contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
+        <View className="rounded-[28px] border border-slate-200 bg-white p-5 mb-4">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="font-bold text-slate-800 text-base">Resumen</Text>
+            <View className="rounded-lg px-2.5 py-1" style={{ backgroundColor: palette.primary }}>
               <Text className="text-white text-xs font-bold">PRO</Text>
             </View>
           </View>
-          
-          <View className="flex-row justify-between items-center mb-4">
-            <View className="flex-row items-center">
-              <Star color="#64748b" size={18} />
-              <Text className="text-slate-600 ml-3 font-medium text-sm">Plan</Text>
-            </View>
-            <Text className="font-semibold text-slate-800">Pro</Text>
-          </View>
 
-          <View className="flex-row justify-between items-center mb-4">
-            <View className="flex-row items-center">
-              <Calendar color="#64748b" size={18} />
-              <Text className="text-slate-600 ml-3 font-medium text-sm">Duración</Text>
+          <View className="rounded-2xl bg-slate-50 p-4">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-slate-600 text-sm">Plan Pro · Mensual</Text>
+              <Text className="font-semibold text-slate-800">S/ 29.90</Text>
             </View>
-            <Text className="font-semibold text-slate-800">Mensual</Text>
-          </View>
-
-          <View className="flex-row justify-between items-center mb-4 pb-4 border-b border-slate-100">
-            <View className="flex-row items-center">
-              <Text className="text-slate-600 ml-8 font-medium text-sm">Precio mensual</Text>
-            </View>
-            <Text className="font-semibold text-slate-800">S/ 29.90</Text>
-          </View>
-
-          <View className="flex-row justify-between items-center mt-2">
-            <Text className="font-semibold text-slate-600 text-base">Total a pagar</Text>
-            <Text className="font-bold text-xl" style={{ color: palette.primary }}>S/ 29.90</Text>
-          </View>
-        </View>
-
-        {/* Método de pago */}
-        <Text className="font-bold text-slate-800 text-base mb-4 ml-1">Método de pago</Text>
-        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-8 flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <View className="h-10 w-10 bg-blue-50 rounded-full items-center justify-center mr-4">
-              <View className="h-5 w-5 bg-blue-500 rounded-sm" />
-            </View>
-            <View>
-              <Text className="font-bold text-slate-800 text-sm">MercadoPago</Text>
-              <Text className="text-xs text-slate-500">Paga de forma segura</Text>
-            </View>
-          </View>
-          <View className="h-5 w-5 rounded-full border-2  items-center justify-center" style={{ borderColor: palette.primary }}>
-            <View className="h-2.5 w-2.5 rounded-full " style={{ backgroundColor: palette.primary }} />
-          </View>
-        </View>
-
-        {/* Beneficios */}
-        <View className="space-y-4 mb-10 px-2">
-          <View className="flex-row items-start">
-            <View className="mt-0.5 mr-4  p-1.5 rounded-lg" style={{ backgroundColor: palette.primarySoft }}><Sparkles size={16} color={palette.primary} /></View>
-            <View>
-              <Text className="font-semibold text-slate-800 text-sm">Accede a mdulos premium</Text>
-              <Text className="text-xs text-slate-500 mt-1">Calendario, Reportes, IA y más.</Text>
-            </View>
-          </View>
-          <View className="flex-row items-start">
-            <View className="mt-0.5 mr-4  p-1.5 rounded-lg" style={{ backgroundColor: palette.primarySoft }}><Star size={16} color={palette.primary} /></View>
-            <View>
-              <Text className="font-semibold text-slate-800 text-sm">Cancela cuando quieras</Text>
-              <Text className="text-xs text-slate-500 mt-1">Sin contratos ni permanencias.</Text>
-            </View>
-          </View>
-          <View className="flex-row items-start">
-            <View className="mt-0.5 mr-4 bg-emerald-100 p-1.5 rounded-lg"><Shield size={16} color="#10b981" /></View>
-            <View>
-              <Text className="font-semibold text-slate-800 text-sm">Pago 100% seguro</Text>
-              <Text className="text-xs text-slate-500 mt-1">Procesado por MercadoPago.</Text>
+            <View className="h-px bg-slate-200 mb-3" />
+            <View className="flex-row justify-between items-center">
+              <Text className="font-semibold text-slate-700">Total a pagar</Text>
+              <Text className="font-bold text-xl" style={{ color: palette.primary }}>S/ 29.90</Text>
             </View>
           </View>
         </View>
 
-        <TouchableOpacity 
-          className=" py-4 rounded-2xl items-center flex-row justify-center" style={{ backgroundColor: palette.primary }}
-          onPress={() => setCurrentStep('MERCADOPAGO')}
-        >
-          <Lock size={18} color="white" className="mr-2" />
-          <Text className="text-white font-bold text-base">Continuar con MercadoPago</Text>
-        </TouchableOpacity>
-        
-        <Text className="text-center text-xs text-slate-500 mt-4 px-6">
-          Serás redirigido al checkout seguro de MercadoPago.
-        </Text>
+        <View className="rounded-[28px] border border-slate-200 bg-white p-5 mb-4">
+          <Text className="font-bold text-slate-800 text-base mb-4">Pago con MercadoPago</Text>
 
+          <View className="bg-slate-50 rounded-2xl p-4 items-center mb-4">
+            <View className="flex-row items-center mb-3">
+              <Image
+                source={{ uri: 'https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadopago/logo__small.png' }}
+                style={{ width: 40, height: 40, borderRadius: 8 }}
+                resizeMode="contain"
+              />
+              <Text className="font-bold text-slate-700 text-sm ml-2">MercadoPago</Text>
+            </View>
+            <Lock size={14} color="#64748b" />
+            <Text className="text-xs text-slate-500 mt-1">Pago seguro procesado por MercadoPago</Text>
+          </View>
+
+          <TouchableOpacity
+            className="rounded-2xl py-3.5 items-center"
+            style={{ backgroundColor: palette.primary }}
+            onPress={() => setCurrentStep('MERCADOPAGO')}
+          >
+            <View className="flex-row items-center">
+              <Lock size={16} color="white" />
+              <Text className="text-white font-bold text-sm ml-2">Pagar con MercadoPago</Text>
+            </View>
+          </TouchableOpacity>
+
+          <Text className="text-center text-xs text-slate-400 mt-3">Serás redirigido al checkout seguro</Text>
+        </View>
       </ScrollView>
     </Animated.View>
   );
 
   const renderMercadoPago = () => (
-    <Animated.View className="flex-1 bg-[#f5f5f5]" entering={SlideInRight} exiting={SlideOutLeft} key="mercadopago">
-      {/* Mock Browser Header */}
-      <View style={{ paddingTop: Math.max(insets.top, 10), backgroundColor: '#ffffff', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#e5e5e5' }}>
+    <Animated.View className="flex-1 bg-white" entering={SlideInRight} exiting={SlideOutLeft} key="mercadopago">
+      <View style={{ paddingTop: Math.max(insets.top, 12), backgroundColor: '#009ee3', paddingBottom: 12 }}>
         <View className="flex-row items-center px-4">
-          <TouchableOpacity onPress={handleBack} disabled={isUpgrading}><Text className="text-blue-500 font-medium text-sm">Cancelar</Text></TouchableOpacity>
-          <View className="flex-1 flex-row items-center justify-center">
-            <Lock size={10} color="#333" className="mr-1" />
-            <Text className="text-slate-800 text-[11px] font-medium">checkout.mercadopago.com</Text>
+          <TouchableOpacity onPress={handleBack} disabled={isUpgrading}>
+            <Text className="text-white font-medium text-sm">Cancelar</Text>
+          </TouchableOpacity>
+          <View className="flex-1 items-center">
+            <Image
+              source={{ uri: 'https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadopago/logo__small.png' }}
+              style={{ width: 36, height: 36, borderRadius: 6 }}
+              resizeMode="contain"
+            />
           </View>
-          <RotateCw size={16} color="#333" />
+          <View style={{ width: 60 }} />
         </View>
       </View>
 
-      {/* MP Header */}
-      <View className="bg-[#009ee3] pt-6 pb-4">
-        <View className="items-center mb-6">
-          <Text className="text-white font-bold text-xl italic tracking-wider">mercado</Text>
-          <Text className="text-white font-bold text-xl italic tracking-wider -mt-2">pago</Text>
-        </View>
-        <View className="flex-row items-center justify-between bg-[#0086c9] px-4 py-3">
-          <View className="flex-row items-center">
-            <View className="h-4 w-4 border border-white rounded-full items-center justify-center mr-2"/>
-            <Text className="text-white font-medium text-sm">Detalle de tu compra</Text>
-          </View>
-          <Lock size={14} color="white" />
-        </View>
-      </View>
-
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+      <ScrollView className="flex-1 bg-[#f5f5f5]" contentContainerStyle={{ padding: 16 }}>
         {isUpgrading ? (
           <View className="items-center justify-center py-20">
             <ActivityIndicator size="large" color={palette.primary} />
@@ -573,200 +433,159 @@ export default function PlanProScreen() {
           </View>
         ) : (
           <>
+            {upgradeError ? (
+              <View className="mb-4 rounded-xl bg-rose-50 px-4 py-3">
+                <Text className="text-sm font-medium text-rose-600">{upgradeError}</Text>
+              </View>
+            ) : null}
 
-        {upgradeError ? (
-          <View className="mb-6 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
-            <Text className="text-sm font-medium text-rose-600">{upgradeError}</Text>
-          </View>
-        ) : null}
-        {/* Order details */}
-        <View className="bg-white rounded-lg p-5 shadow-sm mb-6 border border-slate-100">
-          <View className="flex-row justify-between mb-2">
-            <Text className="font-semibold text-slate-800 text-base">Plan Pro - Mensual</Text>
-            <Text className="font-bold text-slate-800 text-base">S/ 29.90</Text>
-          </View>
-          <Text className="text-slate-500 text-sm mb-6">Suscripción mensual</Text>
-          
-          <View className="h-[1px] bg-slate-200 mb-4" />
-          
-          <View className="flex-row justify-between items-center">
-            <Text className="font-semibold text-slate-800 text-base">Total a pagar</Text>
-            <Text className="font-bold text-slate-800 text-2xl">S/ 29.90</Text>
-          </View>
-        </View>
+            <View className="bg-white rounded-2xl p-5 mb-4">
+              <View className="mb-4">
+                <Text className="text-base font-semibold text-slate-800">Plan Pro · Mensual</Text>
+                <Text className="text-xs text-slate-500">Suscripción renovable</Text>
+              </View>
 
-        <Text className="font-semibold text-slate-800 text-base mb-4 ml-1">Elige cómo pagar</Text>
-        
-        {/* Payment Options */}
-        <View className="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden">
-          <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => { void handleUpgrade(); }}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-8 w-8 items-center justify-center mr-3"><CreditCard color="#009ee3" size={24} /></View>
-              <View className="flex-1">
-                <Text className="font-medium text-slate-800">Tarjeta de crédito</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Visa, Mastercard, American Express</Text>
+              <View className="rounded-xl bg-slate-50 p-4">
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-sm text-slate-600">Subtotal</Text>
+                  <Text className="text-sm text-slate-800">S/ 29.90</Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-sm text-slate-600">Impuestos</Text>
+                  <Text className="text-sm text-slate-800">S/ 0.00</Text>
+                </View>
+                <View className="h-px bg-slate-200 my-3" />
+                <View className="flex-row justify-between">
+                  <Text className="font-semibold text-slate-800">Total</Text>
+                  <Text className="font-bold text-lg text-slate-800">S/ 29.90</Text>
+                </View>
               </View>
             </View>
-            <Text className="text-slate-400 font-bold text-lg">{'>'}</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => { void handleUpgrade(); }}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-8 w-8 items-center justify-center mr-3"><CreditCard color="#009ee3" size={24} /></View>
-              <View className="flex-1">
-                <Text className="font-medium text-slate-800">Tarjeta de débito</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Visa Débito, Mastercard Débito</Text>
-              </View>
+            <Text className="font-semibold text-slate-800 text-base mb-3 ml-1">Método de pago</Text>
+
+            <View className="bg-white rounded-2xl border border-slate-200 overflow-hidden mb-4">
+              <TouchableOpacity
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+                onPress={() => { void handleUpgrade(); }}
+              >
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 items-center justify-center mr-3">
+                    <CreditCard size={22} color="#1a1f71" />
+                  </View>
+                  <Text className="text-sm font-medium text-slate-800">Tarjeta de crédito o débito</Text>
+                </View>
+                <Text className="text-slate-400 text-lg">›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-row items-center justify-between px-4 py-3.5 border-b border-slate-100"
+                onPress={() => { void handleUpgrade(); }}
+              >
+                <View className="flex-row items-center">
+                  <Image source={{ uri: 'https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadopago/logo__small.png' }} style={{ width: 28, height: 28, borderRadius: 6, marginRight: 12 }} resizeMode="contain" />
+                  <Text className="text-sm font-medium text-slate-800">Saldo de MercadoPago</Text>
+                </View>
+                <Text className="text-slate-400 text-lg">›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-row items-center justify-between px-4 py-3.5"
+                onPress={() => { void handleUpgrade(); }}
+              >
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 items-center justify-center mr-3">
+                    <Banknote size={22} color="#10b981" />
+                  </View>
+                  <Text className="text-sm font-medium text-slate-800">Pago Efectivo</Text>
+                </View>
+                <Text className="text-slate-400 text-lg">›</Text>
+              </TouchableOpacity>
             </View>
-            <Text className="text-slate-400 font-bold text-lg">{'>'}</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => { void handleUpgrade(); }}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-8 w-8 bg-blue-50 items-center justify-center mr-3 rounded-full"><View className="h-4 w-4 bg-[#009ee3] rounded-sm" /></View>
-              <View className="flex-1">
-                <Text className="font-medium text-slate-800">Mercado Pago</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Saldo disponible en tu cuenta</Text>
-              </View>
+            <View className="flex-row items-center justify-center mb-6">
+              <Lock size={12} color="#94a3b8" />
+              <Text className="text-xs text-slate-400 ml-1">Pago seguro procesado por MercadoPago</Text>
             </View>
-            <Text className="text-slate-400 font-bold text-lg">{'>'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-slate-100"
-            onPress={() => { void handleUpgrade(); }}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className="h-8 w-8 items-center justify-center mr-3"><View className="h-5 w-6 border-2 border-[#009ee3] rounded-sm" /></View>
-              <View className="flex-1">
-                <Text className="font-medium text-slate-800">Transferencia bancaria</Text>
-                <Text className="text-xs text-slate-500 mt-0.5">Desde tu banca por internet</Text>
-              </View>
-            </View>
-            <Text className="text-slate-400 font-bold text-lg">{'>'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row items-center justify-center mt-6 mb-10">
-          <Lock size={12} color="#94a3b8" />
-          <Text className="text-xs text-slate-400 ml-2">Tus datos están protegidos con encriptación SSL</Text>
-        </View>
           </>
         )}
       </ScrollView>
     </Animated.View>
   );
 
+  function ConfettiPiece({ color, x, delay, size }: { color: string; x: number; delay: number; size: number }) {
+    const fallAnim = React.useRef(new RNAnimated.Value(0)).current;
+    const spinAnim = React.useRef(new RNAnimated.Value(0)).current;
+
+    React.useEffect(() => {
+      const loop = RNAnimated.loop(
+        RNAnimated.parallel([
+          RNAnimated.sequence([
+            RNAnimated.delay(delay),
+            RNAnimated.timing(fallAnim, { toValue: 1, duration: 4000, useNativeDriver: true }),
+          ]),
+          RNAnimated.sequence([
+            RNAnimated.delay(delay),
+            RNAnimated.timing(spinAnim, { toValue: 1, duration: 4000, useNativeDriver: true }),
+          ]),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [delay, fallAnim, spinAnim]);
+
+    const translateY = fallAnim.interpolate({ inputRange: [0, 1], outputRange: [-40, 500] });
+    const rotate = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '720deg'] });
+    const opacity = fallAnim.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0.2] });
+
+    const shapes = ['rounded-full', 'rounded-sm'];
+    const shape = shapes[size > 8 ? 0 : 1];
+
+    return (
+      <RNAnimated.View
+        className={`absolute ${shape}`}
+        style={{
+          left: x,
+          width: size,
+          height: size,
+          backgroundColor: color,
+          transform: [{ translateY }, { rotate }],
+          opacity,
+        }}
+      />
+    );
+  }
+
   const renderSuccess = () => (
-    <Animated.View className="flex-1 " style={{ backgroundColor: palette.primary }} entering={FadeIn.delay(200)} exiting={FadeOut} key="success">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: Math.max(insets.top, 40), paddingHorizontal: 24, paddingBottom: 40 }}>
-        
-        <View className="items-center mb-10 mt-10">
-          <Text className="text-white/80 font-medium mb-10">¡Pago exitoso!</Text>
-          
-          <View className="h-28 w-28 bg-white rounded-full items-center justify-center mb-8 shadow-lg relative">
-            <Check size={56} color="#10b981" strokeWidth={3} />
-            {/* Simple confetti dots mocked with absolute positioning */}
-            <View className="absolute -top-4 -left-4 h-3 w-3 rounded-full bg-yellow-400" />
-            <View className="absolute top-10 -left-8 h-2 w-2 rounded-full bg-blue-400" />
-            <View className="absolute -bottom-2 -left-2 h-4 w-4 rounded-full bg-pink-400" />
-            <View className="absolute -top-6 right-2 h-2 w-2 rounded-full bg-emerald-400" />
-            <View className="absolute top-4 -right-8 h-3 w-3 rounded-full bg-orange-400" />
-            <View className="absolute -bottom-4 right-0 h-2 w-2 rounded-full bg-purple-400" />
-          </View>
-          
-          <Text className="text-white text-3xl font-bold mb-4">¡Bienvenido a PRO!</Text>
-          <Text className="text-white/90 text-center text-sm px-4 mb-2">
-            Tu pago fue realizado con éxito.
-          </Text>
-          <Text className="text-white/90 text-center text-sm px-4">
-            Ya puedes disfrutar de todas las herramientas premium.
-          </Text>
-        </View>
+    <Animated.View className="flex-1" style={{ backgroundColor: palette.primary }} entering={FadeIn.delay(200)} exiting={FadeOut} key="success">
+      <View className="absolute inset-0 overflow-hidden">
+        {confettiPieces.map((p, i) => (
+          <ConfettiPiece key={i} color={p.color} x={p.x} delay={p.delay} size={p.size} />
+        ))}
+      </View>
 
-        <View className="bg-white rounded-3xl p-6 shadow-xl mb-10">
-          <Text className="font-semibold text-slate-800 mb-6">Módulos desbloqueados</Text>
-          
-          <View className="space-y-4">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Calendar size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Calendario</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><PieChart size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Reportes avanzados</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Sparkles size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Análisis e IA</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Download size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Exportar a Excel</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><BarChart2 size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Estadísticas avanzadas</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Bell size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Recordatorios</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
-            
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <View className="h-8 w-8  rounded-lg items-center justify-center mr-3" style={{ backgroundColor: palette.primarySoft }}><Headset size={16} color={palette.primary} /></View>
-                <Text className="font-medium text-slate-700">Soporte prioritario</Text>
-              </View>
-              <View className="h-5 w-5 bg-emerald-100 rounded-full items-center justify-center"><Check size={12} color="#10b981" /></View>
-            </View>
+      <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: Math.max(insets.top, 40) }}>
+          <View className="h-24 w-24 bg-white rounded-full items-center justify-center shadow-2xl mb-8">
+            <Check size={44} color="#10b981" strokeWidth={3} />
           </View>
-        </View>
 
-        <TouchableOpacity 
-          className="bg-white py-4 rounded-2xl items-center mb-6"
-          onPress={handleBack}
-        >
-          <Text className=" font-bold text-base" style={{ color: palette.primary }}>Comenzar</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity className="items-center" onPress={handleBack}>
-          <Text className="text-white/80 font-medium">Ir al inicio</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </Animated.View>
+          <Text className="text-white text-3xl font-bold text-center mb-3">¡Bienvenido a PRO!</Text>
+          <Text className="text-white/80 text-center text-base mb-10">
+            Todas las herramientas premium están activadas.
+          </Text>
+
+          <TouchableOpacity
+            className="bg-white py-4 rounded-2xl items-center w-full"
+            onPress={handleBack}
+          >
+            <Text className="font-bold text-base" style={{ color: palette.primary }}>Comenzar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="items-center mt-4" onPress={handleBack}>
+            <Text className="text-white/70 font-medium text-sm">Ir al inicio</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
   );
 
   return (

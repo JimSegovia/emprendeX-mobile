@@ -6,3 +6,9 @@ export async function upgradeToPro(accessToken: string): Promise<AuthUser> {
     method: 'POST',
   }, accessToken);
 }
+
+export async function downgradeToBasic(accessToken: string): Promise<AuthUser> {
+  return apiRequest<AuthUser>('/subscriptions/downgrade', {
+    method: 'POST',
+  }, accessToken);
+}
