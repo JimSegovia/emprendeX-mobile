@@ -78,4 +78,12 @@ const BADGE_DEFAULTS = { className: getBadgeClass('Pendiente'), label: getBadgeL
 
 export const PEDIDO_STATUS_OPTIONS = Object.keys(BADGE_MAP);
 
+export const ORDER_STATUS_VALUES = [
+  'Pendiente',
+  'Reserva',
+  'Activo',
+  'En camino',
+  'Entregado',
+] as const;
+
 export { BADGE_DEFAULTS };

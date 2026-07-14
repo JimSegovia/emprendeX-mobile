@@ -15,7 +15,6 @@ export default function OperacionesLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="nueva" />
-      <Stack.Screen name="[id]" />
       <Stack.Screen name="editar-cotizacion" />
     </Stack>
   );

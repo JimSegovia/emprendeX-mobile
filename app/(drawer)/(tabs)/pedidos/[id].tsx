@@ -13,13 +13,14 @@ import Animated, { screenEntering, sectionEntering } from '@/components/ui/motio
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import type { PedidoHistorial } from '@/lib/clientes';
-import { fetchOperacionById } from '@/lib/ventas';
+import { fetchOperacionById, updateOrderStatus } from '@/lib/ventas';
 import { formatCurrencyAmount, formatCurrencyValue } from '@/lib/runtime-config';
+import { ItemKindBadge } from '@/components/ItemKindBadge';
 import {
   getBadgeBgColor,
   getBadgeLabel,
   getBadgeTextColor,
-  PEDIDO_STATUS_OPTIONS,
+  ORDER_STATUS_VALUES,
 } from '@/lib/status-badge';
 
 function formatDate(isoString: string): string {
@@ -28,12 +29,14 @@ function formatDate(isoString: string): string {
 }
 
 export default function PedidoDetalleScreen() {
-  const { id, srcCustomer, srcCreatedAt } = useLocalSearchParams<{
+  const { id, srcCustomer, srcCreatedAt, source } = useLocalSearchParams<{
     id?: string;
     srcCustomer?: string;
     srcCreatedAt?: string;
+    source?: string;
   }>();
   const router = useRouter();
+  const backRoute = source === 'operaciones' ? '/(drawer)/(tabs)/operaciones' : '/(drawer)/(tabs)';
   const insets = useSafeAreaInsets();
   const { palette } = useAccountPreferences();
   const { accessToken } = useAuthSession();
@@ -66,7 +69,7 @@ export default function PedidoDetalleScreen() {
           referenceCode: op.referenceCode,
           status: op.status,
           total: op.total,
-          balance: op.total,
+          balance: op.remainingTotal ?? op.total,
           deliveryDate: op.deliveryDate,
           createdAt: srcCreatedAt ?? op.deliveryDate,
           itemsCount: op.items.length,
@@ -90,7 +93,7 @@ export default function PedidoDetalleScreen() {
     };
 
     void loadPedido();
-  }, [accessToken, id]);
+  }, [accessToken, id, srcCreatedAt, srcCustomer]);
 
   const subtotal = useMemo(() => {
     return (pedido?.items ?? []).reduce(
@@ -102,10 +105,18 @@ export default function PedidoDetalleScreen() {
   const statusBg = getBadgeBgColor(currentStatus);
   const statusText = getBadgeTextColor(currentStatus);
 
-  const handleSelectStatus = (newStatus: string) => {
-    setCurrentStatus(newStatus);
+  const handleSelectStatus = async (newStatus: string) => {
+    if (!accessToken || !id) return;
     setShowStatusDropdown(false);
-    // TODO: Conectar con el backend real - PATCH /pedidos/:id/status
+    try {
+      await updateOrderStatus(accessToken, id, newStatus);
+      setCurrentStatus(newStatus);
+      if (pedido) {
+        setPedido({ ...pedido, status: newStatus });
+      }
+    } catch {
+      // silencio si falla, el estado local se mantiene
+    }
   };
 
   if (isLoading || !pedido) {
@@ -131,7 +142,7 @@ export default function PedidoDetalleScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity onPress={() => router.replace(backRoute)} className="mr-4">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
           <Text className="text-white text-xl font-semibold">{pedido.referenceCode}</Text>
@@ -197,17 +208,7 @@ export default function PedidoDetalleScreen() {
               <View className="flex-row items-start justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="font-semibold text-slate-800">{item.name}</Text>
-                  <View
-                    className={`mt-2 self-start rounded-full px-2.5 py-1 ${item.kind === 'Servicio' ? 'bg-emerald-50' : ''}`}
-                    style={{ backgroundColor: item.kind === 'Servicio' ? undefined : palette.primarySoft }}
-                  >
-                    <Text
-                      className={`text-[10px] font-semibold ${item.kind === 'Servicio' ? 'text-emerald-700' : ''}`}
-                      style={{ color: item.kind === 'Servicio' ? undefined : palette.primaryText }}
-                    >
-                      {item.kind}
-                    </Text>
-                  </View>
+                  <ItemKindBadge kind={item.kind} className="mt-2" />
                 </View>
                 <View className="items-end">
                   <Text className="text-xs font-medium text-slate-500">Subtotal</Text>
@@ -273,7 +274,7 @@ export default function PedidoDetalleScreen() {
           {showStatusDropdown && (
             <View className="mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
               <ScrollView className="max-h-56" nestedScrollEnabled>
-                {PEDIDO_STATUS_OPTIONS.map((status, idx) => {
+                {ORDER_STATUS_VALUES.map((status, idx) => {
                   const bg = getBadgeBgColor(status);
                   const text = getBadgeTextColor(status);
                   const isActive = status === currentStatus;

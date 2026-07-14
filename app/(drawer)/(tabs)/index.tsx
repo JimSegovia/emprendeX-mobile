@@ -340,8 +340,8 @@ export default function DashboardScreen() {
                     className={`${index === 0 ? '' : 'mt-4 border-t border-slate-100 pt-4'}`}
                     onPress={() =>
                       router.push({
-                        pathname: '/(drawer)/(tabs)/operaciones/[id]',
-                        params: { id: event.id },
+                        pathname: '/(drawer)/(tabs)/pedidos/[id]',
+                        params: { id: event.id, source: 'home' },
                       })
                     }
                     activeOpacity={0.8}
