@@ -1,4 +1,4 @@
-Ôªøimport React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Animated as RNAnimated, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Lock, Shield, Star, RotateCw, Pause, ArrowLeftRight, Info, Crown, CreditCard, Banknote } from 'lucide-react-native';
@@ -27,7 +27,7 @@ function daysUntil(isoDate: string): number {
 export default function PlanProScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { authState, accessToken, updateAuthState, refreshAuthState } = useAuthSession();
+  const { authState, accessToken, updateAuthState } = useAuthSession();
   const { palette } = useAccountPreferences();
 
   const isPremium = authState?.user.activeSubscription?.isPremium === true;
@@ -52,16 +52,16 @@ export default function PlanProScreen() {
   const [cancelStep, setCancelStep] = useState<'idle' | 'done'>('idle');
 
   const handleRenew = () => {
-    Alert.alert('Renovar suscripci√≥n', '¬øDeseas renovar tu suscripci√≥n de manera anticipada?', [
+    Alert.alert('Renovar suscripciÛn', 'øDeseas renovar tu suscripciÛn de manera anticipada?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Renovar ahora', onPress: () => setRenewSuccess(true) },
     ]);
   };
 
   const handleCancel = () => {
-    Alert.alert('Cancelar suscripci√≥n', `¬øEst√°s seguro de que deseas cancelar? Seguir√°s disfrutando de ${isPremium ? 'PRO' : 'tu plan actual'} hasta el ${renewalDateFormatted}.`, [
+    Alert.alert('Cancelar suscripciÛn', `øEst·s seguro de que deseas cancelar? Seguir·s disfrutando de ${isPremium ? 'PRO' : 'tu plan actual'} hasta el ${renewalDateFormatted}.`, [
       { text: 'Mantener plan', style: 'cancel' },
-      { text: 'Confirmar cancelaci√≥n', style: 'destructive', onPress: () => setCancelStep('done') },
+      { text: 'Confirmar cancelaciÛn', style: 'destructive', onPress: () => setCancelStep('done') },
     ]);
   };
 
@@ -104,7 +104,7 @@ export default function PlanProScreen() {
       const message =
         error instanceof Error
           ? error.message
-          : 'No se pudo completar la actualizaci√≥n. Intenta de nuevo.';
+          : 'No se pudo completar la actualizaciÛn. Intenta de nuevo.';
       setUpgradeError(message);
     } finally {
       setIsUpgrading(false);
@@ -129,7 +129,7 @@ export default function PlanProScreen() {
 
       setCurrentStep('MANAGEMENT');
     } catch (error: unknown) {
-      setUpgradeError(error instanceof Error ? error.message : 'No se pudo completar la operaci√≥n.');
+      setUpgradeError(error instanceof Error ? error.message : 'No se pudo completar la operaciÛn.');
     } finally {
       setIsUpgrading(false);
     }
@@ -147,7 +147,7 @@ export default function PlanProScreen() {
           <View className="flex-row items-center">
             <Text className="text-white text-xl font-bold mr-2">Mi Plan</Text>
             <View className="border border-white/40 rounded-full px-2 py-0.5">
-              <Text className="text-white text-[10px] font-bold">{isPremium ? 'PRO' : 'B√ÅSICO'}</Text>
+              <Text className="text-white text-[10px] font-bold">{isPremium ? 'PRO' : 'B¡SICO'}</Text>
             </View>
           </View>
         </View>
@@ -162,7 +162,7 @@ export default function PlanProScreen() {
               </View>
               <View>
                 <Text className="text-sm text-slate-500">Plan actual</Text>
-                <Text className="text-xl font-bold text-slate-800">{isPremium ? 'PRO' : 'B√°sico'}</Text>
+                <Text className="text-xl font-bold text-slate-800">{isPremium ? 'PRO' : 'B·sico'}</Text>
               </View>
             </View>
             <View className="rounded-full px-3 py-1" style={{ backgroundColor: palette.primary }}>
@@ -177,9 +177,9 @@ export default function PlanProScreen() {
               <Text className="text-xs text-slate-400">/ mes</Text>
             </View>
             <View className="flex-1 rounded-2xl bg-slate-50 p-3 ml-2">
-              <Text className="text-xs text-slate-500">Renovaci√≥n</Text>
+              <Text className="text-xs text-slate-500">RenovaciÛn</Text>
               <Text className="text-base font-bold text-slate-800">{renewalDateFormatted}</Text>
-              <Text className="text-xs text-slate-400">en {renewalDays} d√≠as</Text>
+              <Text className="text-xs text-slate-400">en {renewalDays} dÌas</Text>
             </View>
           </View>
         </View>
@@ -188,7 +188,7 @@ export default function PlanProScreen() {
           {renewSuccess ? (
             <View className="rounded-2xl bg-emerald-50 p-4 flex-row items-center">
               <Check size={18} color="#10b981" />
-              <Text className="text-sm font-semibold text-emerald-800 ml-2">Suscripci√≥n renovada</Text>
+              <Text className="text-sm font-semibold text-emerald-800 ml-2">SuscripciÛn renovada</Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -200,14 +200,14 @@ export default function PlanProScreen() {
                 <RotateCw size={20} color="#10b981" />
               </View>
               <Text className="text-sm font-semibold text-slate-800 flex-1">Renovar ahora</Text>
-              <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+              <Text className="text-slate-400 text-lg">õ</Text>
             </TouchableOpacity>
           )}
 
           {cancelStep === 'done' ? (
             <View className="rounded-2xl bg-amber-50 p-4 flex-row items-center mt-2">
               <Info size={18} color="#d97706" />
-              <Text className="text-sm font-semibold text-amber-800 ml-2 flex-1">Cancelaci√≥n programada</Text>
+              <Text className="text-sm font-semibold text-amber-800 ml-2 flex-1">CancelaciÛn programada</Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -218,8 +218,8 @@ export default function PlanProScreen() {
               <View className="h-10 w-10 rounded-xl items-center justify-center bg-amber-50 mr-3">
                 <Pause size={20} color="#f59e0b" />
               </View>
-              <Text className="text-sm font-semibold text-slate-800 flex-1">Cancelar suscripci√≥n</Text>
-              <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+              <Text className="text-sm font-semibold text-slate-800 flex-1">Cancelar suscripciÛn</Text>
+              <Text className="text-slate-400 text-lg">õ</Text>
             </TouchableOpacity>
           )}
 
@@ -232,7 +232,7 @@ export default function PlanProScreen() {
               <ArrowLeftRight size={20} color={palette.primary} />
             </View>
             <Text className="text-sm font-semibold text-slate-800 flex-1">Cambiar de plan</Text>
-            <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+            <Text className="text-slate-400 text-lg">õ</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -265,7 +265,7 @@ export default function PlanProScreen() {
 
           <View className="rounded-2xl bg-slate-50 p-4 mb-4">
             <View className="flex-row flex-wrap">
-              {['Clientes', 'Cotizaciones', 'Pedidos', 'Pagos', 'Inventario b√°sico', 'Reportes b√°sicos'].map((item, i) => (
+              {['Clientes', 'Cotizaciones', 'Pedidos', 'Pagos', 'Inventario b·sico', 'Reportes b·sicos'].map((item, i) => (
                 <View key={item} className="flex-row items-center w-1/2 mb-2">
                   <Check size={14} color={palette.primary} />
                   <Text className="text-xs text-slate-600 ml-2">{item}</Text>
@@ -278,7 +278,7 @@ export default function PlanProScreen() {
             <TouchableOpacity
               className="rounded-2xl border border-slate-200 bg-white py-3.5 items-center"
               onPress={() => {
-                Alert.alert('Cambiar a plan Gratis', 'Si cambias a Gratis, perder√°s acceso a los m√≥dulos premium al finalizar tu per√≠odo actual.', [
+                Alert.alert('Cambiar a plan Gratis', 'Si cambias a Gratis, perder·s acceso a los mÛdulos premium al finalizar tu perÌodo actual.', [
                   { text: 'Mantenerme en PRO', style: 'cancel' },
                   { text: 'Cambiar a Gratis', style: 'destructive', onPress: () => { void handleDowngrade(); } },
                 ]);
@@ -308,10 +308,10 @@ export default function PlanProScreen() {
             <Text className="text-sm text-slate-500 mt-1">S/ 29.90 / mes</Text>
           </View>
 
-          <Text className="text-xs font-semibold text-slate-500 mb-3">Todo del plan Gratis, m√°s:</Text>
+          <Text className="text-xs font-semibold text-slate-500 mb-3">Todo del plan Gratis, m·s:</Text>
           <View className="rounded-2xl bg-slate-50 p-4 mb-4">
             <View className="flex-row flex-wrap">
-              {['Calendario', 'Reportes avanzados', 'An√°lisis e IA', 'Exportar a Excel', 'Estad√≠sticas', 'Soporte prioritario'].map((item, i) => (
+              {['Calendario', 'Reportes avanzados', 'An·lisis e IA', 'Exportar a Excel', 'EstadÌsticas', 'Soporte prioritario'].map((item, i) => (
                 <View key={item} className="flex-row items-center w-1/2 mb-2">
                   <Check size={14} color="#10b981" />
                   <Text className="text-xs text-slate-700 font-medium ml-2">{item}</Text>
@@ -333,7 +333,7 @@ export default function PlanProScreen() {
           <Shield size={22} color={palette.primary} />
           <View className="ml-3 flex-1">
             <Text className="text-slate-800 font-semibold text-sm">Sin contratos</Text>
-            <Text className="text-slate-500 text-xs">Cancela cuando quieras. Se renueva autom√°ticamente.</Text>
+            <Text className="text-slate-500 text-xs">Cancela cuando quieras. Se renueva autom·ticamente.</Text>
           </View>
         </View>
       </ScrollView>
@@ -362,7 +362,7 @@ export default function PlanProScreen() {
 
           <View className="rounded-2xl bg-slate-50 p-4">
             <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-slate-600 text-sm">Plan Pro ¬∑ Mensual</Text>
+              <Text className="text-slate-600 text-sm">Plan Pro ∑ Mensual</Text>
               <Text className="font-semibold text-slate-800">S/ 29.90</Text>
             </View>
             <View className="h-px bg-slate-200 mb-3" />
@@ -400,7 +400,7 @@ export default function PlanProScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text className="text-center text-xs text-slate-400 mt-3">Ser√°s redirigido al checkout seguro</Text>
+          <Text className="text-center text-xs text-slate-400 mt-3">Ser·s redirigido al checkout seguro</Text>
         </View>
       </ScrollView>
     </Animated.View>
@@ -428,8 +428,8 @@ export default function PlanProScreen() {
         {isUpgrading ? (
           <View className="items-center justify-center py-20">
             <ActivityIndicator size="large" color={palette.primary} />
-            <Text className="text-slate-600 font-medium mt-4 text-base">Procesando tu suscripci√≥n Pro...</Text>
-            <Text className="text-slate-400 text-sm mt-1">Esto tomar√° solo un momento</Text>
+            <Text className="text-slate-600 font-medium mt-4 text-base">Procesando tu suscripciÛn Pro...</Text>
+            <Text className="text-slate-400 text-sm mt-1">Esto tomar· solo un momento</Text>
           </View>
         ) : (
           <>
@@ -441,8 +441,8 @@ export default function PlanProScreen() {
 
             <View className="bg-white rounded-2xl p-5 mb-4">
               <View className="mb-4">
-                <Text className="text-base font-semibold text-slate-800">Plan Pro ¬∑ Mensual</Text>
-                <Text className="text-xs text-slate-500">Suscripci√≥n renovable</Text>
+                <Text className="text-base font-semibold text-slate-800">Plan Pro ∑ Mensual</Text>
+                <Text className="text-xs text-slate-500">SuscripciÛn renovable</Text>
               </View>
 
               <View className="rounded-xl bg-slate-50 p-4">
@@ -462,7 +462,7 @@ export default function PlanProScreen() {
               </View>
             </View>
 
-            <Text className="font-semibold text-slate-800 text-base mb-3 ml-1">M√©todo de pago</Text>
+            <Text className="font-semibold text-slate-800 text-base mb-3 ml-1">MÈtodo de pago</Text>
 
             <View className="bg-white rounded-2xl border border-slate-200 overflow-hidden mb-4">
               <TouchableOpacity
@@ -473,9 +473,9 @@ export default function PlanProScreen() {
                   <View className="w-8 h-8 items-center justify-center mr-3">
                     <CreditCard size={22} color="#1a1f71" />
                   </View>
-                  <Text className="text-sm font-medium text-slate-800">Tarjeta de cr√©dito o d√©bito</Text>
+                  <Text className="text-sm font-medium text-slate-800">Tarjeta de crÈdito o dÈbito</Text>
                 </View>
-                <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+                <Text className="text-slate-400 text-lg">õ</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -486,7 +486,7 @@ export default function PlanProScreen() {
                   <Image source={{ uri: 'https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadopago/logo__small.png' }} style={{ width: 28, height: 28, borderRadius: 6, marginRight: 12 }} resizeMode="contain" />
                   <Text className="text-sm font-medium text-slate-800">Saldo de MercadoPago</Text>
                 </View>
-                <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+                <Text className="text-slate-400 text-lg">õ</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -499,7 +499,7 @@ export default function PlanProScreen() {
                   </View>
                   <Text className="text-sm font-medium text-slate-800">Pago Efectivo</Text>
                 </View>
-                <Text className="text-slate-400 text-lg">‚Ä∫</Text>
+                <Text className="text-slate-400 text-lg">õ</Text>
               </TouchableOpacity>
             </View>
 
@@ -569,9 +569,9 @@ export default function PlanProScreen() {
             <Check size={44} color="#10b981" strokeWidth={3} />
           </View>
 
-          <Text className="text-white text-3xl font-bold text-center mb-3">¬°Bienvenido a PRO!</Text>
+          <Text className="text-white text-3xl font-bold text-center mb-3">°Bienvenido a PRO!</Text>
           <Text className="text-white/80 text-center text-base mb-10">
-            Todas las herramientas premium est√°n activadas.
+            Todas las herramientas premium est·n activadas.
           </Text>
 
           <TouchableOpacity
