@@ -98,37 +98,37 @@ export default function LoginScreen() {
 
   return (
     <AppSafeArea className="flex-1 bg-white">
-      <KeyboardAwareLayout>
-          <Animated.View className="flex-1 px-8 py-10 justify-between" entering={screenEntering}>
-            <Animated.View className="items-center mt-4" entering={sectionEntering(0)}>
-<View className="flex-row items-center justify-center">
-  <Image
-    source={require('../assets/images/Logo.png')}
-    style={{ width: 230, height: 70 }}
-    contentFit="contain"
-    contentPosition="center"
-  />
-</View>
-              <Text className="text-slate-500 text-base font-medium mt-1">
+      <KeyboardAwareLayout extraScrollHeight={40}>
+          <Animated.View className="flex-1 px-8" entering={screenEntering}>
+            <Animated.View className="items-center mt-4 mb-2" entering={sectionEntering(0)}>
+              <View className="flex-row items-center justify-center">
+                <Image
+                  source={require('../assets/images/Logo.png')}
+                  style={{ width: 260, height: 80 }}
+                  contentFit="contain"
+                  contentPosition="center"
+                />
+              </View>
+              <Text className="text-slate-500 text-sm font-medium mt-0.5">
                 Tu negocio, en orden.
               </Text>
             </Animated.View>
 
             <Animated.View
-              className="items-center justify-center my-3"
+              className="items-center justify-center mb-4"
               entering={sectionEntering(1)}
             >
               <Image
                 source={require('../assets/images/emprendex-login.png')}
-                style={{ width: '100%', aspectRatio: 1.5 }}
+                style={{ width: '85%', aspectRatio: 1.6 }}
                 contentFit="contain"
                 contentPosition="center"
               />
             </Animated.View>
 
             <Animated.View className="w-full" entering={sectionEntering(2)}>
-              <View className="mb-5">
-                <Text className="text-slate-700 font-semibold mb-2">Correo electrónico</Text>
+              <View className="mb-4">
+                <Text className="text-slate-700 font-semibold mb-1.5">Correo electrónico</Text>
                 <TextInput
                   className={`rounded-xl border px-4 py-3.5 text-base text-slate-800 ${hasEmailError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
                   placeholder="ejemplo@correo.com"
@@ -144,8 +144,8 @@ export default function LoginScreen() {
                 ) : null}
               </View>
 
-              <View className="mb-2">
-                <Text className="text-slate-700 font-semibold mb-2">Contraseña</Text>
+              <View className="mb-1">
+                <Text className="text-slate-700 font-semibold mb-1.5">Contraseña</Text>
                 <View className="relative justify-center">
                   <TextInput
                     className={`rounded-xl border px-4 py-3.5 pr-12 text-base text-slate-800 ${hasPasswordError ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}
@@ -173,7 +173,7 @@ export default function LoginScreen() {
                 ) : null}
               </View>
 
-              <View className="items-end mb-8">
+              <View className="items-end mb-5">
                 <TouchableOpacity onPress={() => router.push({ pathname: '/forgot-password' })}>
                   <Text className="font-medium text-sm" style={{ color: palette.primaryText }}>
                     ¿Olvidaste tu contraseña?
@@ -206,7 +206,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               {/* Divider with circle */}
-              <View className="flex-row items-center my-3">
+              <View className="flex-row items-center my-2">
                 <View className="flex-1 h-[1px] bg-slate-100" />
                 <View className="mx-4 w-2 h-2 rounded-full border border-slate-300 bg-white" />
                 <View className="flex-1 h-[1px] bg-slate-100" />
@@ -225,7 +225,7 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <View className="flex-row justify-center items-center mb-4">
+              <View className="flex-row justify-center items-center mt-2">
                 <Text className="text-slate-500 font-medium mr-1">¿No tienes cuenta?</Text>
                 <Link href="/register" asChild>
                   <TouchableOpacity>
