@@ -103,7 +103,7 @@ export default function OperacionesScreen() {
 
         router.push({
           pathname: '/(drawer)/(tabs)/pedidos/[id]',
-          params: { id: item.id, srcCustomer: item.customerName, srcCreatedAt: item.createdAt },
+          params: { id: item.id, srcCustomer: item.customerName, srcCreatedAt: item.createdAt, source: 'operaciones' },
         });
       }}
       entering={itemEntering(index)}

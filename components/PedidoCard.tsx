@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Animated, { itemEntering } from '@/components/ui/motion';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { formatCurrencyValue } from '@/lib/runtime-config';
+import { ItemKindBadge } from '@/components/ItemKindBadge';
 import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 import type { PedidoHistorial } from '@/lib/clientes';
 
@@ -89,21 +90,7 @@ export function PedidoCard({ pedido, index }: PedidoCardProps) {
               <View className="flex-1">
                 <Text className="text-sm font-medium text-slate-700">{item.name}</Text>
                 <View className="mt-0.5 flex-row items-center gap-2">
-                  <View
-                    className="rounded-full px-2 py-0.5"
-                    style={{
-                      backgroundColor: item.kind === 'Servicio' ? '#ecfdf5' : palette.primarySoft,
-                    }}
-                  >
-                    <Text
-                      className="text-[9px] font-semibold"
-                      style={{
-                        color: item.kind === 'Servicio' ? '#047857' : palette.primaryText,
-                      }}
-                    >
-                      {item.kind}
-                    </Text>
-                  </View>
+                  <ItemKindBadge kind={item.kind} />
                   <Text className="text-xs text-slate-400">
                     {item.quantity} x {formatCurrencyValue(item.unitPrice)}
                   </Text>

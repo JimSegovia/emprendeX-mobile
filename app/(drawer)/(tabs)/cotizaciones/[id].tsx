@@ -8,10 +8,16 @@ import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } from '@/lib/ventas';
 import { formatCurrencyAmount, formatCurrencyValue } from '@/lib/runtime-config';
+import { ItemKindBadge } from '@/components/ItemKindBadge';
 import { getBadgeBgColor, getBadgeLabel, getBadgeTextColor } from '@/lib/status-badge';
 
+function formatDate(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export default function CotizacionDetalleScreen() {
-  const { id, source } = useLocalSearchParams<{ id?: string; source?: string }>();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { palette } = useAccountPreferences();
@@ -19,17 +25,12 @@ export default function CotizacionDetalleScreen() {
   const [quotation, setQuotation] = useState<OperacionDetalle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const backRoute = source === 'operaciones' ? '/(drawer)/(tabs)/operaciones' : '/(drawer)/(tabs)/cotizaciones';
 
   useEffect(() => {
     const loadQuotation = async () => {
-      if (!id || !accessToken) {
-        return;
-      }
-
+      if (!id || !accessToken) return;
       setIsLoading(true);
       setError(null);
-
       try {
         setQuotation(await fetchOperacionById(accessToken, id));
       } catch (loadError) {
@@ -38,7 +39,6 @@ export default function CotizacionDetalleScreen() {
         setIsLoading(false);
       }
     };
-
     void loadQuotation();
   }, [accessToken, id]);
 
@@ -49,15 +49,14 @@ export default function CotizacionDetalleScreen() {
     );
   }, [quotation]);
 
-  const statusTone = useMemo(() => {
-    if (!quotation) {
-      return { backgroundColor: '#f3f4f6', color: '#4b5563' };
-    }
+  const statusBg = useMemo(() => {
+    if (!quotation) return '#f3f4f6';
+    return getBadgeBgColor(quotation.status);
+  }, [quotation]);
 
-    return {
-      backgroundColor: getBadgeBgColor(quotation.status),
-      color: getBadgeTextColor(quotation.status),
-    };
+  const statusText = useMemo(() => {
+    if (!quotation) return '#4b5563';
+    return getBadgeTextColor(quotation.status);
   }, [quotation]);
 
   if (isLoading || !quotation) {
@@ -83,20 +82,26 @@ export default function CotizacionDetalleScreen() {
         entering={sectionEntering(0)}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.replace(backRoute)}
-            className="mr-4"
-          >
+          <TouchableOpacity onPress={() => router.replace('/(drawer)/(tabs)/operaciones')} className="mr-4">
             <ArrowLeft color="white" size={24} />
           </TouchableOpacity>
           <Text className="text-white text-xl font-semibold">{quotation.referenceCode}</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: '/(drawer)/(tabs)/operaciones/editar-cotizacion', params: { id: quotation.id } })}
-          className="p-2"
-        >
-          <Pencil color="white" size={20} />
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-2">
+          <View className="rounded-full px-3 py-1" style={{ backgroundColor: statusBg }}>
+            <Text className="text-xs font-semibold" style={{ color: statusText }}>
+              {getBadgeLabel(quotation.status)}
+            </Text>
+          </View>
+          {quotation.status !== 'Aprobada' && (
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/(drawer)/(tabs)/operaciones/editar-cotizacion', params: { id: quotation.id } })}
+              className="p-1"
+            >
+              <Pencil color="white" size={20} />
+            </TouchableOpacity>
+          )}
+        </View>
       </Animated.View>
 
       <ScrollView
@@ -104,15 +109,10 @@ export default function CotizacionDetalleScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
       >
-        <Animated.View className="items-end mb-6" entering={sectionEntering(1)}>
-          <View className="rounded-full px-4 py-1.5" style={{ backgroundColor: statusTone.backgroundColor }}>
-            <Text className="font-medium text-sm" style={{ color: statusTone.color }}>
-              {getBadgeLabel(quotation.status)}
-            </Text>
-          </View>
-        </Animated.View>
-
-        <Animated.View className="mb-8" entering={sectionEntering(2)}>
+        <Animated.View
+          className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100"
+          entering={sectionEntering(1)}
+        >
           <Text className="text-lg font-semibold text-slate-800 mb-4">Información</Text>
           <View className="gap-4">
             <View>
@@ -121,9 +121,7 @@ export default function CotizacionDetalleScreen() {
             </View>
             <View>
               <Text className="text-xs font-medium text-slate-500">Entrega</Text>
-              <Text className="mt-1 text-slate-800 font-medium">
-                {new Date(quotation.deliveryDate).toLocaleDateString()}
-              </Text>
+              <Text className="mt-1 text-slate-800 font-medium">{formatDate(quotation.deliveryDate)}</Text>
             </View>
             <View>
               <Text className="text-xs font-medium text-slate-500">Método</Text>
@@ -135,12 +133,12 @@ export default function CotizacionDetalleScreen() {
                 {quotation.customer.address ?? 'Sin dirección'}
               </Text>
             </View>
-            <View>
-              <Text className="text-xs font-medium text-slate-500">Observaciones</Text>
-              <Text className="mt-1 text-slate-800 font-medium">
-                {quotation.description ?? 'Sin observaciones'}
-              </Text>
-            </View>
+            {quotation.description ? (
+              <View>
+                <Text className="text-xs font-medium text-slate-500">Observaciones</Text>
+                <Text className="mt-1 text-slate-800 font-medium">{quotation.description}</Text>
+              </View>
+            ) : null}
             {quotation.sourceLabel ? (
               <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: palette.primarySoft }}>
                 <Text className="text-sm font-medium" style={{ color: palette.primaryText }}>
@@ -151,9 +149,9 @@ export default function CotizacionDetalleScreen() {
           </View>
         </Animated.View>
 
-        <View className="h-[1px] bg-slate-100 mb-8" />
+        <View className="h-px bg-slate-100 my-6" />
 
-        <Animated.View className="mb-8" entering={sectionEntering(3)}>
+        <Animated.View className="mb-6" entering={sectionEntering(2)}>
           <Text className="text-lg font-semibold text-slate-800 mb-4">Items</Text>
           {quotation.items.map((item, index) => (
             <View
@@ -163,24 +161,12 @@ export default function CotizacionDetalleScreen() {
               <View className="flex-row items-start justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="font-semibold text-slate-800">{item.name}</Text>
-                  <View
-                    className={`mt-2 self-start rounded-full px-2.5 py-1 ${item.kind === 'Servicio' ? 'bg-emerald-50' : ''}`}
-                    style={{ backgroundColor: item.kind === 'Servicio' ? undefined : palette.primarySoft }}
-                  >
-                    <Text
-                      className={`text-[10px] font-semibold ${item.kind === 'Servicio' ? 'text-emerald-700' : ''}`}
-                      style={{ color: item.kind === 'Servicio' ? undefined : palette.primaryText }}
-                    >
-                      {item.kind}
-                    </Text>
-                  </View>
+                  <ItemKindBadge kind={item.kind} className="mt-2" />
                 </View>
                 <View className="items-end">
                   <Text className="text-xs font-medium text-slate-500">Subtotal</Text>
                   <Text className="mt-1 font-semibold text-slate-800">
-                    {formatCurrencyAmount(
-                      Number(item.unitPrice) * item.quantity - Number(item.discount),
-                    )}
+                    {formatCurrencyAmount(Number(item.unitPrice) * item.quantity - Number(item.discount))}
                   </Text>
                 </View>
               </View>
@@ -203,9 +189,9 @@ export default function CotizacionDetalleScreen() {
           ))}
         </Animated.View>
 
-        <View className="h-[1px] bg-slate-100 mb-8" />
+        <View className="h-px bg-slate-100 mb-6" />
 
-        <Animated.View className="mb-12" entering={sectionEntering(4)}>
+        <Animated.View entering={sectionEntering(3)}>
           <Text className="text-lg font-semibold text-slate-800 mb-4">Resumen</Text>
           <View className="flex-row justify-between">
             <Text className="text-slate-500">Subtotal</Text>

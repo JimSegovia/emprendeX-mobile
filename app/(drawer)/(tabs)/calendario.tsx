@@ -160,7 +160,10 @@ export default function CalendarioScreen() {
   };
 
   const handleEventPress = (event: CalendarioEvento) => {
-    router.push(`/(drawer)/(tabs)/operaciones/${event.id}`);
+    router.push({
+      pathname: '/(drawer)/(tabs)/pedidos/[id]',
+      params: { id: event.id, srcCreatedAt: event.date, source: 'calendario' },
+    });
   };
 
   const openDrawer = () => navigation.dispatch(DrawerActions.openDrawer());

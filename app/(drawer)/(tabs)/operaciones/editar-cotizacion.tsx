@@ -12,7 +12,7 @@ import {
   type CatalogItem,
   type CatalogItemKind,
 } from '@/lib/catalog';
-import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } from '@/lib/ventas';
+import { fetchOperacionById, getReadableVentasError, type OperacionDetalle, updateQuotation, deleteCotizacion } from '@/lib/ventas';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
 import { formatCurrencyAmount } from '@/lib/runtime-config';
@@ -215,8 +215,19 @@ export default function EditarCotizacionScreen() {
     if (selectedDate) setDate(selectedDate);
   }
 
-  const handleEliminar = () => {
-    router.back();
+  const handleEliminar = async () => {
+    if (!accessToken || !id) return;
+    setIsSubmitting(true);
+    try {
+      await deleteCotizacion(accessToken, id);
+      router.replace({
+        pathname: '/(drawer)/(tabs)/operaciones',
+      });
+    } catch (deleteError) {
+      setSubmitError(getReadableVentasError(deleteError));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirmarPedido = async () => {
@@ -225,13 +236,29 @@ export default function EditarCotizacionScreen() {
       return;
     }
 
+    if (!method) {
+      setSubmitError('Selecciona un método de entrega.');
+      return;
+    }
+
+    if (!accessToken || !id) return;
+
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      setTimeout(() => {
-        router.back();
-      }, 500);
+      await updateQuotation(accessToken, id, {
+        customerId: cotizacion!.customer.id,
+        details: selectedProducts.map((p) => ({
+          itemId: p.id,
+          quantity: p.quantity,
+          unitPrice: p.price.toFixed(2),
+        })),
+        description: description.trim() || undefined,
+        deliveryDate: date.toISOString(),
+        deliveryMethod: method,
+      });
+      router.back();
     } catch (saveError) {
       setSubmitError(getReadableVentasError(saveError));
     } finally {
@@ -255,7 +282,10 @@ export default function EditarCotizacionScreen() {
         style={{ paddingTop: Math.max(insets.top, 16) + 16, backgroundColor: palette.primary }}
         entering={sectionEntering(0)}
       >
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="mr-4"
+        >
           <ArrowLeft color="white" size={24} />
         </TouchableOpacity>
         <Text className="text-white text-xl font-semibold">Modificar cotización</Text>
@@ -460,27 +490,29 @@ export default function EditarCotizacionScreen() {
           </View>
         </View>
 
-        <View className="flex-row">
+        <View className="flex-row gap-3">
           <TouchableOpacity
-            className="flex-1 mr-2 rounded-2xl py-4 items-center"
-            style={{ backgroundColor: '#fca5a5' }}
-            onPress={handleEliminar}
+            className="flex-1 rounded-2xl border border-rose-200 bg-rose-50 py-4 items-center"
+            onPress={() => { void handleEliminar(); }}
+            disabled={isSubmitting}
           >
-            <Text className="font-semibold text-slate-800">Eliminar</Text>
+            <Text className="font-semibold text-rose-600">
+              {isSubmitting ? 'Eliminando...' : 'Eliminar'}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 ml-2 rounded-2xl py-4 items-center"
+            className="flex-1 rounded-2xl py-4 items-center"
             style={{
-              backgroundColor:
-                product.length > 0 && !isSubmitting ? '#86efac' : '#e2e8f0',
+              backgroundColor: product.length > 0 && method && !isSubmitting ? palette.primary : '#e2e8f0',
             }}
-            disabled={product.length === 0 || isSubmitting}
-            onPress={() => {
-              void handleConfirmarPedido();
-            }}
+            disabled={product.length === 0 || !method || isSubmitting}
+            onPress={() => { void handleConfirmarPedido(); }}
           >
-            <Text className={`font-semibold ${product.length > 0 ? 'text-slate-800' : 'text-slate-400'}`}>
-              {isSubmitting ? 'Guardando...' : 'Confirmar pedido'}
+            <Text
+              className="font-semibold"
+              style={{ color: product.length > 0 && method && !isSubmitting ? 'white' : '#94a3b8' }}
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
             </Text>
           </TouchableOpacity>
         </View>

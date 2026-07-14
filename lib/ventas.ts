@@ -44,6 +44,7 @@ export type OperacionDetalle = {
   quotationReferenceCode: string;
   sourceLabel: string | null;
   total: string;
+  remainingTotal: string | null;
   items: Array<{
     id: string;
     itemId: string;
@@ -93,6 +94,18 @@ export async function deleteCotizacion(accessToken: string, quotationId: string)
   return apiRequest<void>(`/cotizaciones/${quotationId}`, { method: 'DELETE' }, accessToken);
 }
 
+export async function updateQuotation(
+  accessToken: string,
+  quotationId: string,
+  payload: CrearCotizacionPayload,
+) {
+  return apiRequest<Cotizacion>(
+    `/cotizaciones/${quotationId}`,
+    { method: 'PATCH', body: JSON.stringify(payload) },
+    accessToken,
+  );
+}
+
 export async function convertCotizacionToPedido(accessToken: string, quotationId: string) {
   return apiRequest<OperacionResumen>(
     `/cotizaciones/${quotationId}/convertir`,
@@ -111,6 +124,18 @@ export async function fetchOperacionById(accessToken: string, operationId: strin
 
 export async function fetchPedidosPendientes(accessToken: string) {
   return apiRequest<PedidoPendiente[]>('/pedidos/pendientes', { method: 'GET' }, accessToken);
+}
+
+export async function updateOrderStatus(
+  accessToken: string,
+  orderId: string,
+  status: string,
+) {
+  return apiRequest<OperacionResumen>(
+    `/pedidos/${orderId}/status`,
+    { method: 'PATCH', body: JSON.stringify({ status }) },
+    accessToken,
+  );
 }
 
 export { getReadableApiError as getReadableVentasError };

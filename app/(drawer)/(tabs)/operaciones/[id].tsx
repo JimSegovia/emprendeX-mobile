@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { screenEntering, sectionEntering } from '@/components/ui/motion';
+import { ItemKindBadge } from '@/components/ItemKindBadge';
 import { fetchOperacionById, getReadableVentasError, type OperacionDetalle } from '@/lib/ventas';
 import { useAccountPreferences } from '@/lib/account-preferences-context';
 import { useAuthSession } from '@/lib/auth-session-context';
@@ -130,17 +131,7 @@ export default function OperacionDetalleScreen() {
               <View className="flex-row items-start justify-between">
                 <View className="mr-4 flex-1">
                   <Text className="font-semibold text-slate-800">{item.name}</Text>
-                  <View
-                    className={`mt-2 self-start rounded-full px-2.5 py-1 ${item.kind === 'Servicio' ? 'bg-emerald-50' : ''}`}
-                    style={{ backgroundColor: item.kind === 'Servicio' ? undefined : palette.primarySoft }}
-                  >
-                    <Text
-                      className={`text-[10px] font-semibold ${item.kind === 'Servicio' ? 'text-emerald-700' : ''}`}
-                      style={{ color: item.kind === 'Servicio' ? undefined : palette.primaryText }}
-                    >
-                      {item.kind}
-                    </Text>
-                  </View>
+                  <ItemKindBadge kind={item.kind} className="mt-2" />
                 </View>
                 <View className="items-end">
                   <Text className="text-xs font-medium text-slate-500">Subtotal</Text>
